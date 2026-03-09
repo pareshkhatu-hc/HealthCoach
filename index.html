@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitalCoach — Client Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0f14;
+  --surface: #151820;
+  --surface2: #1c2030;
+  --border: #252a3a;
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,0.12);
+  --orange: #ff7043;
+  --orange-dim: rgba(255,112,67,0.12);
+  --blue: #4d9fff;
+  --blue-dim: rgba(77,159,255,0.12);
+  --purple: #b06cff;
+  --purple-dim: rgba(176,108,255,0.12);
+  --text: #e8eaf2;
+  --muted: #6b7394;
+  --card-r: 16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 72px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  z-index: 50;
+  gap: 8px;
+}
+
+.logo-mark {
+  width: 40px; height: 40px;
+  background: var(--green);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #0d0f14;
+}
+
+.nav-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.nav-icon:hover { background: var(--surface2); color: var(--text); }
+.nav-icon.active { background: var(--green-dim); color: var(--green); }
+
+/* ── MAIN ── */
+.main {
+  margin-left: 72px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  height: 68px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 20px;
+  position: sticky; top: 0; z-index: 40;
+}
+
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.topbar-title span { color: var(--green); }
+
+/* Client Selector */
+.client-selector-wrap {
+  position: relative;
+}
+
+.client-selector-wrap::before {
+  content: '👤';
+  position: absolute;
+  left: 14px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+select#clientSelect {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 40px 9px 38px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 200px;
+  transition: border-color 0.2s;
+}
+
+select#clientSelect:focus { border-color: var(--green); }
+
+.selector-arrow {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.badge {
+  background: var(--green-dim);
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,229,160,0.2);
+}
+
+/* ── CONTENT ── */
+.content {
+  padding: 28px;
+  flex: 1;
+}
+
+/* ── STAT CARDS ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-r);
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: #353a50;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--card-r) var(--card-r) 0 0;
+}
+
+.stat-card.green::before { background: var(--green); }
+.stat-card.orange::before { background: var(--orange); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.purple::before { background: var(--purple); }
+
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  margin-bottom: 14px;
+}
+
+.stat-card.green .stat-icon { background: var(--green-dim); }
+.stat-card.orange .stat-icon { background: var(--orange-dim); }
+.stat-card.blue .stat-icon { background: var(--blue-dim); }
+.stat-card.purple .stat-icon { background: var(--purple-dim); }
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-card.green .stat-value { color: var(--green); }
+.stat-card.orange .stat-value { color: var(--orange); }
+.stat-card.blue .stat-value { color: var(--blue); }
+.stat-card.purple .stat-value { color: var(--purple); }
+
+.stat-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.delta-good { background: var(--green-dim); color: var(--green); }
+.delta-warn { background: var(--orange-dim); color: var(--orange); }
+
+/* ── CHARTS GRID ── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-r);
+  padding: 22px;
+}
+
+.chart-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.chart-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.chart-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.chart-badge.green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
+.chart-badge.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,112,67,0.2); }
+.chart-badge.blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(77,159,255,0.2); }
+.chart-badge.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(176,108,255,0.2); }
+
+canvas { width: 100% !important; }
+
+/* ── PROGRESS TABLE ── */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-r);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table-head {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 12px 22px;
+  text-align: left;
+  background: var(--surface2);
+}
+
+td {
+  padding: 13px 22px;
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.anim { opacity: 0; animation: fadeIn 0.5s ease forwards; }
+.anim-1 { animation-delay: 0.05s; }
+.anim-2 { animation-delay: 0.1s; }
+.anim-3 { animation-delay: 0.15s; }
+.anim-4 { animation-delay: 0.2s; }
+.anim-5 { animation-delay: 0.25s; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 80px 40px;
+  color: var(--muted);
+}
+.empty-state .big { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 14px; line-height: 1.7; }
+
+/* Google Sheets Connect Banner */
+.connect-banner {
+  background: linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(77,159,255,0.08) 100%);
+  border: 1px solid rgba(0,229,160,0.2);
+  border-radius: var(--card-r);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.connect-banner .icon { font-size: 28px; }
+
+.connect-banner-text { flex: 1; }
+.connect-banner-text strong { font-size: 14px; font-weight: 600; display: block; margin-bottom: 4px; }
+.connect-banner-text span { font-size: 12px; color: var(--muted); }
+
+.connect-btn {
+  background: var(--green);
+  color: #0d0f14;
+  border: none;
+  padding: 9px 20px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+.connect-btn:hover { opacity: 0.85; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .charts-grid { grid-template-columns: 1fr; }
+  .charts-grid .chart-card.full-width { grid-column: 1; }
+}
+@media (max-width: 640px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 16px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo-mark">VC</div>
+  <div class="nav-icon active" title="Dashboard">📊</div>
+  <div class="nav-icon" title="Clients">👥</div>
+  <div class="nav-icon" title="Programs">🎯</div>
+  <div class="nav-icon" title="Nutrition">🥗</div>
+  <div class="nav-icon" title="Reports">📋</div>
+  <div style="flex:1"></div>
+  <div class="nav-icon" title="Settings">⚙️</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title">Vital<span>Coach</span></div>
+    <div class="client-selector-wrap">
+      <select id="clientSelect" onchange="loadClient(this.value)">
+        <option value="">— Select Client —</option>
+      </select>
+      <span class="selector-arrow">▼</span>
+    </div>
+    <span class="badge" id="activeBadge" style="display:none">Active</span>
+    <div style="width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">👩‍⚕️</div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content" id="content">
+    <!-- Shown before client selected -->
+    <div id="emptyState" class="empty-state">
+      <div class="big">📈</div>
+      <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>
+      Track weight, body fat %, visceral fat and more.<br>All your client data in one beautiful view.</p>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ────────────────────────────────────────────
+// SAMPLE DATA — Replace with Google Sheets API
+// ────────────────────────────────────────────
+const clientsData = {
+  "Priya Sharma": {
+    goal: "Fat Loss",
+    records: [
+      { date: "2024-01-08", weight: 72.4, fat: 31.2, visceral: 9 },
+      { date: "2024-02-05", weight: 71.1, fat: 30.5, visceral: 8 },
+      { date: "2024-03-04", weight: 69.8, fat: 29.8, visceral: 8 },
+      { date: "2024-04-01", weight: 68.5, fat: 28.9, visceral: 7 },
+      { date: "2024-05-06", weight: 67.2, fat: 28.1, visceral: 7 },
+      { date: "2024-06-03", weight: 66.0, fat: 27.4, visceral: 6 },
+      { date: "2024-07-01", weight: 65.1, fat: 26.8, visceral: 6 },
+    ]
+  },
+  "Rahul Mehta": {
+    goal: "Body Recomp",
+    records: [
+      { date: "2024-02-12", weight: 89.0, fat: 26.4, visceral: 13 },
+      { date: "2024-03-11", weight: 88.2, fat: 25.9, visceral: 12 },
+      { date: "2024-04-08", weight: 87.5, fat: 25.1, visceral: 12 },
+      { date: "2024-05-13", weight: 87.0, fat: 24.4, visceral: 11 },
+      { date: "2024-06-10", weight: 86.4, fat: 23.8, visceral: 11 },
+      { date: "2024-07-08", weight: 85.9, fat: 23.2, visceral: 10 },
+    ]
+  },
+  "Anita Desai": {
+    goal: "Weight Loss",
+    records: [
+      { date: "2024-03-18", weight: 78.5, fat: 34.1, visceral: 10 },
+      { date: "2024-04-15", weight: 77.0, fat: 33.2, visceral: 9 },
+      { date: "2024-05-20", weight: 75.4, fat: 32.0, visceral: 9 },
+      { date: "2024-06-17", weight: 73.9, fat: 30.8, visceral: 8 },
+      { date: "2024-07-15", weight: 72.6, fat: 29.9, visceral: 8 },
+    ]
+  },
+  "Vikram Nair": {
+    goal: "Muscle Gain",
+    records: [
+      { date: "2024-01-22", weight: 65.0, fat: 18.5, visceral: 6 },
+      { date: "2024-02-19", weight: 65.8, fat: 18.1, visceral: 5 },
+      { date: "2024-03-18", weight: 66.7, fat: 17.6, visceral: 5 },
+      { date: "2024-04-22", weight: 67.5, fat: 17.2, visceral: 5 },
+      { date: "2024-05-20", weight: 68.2, fat: 16.9, visceral: 4 },
+      { date: "2024-06-17", weight: 69.0, fat: 16.5, visceral: 4 },
+    ]
+  }
+};
+
+// Populate select
+const sel = document.getElementById('clientSelect');
+Object.keys(clientsData).forEach(name => {
+  const opt = document.createElement('option');
+  opt.value = name; opt.textContent = name;
+  sel.appendChild(opt);
+});
+
+let charts = {};
+
+function destroyCharts() {
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+}
+
+function fmt(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+}
+
+function loadClient(name) {
+  destroyCharts();
+  const content = document.getElementById('content');
+  const badge = document.getElementById('activeBadge');
+
+  if (!name) {
+    content.innerHTML = `<div id="emptyState" class="empty-state">
+      <div class="big">📈</div>
+      <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>
+      Track weight, body fat %, visceral fat and more.<br>All your client data in one beautiful view.</p>
+    </div>`;
+    badge.style.display = 'none';
+    return;
+  }
+
+  badge.style.display = 'inline-flex';
+  const d = clientsData[name];
+  const r = d.records;
+  const first = r[0], last = r[r.length - 1];
+  const weightLost = (first.weight - last.weight).toFixed(1);
+  const fatLost = (first.fat - last.fat).toFixed(1);
+  const visceralDrop = first.visceral - last.visceral;
+  const weeks = Math.round((new Date(last.date) - new Date(first.date)) / (7*24*3600*1000));
+  const labels = r.map(x => fmt(x.date));
+  const weights = r.map(x => x.weight);
+  const fats = r.map(x => x.fat);
+  const visceralArr = r.map(x => x.visceral);
+
+  const goalColor = d.goal === 'Muscle Gain' ? 'blue' : 'green';
+
+  content.innerHTML = `
+  <!-- Google Sheets Banner -->
+  <div class="connect-banner anim anim-1">
+    <div class="icon">📋</div>
+    <div class="connect-banner-text">
+      <strong>Connect your Google Sheet</strong>
+      <span>Paste your Sheet URL below to sync live client data automatically</span>
+    </div>
+    <input id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." 
+      style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:12px;outline:none;font-family:inherit;min-width:0">
+    <button class="connect-btn" onclick="alert('In production: this would authenticate and pull your Sheet data via the Google Sheets API.')">Connect Sheet</button>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-row">
+    <div class="stat-card green anim anim-1">
+      <div class="stat-icon">📅</div>
+      <div class="stat-label">Start Date</div>
+      <div class="stat-value" style="font-size:18px">${fmt(first.date)}</div>
+      <div class="stat-sub">${weeks} weeks on programme</div>
+    </div>
+    <div class="stat-card orange anim anim-2">
+      <div class="stat-icon">⚖️</div>
+      <div class="stat-label">Starting Weight</div>
+      <div class="stat-value">${first.weight}<span style="font-size:14px;font-weight:400"> kg</span></div>
+      <div class="stat-sub">Current: ${last.weight} kg</div>
+    </div>
+    <div class="stat-card green anim anim-3">
+      <div class="stat-icon">📉</div>
+      <div class="stat-label">Total Weight Lost</div>
+      <div class="stat-value">${weightLost}<span style="font-size:14px;font-weight:400"> kg</span></div>
+      <div class="stat-sub"><span class="stat-delta delta-good">↓ ${(weightLost/first.weight*100).toFixed(1)}% of body weight</span></div>
+    </div>
+    <div class="stat-card blue anim anim-4">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-label">Fat % Reduction</div>
+      <div class="stat-value">${fatLost}<span style="font-size:14px;font-weight:400"> %</span></div>
+      <div class="stat-sub">${first.fat}% → ${last.fat}%</div>
+    </div>
+    <div class="stat-card purple anim anim-5">
+      <div class="stat-icon">🧠</div>
+      <div class="stat-label">Visceral Fat Drop</div>
+      <div class="stat-value">${visceralDrop}<span style="font-size:14px;font-weight:400"> pts</span></div>
+      <div class="stat-sub">Level ${first.visceral} → Level ${last.visceral}</div>
+    </div>
+    <div class="stat-card blue anim anim-1">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-label">Goal</div>
+      <div class="stat-value" style="font-size:15px;padding-top:4px">${d.goal}</div>
+      <div class="stat-sub">${r.length} check-ins recorded</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1: Weight full width -->
+  <div class="charts-grid">
+    <div class="chart-card full-width anim anim-2">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Weight Progression</div>
+          <div class="chart-subtitle">All recorded sessions • kg</div>
+        </div>
+        <span class="chart-badge green">↓ ${weightLost} kg lost</span>
+      </div>
+      <canvas id="weightChart" height="90"></canvas>
+    </div>
+
+    <!-- Fat % -->
+    <div class="chart-card anim anim-3">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Body Fat %</div>
+          <div class="chart-subtitle">Percentage body fat over time</div>
+        </div>
+        <span class="chart-badge orange">↓ ${fatLost}% reduced</span>
+      </div>
+      <canvas id="fatChart" height="160"></canvas>
+    </div>
+
+    <!-- Visceral Fat -->
+    <div class="chart-card anim anim-4">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Visceral Fat Level</div>
+          <div class="chart-subtitle">Scale 1–30 (healthy: below 13)</div>
+        </div>
+        <span class="chart-badge purple">↓ ${visceralDrop} levels dropped</span>
+      </div>
+      <canvas id="visceralChart" height="160"></canvas>
+    </div>
+  </div>
+
+  <!-- PROGRESS LOG TABLE -->
+  <div class="table-card anim anim-5">
+    <div class="table-head">
+      <div>
+        <div class="chart-title">Session Log</div>
+        <div class="chart-subtitle" style="margin-top:4px">Complete measurement history</div>
+      </div>
+      <span class="chart-badge green">${r.length} sessions</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Weight (kg)</th>
+          <th>Body Fat %</th>
+          <th>Visceral Fat</th>
+          <th>Wt Change</th>
+          <th>Fat % Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${r.map((row, i) => {
+          const prev = r[i-1];
+          const wDelta = prev ? (row.weight - prev.weight).toFixed(1) : null;
+          const fDelta = prev ? (row.fat - prev.fat).toFixed(1) : null;
+          const wGood = wDelta !== null && (d.goal === 'Muscle Gain' ? parseFloat(wDelta) >= 0 : parseFloat(wDelta) <= 0);
+          const fGood = fDelta !== null && parseFloat(fDelta) <= 0;
+          return `<tr>
+            <td style="font-weight:500">${fmt(row.date)}</td>
+            <td style="font-family:'Syne',sans-serif;font-weight:600">${row.weight}</td>
+            <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--orange)">${row.fat}%</td>
+            <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--purple)">${row.visceral}</td>
+            <td>${wDelta !== null ? `<span class="trend-pill" style="background:${wGood?'var(--green-dim)':'var(--orange-dim)'};color:${wGood?'var(--green)':'var(--orange)'}">${parseFloat(wDelta)>0?'+':''}${wDelta} kg</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+            <td>${fDelta !== null ? `<span class="trend-pill" style="background:${fGood?'var(--green-dim)':'var(--orange-dim)'};color:${fGood?'var(--green)':'var(--orange)'}">${parseFloat(fDelta)>0?'+':''}${fDelta}%</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+
+  // ── RENDER CHARTS ──
+  const gridOpts = {
+    color: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.05)'
+  };
+  const tickOpts = { color: '#6b7394', font: { family: 'Inter', size: 11 } };
+
+  function baseOptions(yLabel) {
+    return {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2030',
+          borderColor: '#252a3a',
+          borderWidth: 1,
+          titleColor: '#e8eaf2',
+          bodyColor: '#6b7394',
+          padding: 12,
+          titleFont: { family: 'Syne', size: 13 },
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y} ${yLabel}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: gridOpts, ticks: tickOpts },
+        y: { grid: gridOpts, ticks: tickOpts }
+      }
+    };
+  }
+
+  // Weight chart
+  charts.weight = new Chart(document.getElementById('weightChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: weights,
+        borderColor: '#00e5a0',
+        backgroundColor: 'rgba(0,229,160,0.08)',
+        fill: true,
+        tension: 0.45,
+        pointBackgroundColor: '#00e5a0',
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        borderWidth: 2.5
+      }]
+    },
+    options: baseOptions('kg')
+  });
+
+  // Fat % chart
+  charts.fat = new Chart(document.getElementById('fatChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: fats,
+        borderColor: '#ff7043',
+        backgroundColor: 'rgba(255,112,67,0.08)',
+        fill: true,
+        tension: 0.45,
+        pointBackgroundColor: '#ff7043',
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        borderWidth: 2.5
+      }]
+    },
+    options: baseOptions('%')
+  });
+
+  // Visceral Fat chart (bar)
+  charts.visceral = new Chart(document.getElementById('visceralChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: visceralArr,
+        backgroundColor: visceralArr.map(v =>
+          v >= 13 ? 'rgba(255,112,67,0.7)' : v >= 10 ? 'rgba(176,108,255,0.7)' : 'rgba(77,159,255,0.7)'
+        ),
+        borderColor: visceralArr.map(v =>
+          v >= 13 ? '#ff7043' : v >= 10 ? '#b06cff' : '#4d9fff'
+        ),
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      ...baseOptions('level'),
+      plugins: {
+        ...baseOptions('level').plugins,
+        annotation: {}
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
