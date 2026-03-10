@@ -420,8 +420,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS40s3zJuAlHMNoXQInf0tS8v2-EEurHHbtaTTpkTPTTxeJCyyX531c-ZOYjvlVzFFGUfEwKh2DzaBf/pub?gid=438947235&single=true&output=csv';
 
 // ─────────────────────────────────────────
-// COLUMN MAPPING — matches your Sheet Row 1
-// Change these if your column names differ
+// COLUMN MAPPING — auto-detects your Sheet
 // ─────────────────────────────────────────
 const COLS = {
   clientName:   'Client Name',
@@ -430,6 +429,29 @@ const COLS = {
   fat:          'Fat%',
   visceralFat:  'Visceral Fat'
 };
+
+// Auto-detect columns from actual headers
+function detectColumns(headers) {
+  const map = {};
+  const clean = h => h.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  const patterns = {
+    clientName:  ['clientname', 'client', 'name', 'patientname', 'patient'],
+    date:        ['date', 'recorddate', 'visitdate', 'checkdate'],
+    weight:      ['weight', 'weightkg', 'wt', 'bodyweight'],
+    fat:         ['fat', 'fat%', 'bodyfat', 'bodyfat%', 'fatpercentage', 'bodyfattpercentage'],
+    visceralFat: ['visceralfat', 'visceral', 'visceralfatlevel', 'vf']
+  };
+
+  Object.keys(patterns).forEach(key => {
+    const found = headers.find(h => patterns[key].includes(clean(h)));
+    map[key] = found || COLS[key]; // fallback to default
+  });
+
+  console.log('📋 Detected columns:', map);
+  console.log('📋 Your Sheet headers:', headers);
+  return map;
+}
 
 let allData = {};
 let charts  = {};
@@ -455,21 +477,18 @@ function parseCSV(text) {
 // ─────────────────────────────────────────
 // GROUP BY CLIENT
 // ─────────────────────────────────────────
-function groupByClient(rows) {
+function groupByClient(rows, colMap) {
   const clients = {};
   rows.forEach(row => {
-    const name = row[COLS.clientName];
+    const name = (row[colMap.clientName] || '').trim();
     if (!name) return;
+    const weight   = parseFloat(row[colMap.weight])      || 0;
+    const fat      = parseFloat(row[colMap.fat])         || 0;
+    const visceral = parseFloat(row[colMap.visceralFat]) || 0;
+    const dateStr  = (row[colMap.date] || '').trim();
     if (!clients[name]) clients[name] = [];
-    clients[name].push({
-      date:        row[COLS.date],
-      weight:      parseFloat(row[COLS.weight]) || 0,
-      fat:         parseFloat(row[COLS.fat])    || 0,
-      visceral:    parseFloat(row[COLS.visceralFat]) || 0,
-      rawDate:     parseDate(row[COLS.date])
-    });
+    clients[name].push({ date: dateStr, weight, fat, visceral, rawDate: parseDate(dateStr) });
   });
-  // Sort each client's records by date ascending
   Object.keys(clients).forEach(name => {
     clients[name].sort((a, b) => a.rawDate - b.rawDate);
   });
@@ -516,11 +535,15 @@ async function fetchSheetData(isRefresh = false) {
     const res  = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    const rows = parseCSV(text);
 
-    if (rows.length === 0) throw new Error('No data found in sheet');
+    // Grab raw headers before parsing
+    const rawHeaders = text.trim().split('\n')[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+    const colMap     = detectColumns(rawHeaders);
+    const rows       = parseCSV(text);
 
-    allData = groupByClient(rows);
+    if (rows.length === 0) throw new Error('Sheet is empty or could not be read.');
+
+    allData = groupByClient(rows, colMap);
 
     // Populate client dropdown
     const sel = document.getElementById('clientSelect');
@@ -538,18 +561,34 @@ async function fetchSheetData(isRefresh = false) {
     lastSync.style.display = 'flex';
     document.getElementById('syncTime').textContent = `Synced ${new Date().toLocaleTimeString()}`;
 
+    const clientCount = Object.keys(allData).length;
+
     // If a client was selected, reload their view
     if (currentVal && allData[currentVal]) {
       sel.value = currentVal;
       loadClient(currentVal);
     } else if (!isRefresh) {
-      // Show empty state on first load
-      document.getElementById('content').innerHTML = `
-        <div class="empty-state">
-          <div class="big">✅</div>
-          <p><strong style="color:var(--text);font-size:18px;">Google Sheet connected successfully!</strong><br><br>
-          ${Object.keys(allData).length} client(s) loaded.<br>Select a client from the dropdown above to view their dashboard.</p>
-        </div>`;
+      if (clientCount === 0) {
+        // Show column mismatch diagnostic
+        document.getElementById('content').innerHTML = `
+          <div class="error-box">
+            <div style="font-size:32px;margin-bottom:12px">🔍</div>
+            <strong>Sheet connected but no clients found</strong><br><br>
+            Your Sheet headers detected:<br>
+            <code style="background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:6px;display:inline-block;margin:10px 0;font-size:12px">${rawHeaders.join(' | ')}</code><br><br>
+            Expected headers similar to:<br>
+            <code style="background:rgba(0,229,160,0.08);color:var(--green);padding:6px 12px;border-radius:6px;display:inline-block;margin:10px 0;font-size:12px">Client Name | Date | Weight | Fat% | Visceral Fat</code><br><br>
+            <small style="opacity:0.7">Please copy your exact header names above and share with Claude to fix the mapping.</small>
+          </div>`;
+      } else {
+        document.getElementById('content').innerHTML = `
+          <div class="empty-state">
+            <div class="big">✅</div>
+            <p><strong style="color:var(--text);font-size:18px;">Google Sheet connected!</strong><br><br>
+            <strong style="color:var(--green)">${clientCount}</strong> client(s) loaded successfully.<br><br>
+            Select a client from the dropdown above to view their dashboard.</p>
+          </div>`;
+      }
     }
 
   } catch (err) {
@@ -558,8 +597,8 @@ async function fetchSheetData(isRefresh = false) {
       <div class="error-box">
         <div style="font-size:32px;margin-bottom:12px">⚠️</div>
         <strong>Could not load Google Sheet data</strong><br><br>
-        Please make sure your Sheet is published as CSV.<br>
-        <small style="opacity:0.7">File → Share → Publish to web → CSV → Publish</small><br><br>
+        Please make sure your Sheet is published as CSV:<br>
+        <small style="opacity:0.7">File → Share → Publish to web → Sheet1 → CSV → Publish</small><br><br>
         <small>${err.message}</small>
       </div>`;
   } finally {
