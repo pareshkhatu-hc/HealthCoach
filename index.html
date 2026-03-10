@@ -321,12 +321,12 @@ function loadClient(name){
   const woCount=last7.filter(r=>isYes(r[COL.workout])).length;
   const medCount=last7.filter(r=>isYes(r[COL.meditation])).length;
   const foodTotal=last7.reduce((s,r)=>s+nv(r[COL.food]),0);
-  const woPct=Math.round(woCount/Math.max(1,last7.length)*100);
-  const medPct=Math.round(medCount/Math.min(7,last7.length)*100);
+  const woPct=Math.round(woCount/7*100);
+  const medPct=Math.round(medCount/7*100);
   const foodPct=Math.min(100,Math.round(foodTotal/14*100));
   const avgWater=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.water]),0)/last7.length).toFixed(1):'0';
   const avgSleep=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.sleep]),0)/last7.length).toFixed(1):'0';
-  const avgEnergy=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.energy]),0)/last7.length).toFixed(1):'0';
+  const lastEnergy=last7.length?String(last7[last7.length-1][COL.energy]||'—'):'—';
   let streak=0;
   for(let i=rows.length-1;i>=0;i--){if(isYes(rows[i][COL.workout])&&isYes(rows[i][COL.meditation]))streak++;else break;}
   const wellness=calcWellness(rows);
@@ -374,12 +374,12 @@ function loadClient(name){
   <div class="section-header anim anim-3"><span class="section-title">This Week's Habit Compliance</span><div class="section-line"></div><span style="font-size:11px;color:var(--muted)">Last 7 records</span></div>
   <div class="habit-rings-card anim anim-3">
     <div class="habit-rings-grid">
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(woPct,'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💪</div><div class="habit-ring-pct" style="color:var(--blue)">${woPct}%</div></div></div><div class="habit-ring-label">Workouts</div><div class="habit-ring-sub">${woCount}/${Math.min(7,last7.length)} sessions</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(medPct,'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🧘</div><div class="habit-ring-pct" style="color:var(--purple)">${medPct}%</div></div></div><div class="habit-ring-label">Meditation</div><div class="habit-ring-sub">${medCount}/${Math.min(7,last7.length)} days</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(woPct,'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💪</div><div class="habit-ring-pct" style="color:var(--blue)">${woPct}%</div></div></div><div class="habit-ring-label">Workouts</div><div class="habit-ring-sub">${woCount} sessions</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(medPct,'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🧘</div><div class="habit-ring-pct" style="color:var(--purple)">${medPct}%</div></div></div><div class="habit-ring-label">Meditation</div><div class="habit-ring-sub">${medCount} days</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(foodPct,'#00e5a0',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🍽️</div><div class="habit-ring-pct" style="color:var(--green)">${foodPct}%</div></div></div><div class="habit-ring-label">Food Plates</div><div class="habit-ring-sub">${foodTotal} plates</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgWater)/TARGETS.water*100)),'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💧</div><div class="habit-ring-pct" style="color:var(--blue)">${avgWater}L</div></div></div><div class="habit-ring-label">Avg Water</div><div class="habit-ring-sub">Target ${TARGETS.water}L</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgSleep)/TARGETS.sleep*100)),'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">😴</div><div class="habit-ring-pct" style="color:var(--purple)">${avgSleep}h</div></div></div><div class="habit-ring-label">Avg Sleep</div><div class="habit-ring-sub">Target ${TARGETS.sleep}h</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgEnergy)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${avgEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">From sheet</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(lastEnergy)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${lastEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Latest entry</div></div>
     </div>
   </div>
 
