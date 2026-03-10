@@ -274,7 +274,7 @@ function parseDate(s){
 }
 function fmt(s){const d=parseDate(s);return isNaN(d)?String(s):d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'});}
 function fmtW(s){const d=parseDate(s);return isNaN(d)?String(s):d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
-function isYes(v){if(!v)return false;return String(v).toLowerCase().trim()==='yes'||v===true||v===1;}
+function isYes(v){if(v===null||v===undefined||v==='')return false;var s=String(v).toLowerCase().trim();return s==='yes'||s==='true'||s==='1'||v===true||v===1;}
 function nv(v,f=0){const x=parseFloat(v);return isNaN(x)?f:x;}
 function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
 function cOpts(yL,extra={}){
@@ -326,7 +326,7 @@ function loadClient(name){
   const foodPct=Math.min(100,Math.round(foodTotal/14*100));
   const avgWater=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.water]),0)/last7.length).toFixed(1):'0';
   const avgSleep=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.sleep]),0)/last7.length).toFixed(1):'0';
-  const lastEnergy=last7.length?String(last7[last7.length-1][COL.energy]||'—'):'—';
+  var _rawEnergy=last7.length?last7[last7.length-1][COL.energy]:null; var lastEnergy=(_rawEnergy!==null&&_rawEnergy!==undefined&&_rawEnergy!=='')?String(_rawEnergy):'—';
   let streak=0;
   for(let i=rows.length-1;i>=0;i--){if(isYes(rows[i][COL.workout])&&isYes(rows[i][COL.meditation]))streak++;else break;}
   const wellness=calcWellness(rows);
@@ -379,7 +379,7 @@ function loadClient(name){
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(foodPct,'#00e5a0',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🍽️</div><div class="habit-ring-pct" style="color:var(--green)">${foodPct}%</div></div></div><div class="habit-ring-label">Food Plates</div><div class="habit-ring-sub">${foodTotal} plates</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgWater)/TARGETS.water*100)),'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💧</div><div class="habit-ring-pct" style="color:var(--blue)">${avgWater}L</div></div></div><div class="habit-ring-label">Avg Water</div><div class="habit-ring-sub">Target ${TARGETS.water}L</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgSleep)/TARGETS.sleep*100)),'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">😴</div><div class="habit-ring-pct" style="color:var(--purple)">${avgSleep}h</div></div></div><div class="habit-ring-label">Avg Sleep</div><div class="habit-ring-sub">Target ${TARGETS.sleep}h</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(lastEnergy)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${lastEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Latest entry</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round((lastEnergy!=='—'?nv(lastEnergy):0)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${lastEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Latest entry</div></div>
     </div>
   </div>
 
