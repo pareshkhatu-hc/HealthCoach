@@ -170,8 +170,8 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <div class="login-logo">VC</div>
     <div class="login-title">VitalCoach</div>
     <div class="login-sub">Your professional health coaching dashboard.<br>Sign in to continue.</div>
-    <input class="login-input" type="password" id="passwordInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()">
-    <button class="login-btn" onclick="checkPassword()">🔐 Access Dashboard</button>
+    <input class="login-input" type="password" id="passwordInput" placeholder="Enter password" onkeydown="if(event.key==='Enter'){event.preventDefault();checkPassword();}">
+    <button class="login-btn" id="loginBtn" onclick="checkPassword()">🔐 Access Dashboard</button>
     <div class="login-error" id="loginError">❌ Incorrect password. Try again.</div>
   </div>
 </div>
@@ -211,21 +211,38 @@ tr:hover td{background:rgba(255,255,255,.015)}
 </div>
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbyPVVqNme0ybqxX1cBR3KijQKsUWxgknn6-oRamMH80SwpiHRcq012Wg5ZtG6MXcJaN/exec';
-const PASSWORD='PS2026;
+const PASSWORD='vitalcoach2024';
 const COL={name:'Client Name',date:'Date',weight:'Weight',fat:'Fat%',visceral:'Visceral Fat',workout:'Workout Done',meditation:'Meditation Done',food:'Food Plates Shared',water:'Water (L)',sleep:'Sleep (hrs)',energy:'Energy Level',notes:'Coach Notes'};
 const TARGETS={workout:5,meditation:7,food:5,water:2.5,sleep:7};
 let allData=[],charts={};
 
 function checkPassword(){
-  if(document.getElementById('passwordInput').value===PASSWORD){
-    document.getElementById('passwordScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    fetchData();
-  }else{
-    document.getElementById('loginError').style.display='block';
-    document.getElementById('passwordInput').value='';
-    document.getElementById('passwordInput').focus();
-  }
+  try{
+    var input=document.getElementById('passwordInput');
+    var btn=document.querySelector('.login-btn');
+    var err=document.getElementById('loginError');
+    var entered=input.value.trim();
+    btn.textContent='Checking...';
+    btn.style.opacity='0.7';
+    setTimeout(function(){
+      if(entered===PASSWORD){
+        document.getElementById('passwordScreen').style.display='none';
+        document.getElementById('app').style.display='block';
+        btn.textContent='\uD83D\uDD10 Access Dashboard';
+        btn.style.opacity='1';
+        fetchData();
+      }else{
+        err.style.display='block';
+        err.textContent='\u274C Incorrect password. Try again.';
+        input.value='';
+        input.focus();
+        btn.textContent='\uD83D\uDD10 Access Dashboard';
+        btn.style.opacity='1';
+        input.style.borderColor='var(--orange)';
+        setTimeout(function(){input.style.borderColor='';},1000);
+      }
+    },300);
+  }catch(e){alert('Login error: '+e.message);}
 }
 function logout(){
   document.getElementById('app').style.display='none';
