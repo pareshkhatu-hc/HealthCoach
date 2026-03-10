@@ -335,7 +335,7 @@ function loadClient(name){
   const badges=[
     {emoji:'🎯',name:'First Check-in',earned:rows.length>=1},
     {emoji:'📅',name:'1 Month In',earned:weeks>=4},
-    {emoji:'💪',name:'5 Workouts',earned:rows.filter(r=>isYes(r[COL.workout])).length>=5},
+    {emoji:'💪',name:'5 Workouts',earned:rows.filter(r=>isYes(r[COL.workout])).length>=7},
     {emoji:'🧘',name:'7 Meditations',earned:rows.filter(r=>isYes(r[COL.meditation])).length>=7},
     {emoji:'⚖️',name:'First 2kg Lost',earned:nv(wLost)>=2},
     {emoji:'🔥',name:'5kg Milestone',earned:nv(wLost)>=5},
