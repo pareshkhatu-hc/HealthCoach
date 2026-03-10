@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitalCoach — Client Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0f14; --surface: #151820; --surface2: #1c2030; --border: #252a3a;
+  --green: #00e5a0; --green-dim: rgba(0,229,160,0.12);
+  --orange: #ff7043; --orange-dim: rgba(255,112,67,0.12);
+  --blue: #4d9fff; --blue-dim: rgba(77,159,255,0.12);
+  --purple: #b06cff; --purple-dim: rgba(176,108,255,0.12);
+  --text: #e8eaf2; --muted: #6b7394; --card-r: 16px;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 72px;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; padding: 24px 0; z-index: 50; gap: 8px;
+}
+.logo-mark {
+  width: 40px; height: 40px; background: var(--green); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: #0d0f14;
+}
+.nav-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 18px; transition: all 0.2s; }
+.nav-icon:hover { background: var(--surface2); color: var(--text); }
+.nav-icon.active { background: var(--green-dim); color: var(--green); }
+.main { margin-left: 72px; min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { height: 68px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 16px; position: sticky; top: 0; z-index: 40; }
+.topbar-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; flex: 1; }
+.topbar-title span { color: var(--green); }
+.client-name-badge { display: none; align-items: center; gap: 10px; background: var(--green-dim); border: 1px solid rgba(0,229,160,0.2); padding: 7px 14px; border-radius: 10px; }
+.client-name-badge .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--green); color: #0d0f14; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+.client-name-badge span { font-size: 13px; font-weight: 600; color: var(--green); }
+.client-selector-wrap { position: relative; }
+.client-selector-wrap::before { content: '👤'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+select#clientSelect { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 9px 40px 9px 38px; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; min-width: 220px; transition: border-color 0.2s; }
+select#clientSelect:focus { border-color: var(--green); }
+.selector-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 11px; pointer-events: none; }
+.sync-btn { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); padding: 8px 16px; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.sync-btn:hover { background: rgba(0,229,160,0.2); }
+.sync-btn.loading { opacity: 0.6; pointer-events: none; }
+.last-sync { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.content { padding: 28px; flex: 1; }
+/* URL GENERATOR */
+.url-generator { background: linear-gradient(135deg, rgba(0,229,160,0.06), rgba(77,159,255,0.06)); border: 1px solid rgba(0,229,160,0.2); border-radius: var(--card-r); padding: 20px 24px; margin-bottom: 24px; }
+.url-gen-title { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.url-gen-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.url-list { display: flex; flex-direction: column; gap: 8px; }
+.url-row { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.url-row .client-label { font-size: 13px; font-weight: 500; flex: 1; min-width: 0; }
+.url-row .url-text { font-size: 11px; color: var(--muted); flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; }
+.copy-btn { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; }
+.copy-btn:hover { background: rgba(0,229,160,0.2); }
+.copy-btn.copied { background: rgba(0,229,160,0.3); }
+/* STAT CARDS */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 20px 22px; position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.2s; }
+.stat-card:hover { transform: translateY(-2px); border-color: #353a50; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--card-r) var(--card-r) 0 0; }
+.stat-card.green::before { background: var(--green); }
+.stat-card.orange::before { background: var(--orange); }
+.stat-card.blue::before { background: var(--blue); }
+.stat-card.purple::before { background: var(--purple); }
+.stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 14px; }
+.stat-card.green .stat-icon { background: var(--green-dim); }
+.stat-card.orange .stat-icon { background: var(--orange-dim); }
+.stat-card.blue .stat-icon { background: var(--blue-dim); }
+.stat-card.purple .stat-icon { background: var(--purple-dim); }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 6px; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+.stat-card.green .stat-value { color: var(--green); }
+.stat-card.orange .stat-value { color: var(--orange); }
+.stat-card.blue .stat-value { color: var(--blue); }
+.stat-card.purple .stat-value { color: var(--purple); }
+.stat-sub { font-size: 12px; color: var(--muted); }
+.stat-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+.delta-good { background: var(--green-dim); color: var(--green); }
+.delta-warn { background: var(--orange-dim); color: var(--orange); }
+/* CHARTS */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 22px; }
+.chart-card.full-width { grid-column: 1 / -1; }
+.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.chart-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+.chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.chart-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.chart-badge.green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
+.chart-badge.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,112,67,0.2); }
+.chart-badge.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(176,108,255,0.2); }
+canvas { width: 100% !important; }
+/* TABLE */
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); overflow: hidden; margin-bottom: 24px; }
+.table-head { padding: 20px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; padding: 12px 22px; text-align: left; background: var(--surface2); }
+td { padding: 13px 22px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.trend-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+/* STATES */
+.loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 40px; gap: 16px; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--muted); }
+.error-box { background: rgba(255,112,67,0.08); border: 1px solid rgba(255,112,67,0.3); border-radius: var(--card-r); padding: 24px; text-align: center; color: var(--orange); font-size: 14px; line-height: 1.7; }
+.empty-state { text-align: center; padding: 80px 40px; color: var(--muted); }
+.empty-state .big { font-size: 48px; margin-bottom: 16px; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.anim{opacity:0;animation:fadeIn 0.5s ease forwards}
+.anim-1{animation-delay:.05s}.anim-2{animation-delay:.1s}.anim-3{animation-delay:.15s}.anim-4{animation-delay:.2s}.anim-5{animation-delay:.25s}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}.chart-card.full-width{grid-column:1}}
+@media(max-width:640px){.sidebar{display:none}.main{margin-left:0}.content{padding:16px}.stats-row{grid-template-columns:1fr 1fr}.topbar{padding:0 16px;gap:10px}select#clientSelect{min-width:160px}}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo-mark">VC</div>
+  <div class="nav-icon active">📊</div>
+  <div class="nav-icon">👥</div>
+  <div class="nav-icon">🎯</div>
+  <div class="nav-icon">🥗</div>
+  <div class="nav-icon">📋</div>
+  <div style="flex:1"></div>
+  <div class="nav-icon">⚙️</div>
+</nav>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title">Vital<span>Coach</span></div>
+    <div id="lastSync" class="last-sync" style="display:none">
+      <div class="sync-dot"></div><span id="syncTime">Synced just now</span>
+    </div>
+    <div class="client-selector-wrap" id="selectorWrap">
+      <select id="clientSelect" onchange="loadClient(this.value)" disabled>
+        <option value="">Loading clients...</option>
+      </select>
+      <span class="selector-arrow">▼</span>
+    </div>
+    <div class="client-name-badge" id="clientNameBadge">
+      <div class="avatar" id="clientAvatar">?</div>
+      <span id="clientNameLabel">—</span>
+    </div>
+    <button class="sync-btn" onclick="fetchSheetData(true)" id="syncBtn">🔄 Refresh</button>
+  </header>
+
+  <main class="content" id="content">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <div class="loading-text">Connecting to your Google Sheet...</div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG — update BASE_URL if repo changes
+// ══════════════════════════════════════════
+
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS40s3zJuAlHMNoXQInf0tS8v2-EEurHHbtaTTpkTPTTxeJCyyX531c-ZOYjvlVzFFGUfEwKh2DzaBf/pub?gid=438947235&single=true&output=csv';
+  const BASE_URL      = 'https://pareshkhatu-hc.github.io/HealthCoach/';
+
+// ══════════════════════════════════════════
+// URL PARAM — detect client mode
+// ══════════════════════════════════════════
+const _params        = new URLSearchParams(window.location.search);
+const URL_CLIENT     = _params.get('client') ? decodeURIComponent(_params.get('client')) : null;
+const IS_CLIENT_VIEW = !!URL_CLIENT;
+
+let allData = {}, charts = {};
+
+// ══════════════════════════════════════════
+// CSV PARSER
+// ══════════════════════════════════════════
+function parseCSV(text) {
+  const lines   = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line => {
+    const vals = line.match(/(".*?"|[^,]+)(?=,|$)/g) || [];
+    const row  = {};
+    headers.forEach((h,i) => row[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+    return row;
+  });
+}
+
+// ══════════════════════════════════════════
+// AUTO-DETECT COLUMNS
+// ══════════════════════════════════════════
+function detectColumns(headers) {
+  const clean = h => h.toLowerCase().replace(/[^a-z0-9]/g,'');
+  const patterns = {
+    clientName:  ['clientname','client','name','patientname','patient'],
+    date:        ['date','recorddate','visitdate','checkdate'],
+    weight:      ['weight','weightkg','wt','bodyweight'],
+    fat:         ['fat','fat%','bodyfat','bodyfat%','fatpercentage'],
+    visceralFat: ['visceralfat','visceral','visceralfatlevel','vf']
+  };
+  const map = {};
+  Object.keys(patterns).forEach(key => {
+    map[key] = headers.find(h => patterns[key].includes(clean(h))) || key;
+  });
+  console.log('Headers found:', headers);
+  console.log('Column map:', map);
+  return map;
+}
+
+// ══════════════════════════════════════════
+// DATE HELPERS
+// ══════════════════════════════════════════
+function parseDate(str) {
+  if (!str) return new Date();
+  const p = str.split('/');
+  if (p.length === 3) return new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
+  return new Date(str);
+}
+function fmtDate(str) {
+  return parseDate(str).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'});
+}
+
+// ══════════════════════════════════════════
+// GROUP BY CLIENT
+// ══════════════════════════════════════════
+function groupByClient(rows, colMap) {
+  const clients = {};
+  rows.forEach(row => {
+    const name = (row[colMap.clientName]||'').trim();
+    if (!name) return;
+    if (!clients[name]) clients[name] = [];
+    const dateStr = (row[colMap.date]||'').trim();
+    clients[name].push({
+      date: dateStr,
+      weight:   parseFloat(row[colMap.weight])     || 0,
+      fat:      parseFloat(row[colMap.fat])        || 0,
+      visceral: parseFloat(row[colMap.visceralFat])|| 0,
+      rawDate:  parseDate(dateStr)
+    });
+  });
+  Object.keys(clients).forEach(n => clients[n].sort((a,b) => a.rawDate - b.rawDate));
+  return clients;
+}
+
+// ══════════════════════════════════════════
+// CLIENT URL HELPERS
+// ══════════════════════════════════════════
+function makeClientURL(name) {
+  return `${BASE_URL}?client=${encodeURIComponent(name)}`;
+}
+function copyURL(btn, name) {
+  navigator.clipboard.writeText(makeClientURL(name)).then(() => {
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+// ══════════════════════════════════════════
+// FETCH SHEET DATA
+// ══════════════════════════════════════════
+async function fetchSheetData(isRefresh = false) {
+  const syncBtn = document.getElementById('syncBtn');
+  syncBtn.classList.add('loading');
+  syncBtn.textContent = '⏳ Syncing...';
+
+  if (!isRefresh) {
+    document.getElementById('content').innerHTML = `
+      <div class="loading-screen"><div class="spinner"></div>
+      <div class="loading-text">Connecting to your Google Sheet...</div></div>`;
+  }
+
+  try {
+    const res = await fetch(`${SHEET_CSV_URL}&t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text       = await res.text();
+    const rawHeaders = text.trim().split('\n')[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+    const colMap     = detectColumns(rawHeaders);
+    const rows       = parseCSV(text);
+    if (!rows.length) throw new Error('Sheet appears to be empty.');
+    allData = groupByClient(rows, colMap);
+    const clientNames = Object.keys(allData).sort();
+
+    if (!clientNames.length) {
+      throw new Error(`No clients loaded. Detected headers: [${rawHeaders.join(', ')}].\nExpected: Client Name, Date, Weight, Fat%, Visceral Fat`);
+    }
+
+    document.getElementById('lastSync').style.display = 'flex';
+    document.getElementById('syncTime').textContent = `Synced ${new Date().toLocaleTimeString()}`;
+
+    // ── CLIENT VIEW ──
+    if (IS_CLIENT_VIEW) {
+      const matchedName = clientNames.find(n => n.toLowerCase() === URL_CLIENT.toLowerCase()) || URL_CLIENT;
+      document.getElementById('clientNameLabel').textContent = matchedName;
+      document.getElementById('clientAvatar').textContent    = matchedName.charAt(0).toUpperCase();
+      document.title = `${matchedName} — VitalCoach`;
+      if (allData[matchedName]) {
+        loadClient(matchedName);
+      } else {
+        document.getElementById('content').innerHTML = `
+          <div class="empty-state"><div class="big">🔍</div>
+          <p><strong style="color:var(--text);font-size:18px;">Client not found</strong><br><br>
+          No data found for "<strong style="color:var(--orange)">${URL_CLIENT}</strong>".<br>
+          Please contact your coach.</p></div>`;
+      }
+      return;
+    }
+
+    // ── ADMIN VIEW ──
+    const sel = document.getElementById('clientSelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Select Client —</option>';
+    clientNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+
+    if (cur && allData[cur]) {
+      sel.value = cur; loadClient(cur);
+    } else if (!isRefresh) {
+      // Welcome screen with URL generator
+      document.getElementById('content').innerHTML = `
+        <div class="url-generator anim anim-1">
+          <div class="url-gen-title">🔗 Client Access Links — Share these privately</div>
+          <div class="url-gen-sub">Each client gets their own link and sees <strong>only their own data</strong>. Copy and send via WhatsApp, email or SMS.</div>
+          <div class="url-list" id="urlList"></div>
+        </div>
+        <div class="empty-state">
+          <div class="big">👆</div>
+          <p><strong style="color:var(--text);font-size:18px;">Select a client above to view their dashboard</strong><br><br>
+          <span style="color:var(--green);font-weight:600">${clientNames.length}</span> client(s) loaded from your Google Sheet.</p>
+        </div>`;
+      const urlList = document.getElementById('urlList');
+      clientNames.forEach(name => {
+        const row = document.createElement('div');
+        row.className = 'url-row';
+        row.innerHTML = `
+          <span class="client-label">👤 ${name}</span>
+          <span class="url-text">${makeClientURL(name)}</span>
+          <button class="copy-btn" onclick="copyURL(this, '${name.replace(/'/g,"\\'")}')">📋 Copy Link</button>`;
+        urlList.appendChild(row);
+      });
+    }
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('content').innerHTML = `
+      <div class="error-box">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <strong>Could not load Google Sheet data</strong><br><br>
+        Make sure your Sheet is published as CSV:<br>
+        <small style="opacity:0.7">File → Share → Publish to web → Sheet1 → CSV → Publish</small><br><br>
+        <small style="word-break:break-word">${err.message}</small>
+      </div>`;
+  } finally {
+    syncBtn.classList.remove('loading');
+    syncBtn.textContent = '🔄 Refresh';
+  }
+}
+
+// ══════════════════════════════════════════
+// DESTROY CHARTS
+// ══════════════════════════════════════════
+function destroyCharts() {
+  Object.values(charts).forEach(c => { try{c.destroy()}catch(e){} });
+  charts = {};
+}
+
+// ══════════════════════════════════════════
+// LOAD CLIENT DASHBOARD
+// ══════════════════════════════════════════
+function loadClient(name) {
+  destroyCharts();
+  const content = document.getElementById('content');
+  if (!name || !allData[name]) {
+    content.innerHTML = `<div class="empty-state"><div class="big">📈</div>
+      <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong></p></div>`;
+    return;
+  }
+
+  const r     = allData[name];
+  const first = r[0], last = r[r.length-1];
+  const weightLost   = (first.weight   - last.weight).toFixed(1);
+  const fatLost      = (first.fat      - last.fat).toFixed(1);
+  const visceralDrop = (first.visceral - last.visceral).toFixed(1);
+  const weeks  = Math.max(1, Math.round((last.rawDate - first.rawDate)/(7*24*3600*1000)));
+  const labels = r.map(x => fmtDate(x.date));
+  const wGood  = parseFloat(weightLost)   >= 0;
+  const fGood  = parseFloat(fatLost)      >= 0;
+  const vGood  = parseFloat(visceralDrop) >= 0;
+
+  content.innerHTML = `
+  ${!IS_CLIENT_VIEW ? `
+  <div class="url-generator anim anim-1" style="margin-bottom:24px">
+    <div class="url-gen-title">🔗 ${name}'s Private Link</div>
+    <div class="url-gen-sub">Send this link to ${name} — they will only see their own progress</div>
+    <div class="url-list">
+      <div class="url-row">
+        <span class="client-label">👤 ${name}</span>
+        <span class="url-text">${makeClientURL(name)}</span>
+        <button class="copy-btn" onclick="copyURL(this, '${name.replace(/'/g,"\\'")}')">📋 Copy Link</button>
+      </div>
+    </div>
+  </div>` : ''}
+
+  <div class="stats-row">
+    <div class="stat-card green anim anim-1">
+      <div class="stat-icon">📅</div>
+      <div class="stat-label">Start Date</div>
+      <div class="stat-value" style="font-size:17px">${fmtDate(first.date)}</div>
+      <div class="stat-sub">${weeks} week${weeks!==1?'s':''} on programme</div>
+    </div>
+    <div class="stat-card orange anim anim-2">
+      <div class="stat-icon">⚖️</div>
+      <div class="stat-label">Starting Weight</div>
+      <div class="stat-value">${first.weight}<span style="font-size:14px;font-weight:400"> kg</span></div>
+      <div class="stat-sub">Current: <strong style="color:var(--text)">${last.weight} kg</strong></div>
+    </div>
+    <div class="stat-card green anim anim-3">
+      <div class="stat-icon">📉</div>
+      <div class="stat-label">Weight Lost</div>
+      <div class="stat-value">${Math.abs(weightLost)}<span style="font-size:14px;font-weight:400"> kg</span></div>
+      <div class="stat-sub"><span class="stat-delta ${wGood?'delta-good':'delta-warn'}">${wGood?'↓':'↑'} ${Math.abs((weightLost/first.weight*100)).toFixed(1)}% body weight</span></div>
+    </div>
+    <div class="stat-card blue anim anim-4">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-label">Fat % Reduced</div>
+      <div class="stat-value">${Math.abs(fatLost)}<span style="font-size:14px;font-weight:400"> %</span></div>
+      <div class="stat-sub">${first.fat}% → <strong style="color:var(--text)">${last.fat}%</strong></div>
+    </div>
+    <div class="stat-card purple anim anim-5">
+      <div class="stat-icon">🧠</div>
+      <div class="stat-label">Visceral Fat Drop</div>
+      <div class="stat-value">${Math.abs(visceralDrop)}<span style="font-size:14px;font-weight:400"> pts</span></div>
+      <div class="stat-sub">Level ${first.visceral} → <strong style="color:var(--text)">${last.visceral}</strong></div>
+    </div>
+    <div class="stat-card blue anim anim-1">
+      <div class="stat-icon">📋</div>
+      <div class="stat-label">Total Check-ins</div>
+      <div class="stat-value">${r.length}</div>
+      <div class="stat-sub">Last: ${fmtDate(last.date)}</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card full-width anim anim-2">
+      <div class="chart-header">
+        <div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All sessions • kg</div></div>
+        <span class="chart-badge green">${wGood?'↓':'↑'} ${Math.abs(weightLost)} kg ${wGood?'lost':'gained'}</span>
+      </div>
+      <canvas id="weightChart" height="90"></canvas>
+    </div>
+    <div class="chart-card anim anim-3">
+      <div class="chart-header">
+        <div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div>
+        <span class="chart-badge orange">${fGood?'↓':'↑'} ${Math.abs(fatLost)}% ${fGood?'reduced':'increased'}</span>
+      </div>
+      <canvas id="fatChart" height="160"></canvas>
+    </div>
+    <div class="chart-card anim anim-4">
+      <div class="chart-header">
+        <div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–30 · Healthy: below 13</div></div>
+        <span class="chart-badge purple">${vGood?'↓':'↑'} ${Math.abs(visceralDrop)} level${Math.abs(visceralDrop)!=1?'s':''} ${vGood?'dropped':'increased'}</span>
+      </div>
+      <canvas id="visceralChart" height="160"></canvas>
+    </div>
+  </div>
+
+  <div class="table-card anim anim-5">
+    <div class="table-head">
+      <div><div class="chart-title">Session Log — ${name}</div><div class="chart-subtitle" style="margin-top:4px">Complete measurement history</div></div>
+      <span class="chart-badge green">${r.length} session${r.length!==1?'s':''}</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>#</th><th>Date</th><th>Weight (kg)</th><th>Body Fat %</th><th>Visceral Fat</th><th>Wt Change</th><th>Fat % Change</th></tr></thead>
+      <tbody>${r.map((row,i)=>{
+        const prev=r[i-1];
+        const wd=prev?(row.weight-prev.weight).toFixed(1):null;
+        const fd=prev?(row.fat-prev.fat).toFixed(1):null;
+        const wp=wd!==null&&parseFloat(wd)<=0, fp=fd!==null&&parseFloat(fd)<=0;
+        return `<tr>
+          <td style="color:var(--muted)">${i+1}</td>
+          <td style="font-weight:500">${fmtDate(row.date)}</td>
+          <td style="font-family:'Syne',sans-serif;font-weight:600">${row.weight}</td>
+          <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--orange)">${row.fat}%</td>
+          <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--purple)">${row.visceral}</td>
+          <td>${wd!==null?`<span class="trend-pill" style="background:${wp?'var(--green-dim)':'var(--orange-dim)'};color:${wp?'var(--green)':'var(--orange)'}">${parseFloat(wd)>0?'+':''}${wd} kg</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+          <td>${fd!==null?`<span class="trend-pill" style="background:${fp?'var(--green-dim)':'var(--orange-dim)'};color:${fp?'var(--green)':'var(--orange)'}">${parseFloat(fd)>0?'+':''}${fd}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+    </div>
+  </div>`;
+
+  const grd={color:'rgba(255,255,255,0.05)',borderColor:'rgba(255,255,255,0.05)'};
+  const tck={color:'#6b7394',font:{family:'Inter',size:11}};
+  const baseOpts=unit=>({responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1c2030',borderColor:'#252a3a',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#6b7394',padding:12,titleFont:{family:'Syne',size:13},callbacks:{label:ctx=>` ${ctx.parsed.y} ${unit}`}}},scales:{x:{grid:grd,ticks:tck},y:{grid:grd,ticks:tck}}});
+
+  charts.weight   = new Chart(document.getElementById('weightChart'),{type:'line',data:{labels,datasets:[{data:r.map(x=>x.weight),borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.08)',fill:true,tension:0.45,pointBackgroundColor:'#00e5a0',pointRadius:5,pointHoverRadius:8,borderWidth:2.5}]},options:baseOpts('kg')});
+  charts.fat      = new Chart(document.getElementById('fatChart'),{type:'line',data:{labels,datasets:[{data:r.map(x=>x.fat),borderColor:'#ff7043',backgroundColor:'rgba(255,112,67,0.08)',fill:true,tension:0.45,pointBackgroundColor:'#ff7043',pointRadius:5,pointHoverRadius:8,borderWidth:2.5}]},options:baseOpts('%')});
+  charts.visceral = new Chart(document.getElementById('visceralChart'),{type:'bar',data:{labels,datasets:[{data:r.map(x=>x.visceral),backgroundColor:r.map(x=>x.visceral>=13?'rgba(255,112,67,0.7)':x.visceral>=10?'rgba(176,108,255,0.7)':'rgba(77,159,255,0.7)'),borderColor:r.map(x=>x.visceral>=13?'#ff7043':x.visceral>=10?'#b06cff':'#4d9fff'),borderWidth:1.5,borderRadius:6}]},options:baseOpts('level')});
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+if (IS_CLIENT_VIEW) {
+  document.getElementById('selectorWrap').style.display    = 'none';
+  document.getElementById('clientNameBadge').style.display = 'flex';
+}
+fetchSheetData();
+</script>
+</body>
+</html>
