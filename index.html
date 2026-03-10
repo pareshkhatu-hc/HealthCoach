@@ -8,7 +8,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
   --bg: #0d0f14;
   --surface: #151820;
@@ -26,9 +25,7 @@
   --muted: #6b7394;
   --card-r: 16px;
 }
-
 html { scroll-behavior: smooth; }
-
 body {
   background: var(--bg);
   color: var(--text);
@@ -36,8 +33,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
-
-/* ── SIDEBAR ── */
+/* SIDEBAR */
 .sidebar {
   position: fixed;
   left: 0; top: 0; bottom: 0;
@@ -51,7 +47,6 @@ body {
   z-index: 50;
   gap: 8px;
 }
-
 .logo-mark {
   width: 40px; height: 40px;
   background: var(--green);
@@ -63,7 +58,6 @@ body {
   font-size: 16px;
   color: #0d0f14;
 }
-
 .nav-icon {
   width: 44px; height: 44px;
   border-radius: 12px;
@@ -75,16 +69,9 @@ body {
 }
 .nav-icon:hover { background: var(--surface2); color: var(--text); }
 .nav-icon.active { background: var(--green-dim); color: var(--green); }
-
-/* ── MAIN ── */
-.main {
-  margin-left: 72px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── TOPBAR ── */
+/* MAIN */
+.main { margin-left: 72px; min-height: 100vh; display: flex; flex-direction: column; }
+/* TOPBAR */
 .topbar {
   height: 68px;
   background: var(--surface);
@@ -92,24 +79,17 @@ body {
   display: flex;
   align-items: center;
   padding: 0 28px;
-  gap: 20px;
+  gap: 16px;
   position: sticky; top: 0; z-index: 40;
 }
-
 .topbar-title {
   font-family: 'Syne', sans-serif;
   font-size: 18px;
   font-weight: 700;
   flex: 1;
 }
-
 .topbar-title span { color: var(--green); }
-
-/* Client Selector */
-.client-selector-wrap {
-  position: relative;
-}
-
+.client-selector-wrap { position: relative; }
 .client-selector-wrap::before {
   content: '👤';
   position: absolute;
@@ -118,7 +98,6 @@ body {
   font-size: 14px;
   pointer-events: none;
 }
-
 select#clientSelect {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -132,12 +111,10 @@ select#clientSelect {
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  min-width: 200px;
+  min-width: 220px;
   transition: border-color 0.2s;
 }
-
 select#clientSelect:focus { border-color: var(--green); }
-
 .selector-arrow {
   position: absolute;
   right: 12px; top: 50%;
@@ -146,31 +123,32 @@ select#clientSelect:focus { border-color: var(--green); }
   font-size: 11px;
   pointer-events: none;
 }
-
-.badge {
+.sync-btn {
   background: var(--green-dim);
   color: var(--green);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
   border: 1px solid rgba(0,229,160,0.2);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-
-/* ── CONTENT ── */
-.content {
-  padding: 28px;
-  flex: 1;
-}
-
-/* ── STAT CARDS ── */
+.sync-btn:hover { background: rgba(0,229,160,0.2); }
+.sync-btn.loading { opacity: 0.6; pointer-events: none; }
+/* CONTENT */
+.content { padding: 28px; flex: 1; }
+/* STAT CARDS */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -180,12 +158,7 @@ select#clientSelect:focus { border-color: var(--green); }
   overflow: hidden;
   transition: transform 0.2s, border-color 0.2s;
 }
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  border-color: #353a50;
-}
-
+.stat-card:hover { transform: translateY(-2px); border-color: #353a50; }
 .stat-card::before {
   content: '';
   position: absolute;
@@ -193,12 +166,10 @@ select#clientSelect:focus { border-color: var(--green); }
   height: 3px;
   border-radius: var(--card-r) var(--card-r) 0 0;
 }
-
 .stat-card.green::before { background: var(--green); }
 .stat-card.orange::before { background: var(--orange); }
 .stat-card.blue::before { background: var(--blue); }
 .stat-card.purple::before { background: var(--purple); }
-
 .stat-icon {
   width: 36px; height: 36px;
   border-radius: 10px;
@@ -206,12 +177,10 @@ select#clientSelect:focus { border-color: var(--green); }
   font-size: 16px;
   margin-bottom: 14px;
 }
-
 .stat-card.green .stat-icon { background: var(--green-dim); }
 .stat-card.orange .stat-icon { background: var(--orange-dim); }
 .stat-card.blue .stat-icon { background: var(--blue-dim); }
 .stat-card.purple .stat-icon { background: var(--purple-dim); }
-
 .stat-label {
   font-size: 11px;
   color: var(--muted);
@@ -220,7 +189,6 @@ select#clientSelect:focus { border-color: var(--green); }
   font-weight: 500;
   margin-bottom: 6px;
 }
-
 .stat-value {
   font-family: 'Syne', sans-serif;
   font-size: 26px;
@@ -228,17 +196,11 @@ select#clientSelect:focus { border-color: var(--green); }
   line-height: 1;
   margin-bottom: 6px;
 }
-
 .stat-card.green .stat-value { color: var(--green); }
 .stat-card.orange .stat-value { color: var(--orange); }
 .stat-card.blue .stat-value { color: var(--blue); }
 .stat-card.purple .stat-value { color: var(--purple); }
-
-.stat-sub {
-  font-size: 12px;
-  color: var(--muted);
-}
-
+.stat-sub { font-size: 12px; color: var(--muted); }
 .stat-delta {
   display: inline-flex;
   align-items: center;
@@ -248,63 +210,42 @@ select#clientSelect:focus { border-color: var(--green); }
   padding: 2px 7px;
   border-radius: 20px;
 }
-
 .delta-good { background: var(--green-dim); color: var(--green); }
 .delta-warn { background: var(--orange-dim); color: var(--orange); }
-
-/* ── CHARTS GRID ── */
+/* CHARTS */
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
 }
-
 .chart-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--card-r);
   padding: 22px;
 }
-
-.chart-card.full-width {
-  grid-column: 1 / -1;
-}
-
+.chart-card.full-width { grid-column: 1 / -1; }
 .chart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
 }
-
-.chart-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.chart-subtitle {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 3px;
-}
-
+.chart-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+.chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .chart-badge {
   font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 20px;
 }
-
 .chart-badge.green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
 .chart-badge.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,112,67,0.2); }
 .chart-badge.blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(77,159,255,0.2); }
 .chart-badge.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(176,108,255,0.2); }
-
 canvas { width: 100% !important; }
-
-/* ── PROGRESS TABLE ── */
+/* TABLE */
 .table-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -312,7 +253,6 @@ canvas { width: 100% !important; }
   overflow: hidden;
   margin-bottom: 24px;
 }
-
 .table-head {
   padding: 20px 22px;
   border-bottom: 1px solid var(--border);
@@ -320,12 +260,7 @@ canvas { width: 100% !important; }
   align-items: center;
   justify-content: space-between;
 }
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
+table { width: 100%; border-collapse: collapse; }
 th {
   font-size: 11px;
   text-transform: uppercase;
@@ -336,16 +271,13 @@ th {
   text-align: left;
   background: var(--surface2);
 }
-
 td {
   padding: 13px 22px;
   font-size: 13px;
   border-top: 1px solid var(--border);
   vertical-align: middle;
 }
-
 tr:hover td { background: rgba(255,255,255,0.02); }
-
 .trend-pill {
   display: inline-flex;
   align-items: center;
@@ -355,63 +287,70 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   padding: 3px 9px;
   border-radius: 20px;
 }
-
-/* ── ANIMATIONS ── */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* LOADING & STATES */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  gap: 16px;
 }
-
-.anim { opacity: 0; animation: fadeIn 0.5s ease forwards; }
-.anim-1 { animation-delay: 0.05s; }
-.anim-2 { animation-delay: 0.1s; }
-.anim-3 { animation-delay: 0.15s; }
-.anim-4 { animation-delay: 0.2s; }
-.anim-5 { animation-delay: 0.25s; }
-
-/* ── EMPTY STATE ── */
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--muted); }
+.error-box {
+  background: rgba(255,112,67,0.08);
+  border: 1px solid rgba(255,112,67,0.3);
+  border-radius: var(--card-r);
+  padding: 24px;
+  text-align: center;
+  color: var(--orange);
+  font-size: 14px;
+  line-height: 1.7;
+}
 .empty-state {
   text-align: center;
   padding: 80px 40px;
   color: var(--muted);
 }
 .empty-state .big { font-size: 48px; margin-bottom: 16px; }
-.empty-state p { font-size: 14px; line-height: 1.7; }
-
-/* Google Sheets Connect Banner */
-.connect-banner {
-  background: linear-gradient(135deg, rgba(0,229,160,0.08) 0%, rgba(77,159,255,0.08) 100%);
-  border: 1px solid rgba(0,229,160,0.2);
-  border-radius: var(--card-r);
-  padding: 20px 24px;
-  margin-bottom: 24px;
+/* LAST SYNC */
+.last-sync {
+  font-size: 11px;
+  color: var(--muted);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
 }
-
-.connect-banner .icon { font-size: 28px; }
-
-.connect-banner-text { flex: 1; }
-.connect-banner-text strong { font-size: 14px; font-weight: 600; display: block; margin-bottom: 4px; }
-.connect-banner-text span { font-size: 12px; color: var(--muted); }
-
-.connect-btn {
+.sync-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
   background: var(--green);
-  color: #0d0f14;
-  border: none;
-  padding: 9px 20px;
-  border-radius: 10px;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s;
+  animation: pulse 2s infinite;
 }
-.connect-btn:hover { opacity: 0.85; }
-
-/* ── RESPONSIVE ── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim { opacity: 0; animation: fadeIn 0.5s ease forwards; }
+.anim-1 { animation-delay: 0.05s; }
+.anim-2 { animation-delay: 0.1s; }
+.anim-3 { animation-delay: 0.15s; }
+.anim-4 { animation-delay: 0.2s; }
+.anim-5 { animation-delay: 0.25s; }
+/* RESPONSIVE */
 @media (max-width: 900px) {
   .charts-grid { grid-template-columns: 1fr; }
   .charts-grid .chart-card.full-width { grid-column: 1; }
@@ -421,6 +360,8 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   .main { margin-left: 0; }
   .content { padding: 16px; }
   .stats-row { grid-template-columns: 1fr 1fr; }
+  .topbar { padding: 0 16px; gap: 10px; }
+  select#clientSelect { min-width: 160px; }
 }
 </style>
 </head>
@@ -444,195 +385,286 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   <!-- TOPBAR -->
   <header class="topbar">
     <div class="topbar-title">Vital<span>Coach</span></div>
+
+    <div id="lastSync" class="last-sync" style="display:none">
+      <div class="sync-dot"></div>
+      <span id="syncTime">Synced just now</span>
+    </div>
+
     <div class="client-selector-wrap">
-      <select id="clientSelect" onchange="loadClient(this.value)">
-        <option value="">— Select Client —</option>
+      <select id="clientSelect" onchange="loadClient(this.value)" disabled>
+        <option value="">Loading clients...</option>
       </select>
       <span class="selector-arrow">▼</span>
     </div>
-    <span class="badge" id="activeBadge" style="display:none">Active</span>
-    <div style="width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">👩‍⚕️</div>
+
+    <button class="sync-btn" onclick="fetchSheetData(true)" id="syncBtn">
+      🔄 Refresh Data
+    </button>
   </header>
 
   <!-- CONTENT -->
   <main class="content" id="content">
-    <!-- Shown before client selected -->
-    <div id="emptyState" class="empty-state">
-      <div class="big">📈</div>
-      <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>
-      Track weight, body fat %, visceral fat and more.<br>All your client data in one beautiful view.</p>
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <div class="loading-text">Connecting to your Google Sheet...</div>
     </div>
   </main>
 
 </div>
 
 <script>
-// ────────────────────────────────────────────
-// SAMPLE DATA — Replace with Google Sheets API
-// ────────────────────────────────────────────
-const clientsData = {
-  "Priya Sharma": {
-    goal: "Fat Loss",
-    records: [
-      { date: "2024-01-08", weight: 72.4, fat: 31.2, visceral: 9 },
-      { date: "2024-02-05", weight: 71.1, fat: 30.5, visceral: 8 },
-      { date: "2024-03-04", weight: 69.8, fat: 29.8, visceral: 8 },
-      { date: "2024-04-01", weight: 68.5, fat: 28.9, visceral: 7 },
-      { date: "2024-05-06", weight: 67.2, fat: 28.1, visceral: 7 },
-      { date: "2024-06-03", weight: 66.0, fat: 27.4, visceral: 6 },
-      { date: "2024-07-01", weight: 65.1, fat: 26.8, visceral: 6 },
-    ]
-  },
-  "Rahul Mehta": {
-    goal: "Body Recomp",
-    records: [
-      { date: "2024-02-12", weight: 89.0, fat: 26.4, visceral: 13 },
-      { date: "2024-03-11", weight: 88.2, fat: 25.9, visceral: 12 },
-      { date: "2024-04-08", weight: 87.5, fat: 25.1, visceral: 12 },
-      { date: "2024-05-13", weight: 87.0, fat: 24.4, visceral: 11 },
-      { date: "2024-06-10", weight: 86.4, fat: 23.8, visceral: 11 },
-      { date: "2024-07-08", weight: 85.9, fat: 23.2, visceral: 10 },
-    ]
-  },
-  "Anita Desai": {
-    goal: "Weight Loss",
-    records: [
-      { date: "2024-03-18", weight: 78.5, fat: 34.1, visceral: 10 },
-      { date: "2024-04-15", weight: 77.0, fat: 33.2, visceral: 9 },
-      { date: "2024-05-20", weight: 75.4, fat: 32.0, visceral: 9 },
-      { date: "2024-06-17", weight: 73.9, fat: 30.8, visceral: 8 },
-      { date: "2024-07-15", weight: 72.6, fat: 29.9, visceral: 8 },
-    ]
-  },
-  "Vikram Nair": {
-    goal: "Muscle Gain",
-    records: [
-      { date: "2024-01-22", weight: 65.0, fat: 18.5, visceral: 6 },
-      { date: "2024-02-19", weight: 65.8, fat: 18.1, visceral: 5 },
-      { date: "2024-03-18", weight: 66.7, fat: 17.6, visceral: 5 },
-      { date: "2024-04-22", weight: 67.5, fat: 17.2, visceral: 5 },
-      { date: "2024-05-20", weight: 68.2, fat: 16.9, visceral: 4 },
-      { date: "2024-06-17", weight: 69.0, fat: 16.5, visceral: 4 },
-    ]
-  }
+// ─────────────────────────────────────────
+// YOUR GOOGLE SHEET CSV URL
+// ─────────────────────────────────────────
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS40s3zJuAlHMNoXQInf0tS8v2-EEurHHbtaTTpkTPTTxeJCyyX531c-ZOYjvlVzFFGUfEwKh2DzaBf/pub?output=csv';
+
+// ─────────────────────────────────────────
+// COLUMN MAPPING — matches your Sheet Row 1
+// Change these if your column names differ
+// ─────────────────────────────────────────
+const COLS = {
+  clientName:   'Client Name',
+  date:         'Date',
+  weight:       'Weight',
+  fat:          'Fat%',
+  visceralFat:  'Visceral Fat'
 };
 
-// Populate select
-const sel = document.getElementById('clientSelect');
-Object.keys(clientsData).forEach(name => {
-  const opt = document.createElement('option');
-  opt.value = name; opt.textContent = name;
-  sel.appendChild(opt);
-});
+let allData = {};
+let charts  = {};
 
-let charts = {};
-
-function destroyCharts() {
-  Object.values(charts).forEach(c => c.destroy());
-  charts = {};
+// ─────────────────────────────────────────
+// PARSE CSV
+// ─────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].match(/(".*?"|[^,]+)(?=,|$)/g) || [];
+    const row = {};
+    headers.forEach((h, idx) => {
+      row[h] = (vals[idx] || '').replace(/^"|"$/g, '').trim();
+    });
+    rows.push(row);
+  }
+  return rows;
 }
 
-function fmt(dateStr) {
-  const d = new Date(dateStr);
+// ─────────────────────────────────────────
+// GROUP BY CLIENT
+// ─────────────────────────────────────────
+function groupByClient(rows) {
+  const clients = {};
+  rows.forEach(row => {
+    const name = row[COLS.clientName];
+    if (!name) return;
+    if (!clients[name]) clients[name] = [];
+    clients[name].push({
+      date:        row[COLS.date],
+      weight:      parseFloat(row[COLS.weight]) || 0,
+      fat:         parseFloat(row[COLS.fat])    || 0,
+      visceral:    parseFloat(row[COLS.visceralFat]) || 0,
+      rawDate:     parseDate(row[COLS.date])
+    });
+  });
+  // Sort each client's records by date ascending
+  Object.keys(clients).forEach(name => {
+    clients[name].sort((a, b) => a.rawDate - b.rawDate);
+  });
+  return clients;
+}
+
+// ─────────────────────────────────────────
+// PARSE DATE — handles DD/MM/YYYY
+// ─────────────────────────────────────────
+function parseDate(str) {
+  if (!str) return new Date();
+  // Try DD/MM/YYYY first
+  const parts = str.split('/');
+  if (parts.length === 3) {
+    return new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
+  }
+  return new Date(str);
+}
+
+function fmtDate(str) {
+  const d = parseDate(str);
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
 }
 
+// ─────────────────────────────────────────
+// FETCH DATA FROM GOOGLE SHEET
+// ─────────────────────────────────────────
+async function fetchSheetData(isRefresh = false) {
+  const syncBtn = document.getElementById('syncBtn');
+  syncBtn.classList.add('loading');
+  syncBtn.textContent = '⏳ Syncing...';
+
+  if (!isRefresh) {
+    document.getElementById('content').innerHTML = `
+      <div class="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Connecting to your Google Sheet...</div>
+      </div>`;
+  }
+
+  try {
+    // Add cache-busting timestamp so we always get fresh data
+    const url = `${SHEET_CSV_URL}&t=${Date.now()}`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = parseCSV(text);
+
+    if (rows.length === 0) throw new Error('No data found in sheet');
+
+    allData = groupByClient(rows);
+
+    // Populate client dropdown
+    const sel = document.getElementById('clientSelect');
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">— Select Client —</option>';
+    Object.keys(allData).sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+
+    // Show last sync time
+    const lastSync = document.getElementById('lastSync');
+    lastSync.style.display = 'flex';
+    document.getElementById('syncTime').textContent = `Synced ${new Date().toLocaleTimeString()}`;
+
+    // If a client was selected, reload their view
+    if (currentVal && allData[currentVal]) {
+      sel.value = currentVal;
+      loadClient(currentVal);
+    } else if (!isRefresh) {
+      // Show empty state on first load
+      document.getElementById('content').innerHTML = `
+        <div class="empty-state">
+          <div class="big">✅</div>
+          <p><strong style="color:var(--text);font-size:18px;">Google Sheet connected successfully!</strong><br><br>
+          ${Object.keys(allData).length} client(s) loaded.<br>Select a client from the dropdown above to view their dashboard.</p>
+        </div>`;
+    }
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('content').innerHTML = `
+      <div class="error-box">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <strong>Could not load Google Sheet data</strong><br><br>
+        Please make sure your Sheet is published as CSV.<br>
+        <small style="opacity:0.7">File → Share → Publish to web → CSV → Publish</small><br><br>
+        <small>${err.message}</small>
+      </div>`;
+  } finally {
+    syncBtn.classList.remove('loading');
+    syncBtn.textContent = '🔄 Refresh Data';
+  }
+}
+
+// ─────────────────────────────────────────
+// DESTROY OLD CHARTS
+// ─────────────────────────────────────────
+function destroyCharts() {
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
+  charts = {};
+}
+
+// ─────────────────────────────────────────
+// LOAD CLIENT DASHBOARD
+// ─────────────────────────────────────────
 function loadClient(name) {
   destroyCharts();
   const content = document.getElementById('content');
-  const badge = document.getElementById('activeBadge');
 
-  if (!name) {
-    content.innerHTML = `<div id="emptyState" class="empty-state">
-      <div class="big">📈</div>
-      <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>
-      Track weight, body fat %, visceral fat and more.<br>All your client data in one beautiful view.</p>
-    </div>`;
-    badge.style.display = 'none';
+  if (!name || !allData[name]) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <div class="big">📈</div>
+        <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>
+        Track weight, body fat %, visceral fat and more.</p>
+      </div>`;
     return;
   }
 
-  badge.style.display = 'inline-flex';
-  const d = clientsData[name];
-  const r = d.records;
-  const first = r[0], last = r[r.length - 1];
-  const weightLost = (first.weight - last.weight).toFixed(1);
-  const fatLost = (first.fat - last.fat).toFixed(1);
-  const visceralDrop = first.visceral - last.visceral;
-  const weeks = Math.round((new Date(last.date) - new Date(first.date)) / (7*24*3600*1000));
-  const labels = r.map(x => fmt(x.date));
-  const weights = r.map(x => x.weight);
-  const fats = r.map(x => x.fat);
-  const visceralArr = r.map(x => x.visceral);
+  const r     = allData[name];
+  const first = r[0];
+  const last  = r[r.length - 1];
+  const weightLost   = (first.weight   - last.weight).toFixed(1);
+  const fatLost      = (first.fat      - last.fat).toFixed(1);
+  const visceralDrop = (first.visceral - last.visceral).toFixed(1);
+  const weeks = Math.max(1, Math.round((last.rawDate - first.rawDate) / (7*24*3600*1000)));
+  const labels = r.map(x => fmtDate(x.date));
 
-  const goalColor = d.goal === 'Muscle Gain' ? 'blue' : 'green';
+  // Determine trend direction
+  const wGood = parseFloat(weightLost) >= 0;
+  const fGood = parseFloat(fatLost) >= 0;
+  const vGood = parseFloat(visceralDrop) >= 0;
 
   content.innerHTML = `
-  <!-- Google Sheets Banner -->
-  <div class="connect-banner anim anim-1">
-    <div class="icon">📋</div>
-    <div class="connect-banner-text">
-      <strong>Connect your Google Sheet</strong>
-      <span>Paste your Sheet URL below to sync live client data automatically</span>
-    </div>
-    <input id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." 
-      style="flex:2;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:10px;font-size:12px;outline:none;font-family:inherit;min-width:0">
-    <button class="connect-btn" onclick="alert('In production: this would authenticate and pull your Sheet data via the Google Sheets API.')">Connect Sheet</button>
-  </div>
-
   <!-- STAT CARDS -->
   <div class="stats-row">
     <div class="stat-card green anim anim-1">
       <div class="stat-icon">📅</div>
       <div class="stat-label">Start Date</div>
-      <div class="stat-value" style="font-size:18px">${fmt(first.date)}</div>
-      <div class="stat-sub">${weeks} weeks on programme</div>
+      <div class="stat-value" style="font-size:17px">${fmtDate(first.date)}</div>
+      <div class="stat-sub">${weeks} week${weeks!==1?'s':''} on programme</div>
     </div>
     <div class="stat-card orange anim anim-2">
       <div class="stat-icon">⚖️</div>
       <div class="stat-label">Starting Weight</div>
       <div class="stat-value">${first.weight}<span style="font-size:14px;font-weight:400"> kg</span></div>
-      <div class="stat-sub">Current: ${last.weight} kg</div>
+      <div class="stat-sub">Current: <strong style="color:var(--text)">${last.weight} kg</strong></div>
     </div>
     <div class="stat-card green anim anim-3">
       <div class="stat-icon">📉</div>
-      <div class="stat-label">Total Weight Lost</div>
-      <div class="stat-value">${weightLost}<span style="font-size:14px;font-weight:400"> kg</span></div>
-      <div class="stat-sub"><span class="stat-delta delta-good">↓ ${(weightLost/first.weight*100).toFixed(1)}% of body weight</span></div>
+      <div class="stat-label">Weight Lost</div>
+      <div class="stat-value">${Math.abs(weightLost)}<span style="font-size:14px;font-weight:400"> kg</span></div>
+      <div class="stat-sub">
+        <span class="stat-delta ${wGood?'delta-good':'delta-warn'}">
+          ${wGood?'↓':'↑'} ${Math.abs((weightLost/first.weight*100)).toFixed(1)}% of body weight
+        </span>
+      </div>
     </div>
     <div class="stat-card blue anim anim-4">
       <div class="stat-icon">🔥</div>
-      <div class="stat-label">Fat % Reduction</div>
-      <div class="stat-value">${fatLost}<span style="font-size:14px;font-weight:400"> %</span></div>
-      <div class="stat-sub">${first.fat}% → ${last.fat}%</div>
+      <div class="stat-label">Fat % Reduced</div>
+      <div class="stat-value">${Math.abs(fatLost)}<span style="font-size:14px;font-weight:400"> %</span></div>
+      <div class="stat-sub">${first.fat}% → <strong style="color:var(--text)">${last.fat}%</strong></div>
     </div>
     <div class="stat-card purple anim anim-5">
       <div class="stat-icon">🧠</div>
       <div class="stat-label">Visceral Fat Drop</div>
-      <div class="stat-value">${visceralDrop}<span style="font-size:14px;font-weight:400"> pts</span></div>
-      <div class="stat-sub">Level ${first.visceral} → Level ${last.visceral}</div>
+      <div class="stat-value">${Math.abs(visceralDrop)}<span style="font-size:14px;font-weight:400"> pts</span></div>
+      <div class="stat-sub">Level ${first.visceral} → <strong style="color:var(--text)">${last.visceral}</strong></div>
     </div>
     <div class="stat-card blue anim anim-1">
-      <div class="stat-icon">🎯</div>
-      <div class="stat-label">Goal</div>
-      <div class="stat-value" style="font-size:15px;padding-top:4px">${d.goal}</div>
-      <div class="stat-sub">${r.length} check-ins recorded</div>
+      <div class="stat-icon">📋</div>
+      <div class="stat-label">Total Check-ins</div>
+      <div class="stat-value">${r.length}</div>
+      <div class="stat-sub">Last: ${fmtDate(last.date)}</div>
     </div>
   </div>
 
-  <!-- CHARTS ROW 1: Weight full width -->
+  <!-- CHARTS -->
   <div class="charts-grid">
+    <!-- Weight full width -->
     <div class="chart-card full-width anim anim-2">
       <div class="chart-header">
         <div>
           <div class="chart-title">Weight Progression</div>
-          <div class="chart-subtitle">All recorded sessions • kg</div>
+          <div class="chart-subtitle">All sessions • kg</div>
         </div>
-        <span class="chart-badge green">↓ ${weightLost} kg lost</span>
+        <span class="chart-badge green">${wGood?'↓':'↑'} ${Math.abs(weightLost)} kg ${wGood?'lost':'gained'}</span>
       </div>
       <canvas id="weightChart" height="90"></canvas>
     </div>
-
     <!-- Fat % -->
     <div class="chart-card anim anim-3">
       <div class="chart-header">
@@ -640,36 +672,37 @@ function loadClient(name) {
           <div class="chart-title">Body Fat %</div>
           <div class="chart-subtitle">Percentage body fat over time</div>
         </div>
-        <span class="chart-badge orange">↓ ${fatLost}% reduced</span>
+        <span class="chart-badge orange">${fGood?'↓':'↑'} ${Math.abs(fatLost)}% ${fGood?'reduced':'increased'}</span>
       </div>
       <canvas id="fatChart" height="160"></canvas>
     </div>
-
     <!-- Visceral Fat -->
     <div class="chart-card anim anim-4">
       <div class="chart-header">
         <div>
           <div class="chart-title">Visceral Fat Level</div>
-          <div class="chart-subtitle">Scale 1–30 (healthy: below 13)</div>
+          <div class="chart-subtitle">Scale 1–30 · Healthy target: below 13</div>
         </div>
-        <span class="chart-badge purple">↓ ${visceralDrop} levels dropped</span>
+        <span class="chart-badge purple">${vGood?'↓':'↑'} ${Math.abs(visceralDrop)} level${Math.abs(visceralDrop)!==1?'s':''} ${vGood?'dropped':'increased'}</span>
       </div>
       <canvas id="visceralChart" height="160"></canvas>
     </div>
   </div>
 
-  <!-- PROGRESS LOG TABLE -->
+  <!-- SESSION LOG TABLE -->
   <div class="table-card anim anim-5">
     <div class="table-head">
       <div>
-        <div class="chart-title">Session Log</div>
+        <div class="chart-title">Session Log — ${name}</div>
         <div class="chart-subtitle" style="margin-top:4px">Complete measurement history</div>
       </div>
-      <span class="chart-badge green">${r.length} sessions</span>
+      <span class="chart-badge green">${r.length} session${r.length!==1?'s':''}</span>
     </div>
+    <div style="overflow-x:auto">
     <table>
       <thead>
         <tr>
+          <th>#</th>
           <th>Date</th>
           <th>Weight (kg)</th>
           <th>Body Fat %</th>
@@ -680,32 +713,31 @@ function loadClient(name) {
       </thead>
       <tbody>
         ${r.map((row, i) => {
-          const prev = r[i-1];
+          const prev  = r[i-1];
           const wDelta = prev ? (row.weight - prev.weight).toFixed(1) : null;
-          const fDelta = prev ? (row.fat - prev.fat).toFixed(1) : null;
-          const wGood = wDelta !== null && (d.goal === 'Muscle Gain' ? parseFloat(wDelta) >= 0 : parseFloat(wDelta) <= 0);
-          const fGood = fDelta !== null && parseFloat(fDelta) <= 0;
+          const fDelta = prev ? (row.fat    - prev.fat).toFixed(1)    : null;
+          const wPos   = wDelta !== null && parseFloat(wDelta) <= 0;
+          const fPos   = fDelta !== null && parseFloat(fDelta) <= 0;
           return `<tr>
-            <td style="font-weight:500">${fmt(row.date)}</td>
+            <td style="color:var(--muted)">${i+1}</td>
+            <td style="font-weight:500">${fmtDate(row.date)}</td>
             <td style="font-family:'Syne',sans-serif;font-weight:600">${row.weight}</td>
             <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--orange)">${row.fat}%</td>
             <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--purple)">${row.visceral}</td>
-            <td>${wDelta !== null ? `<span class="trend-pill" style="background:${wGood?'var(--green-dim)':'var(--orange-dim)'};color:${wGood?'var(--green)':'var(--orange)'}">${parseFloat(wDelta)>0?'+':''}${wDelta} kg</span>` : '<span style="color:var(--muted)">—</span>'}</td>
-            <td>${fDelta !== null ? `<span class="trend-pill" style="background:${fGood?'var(--green-dim)':'var(--orange-dim)'};color:${fGood?'var(--green)':'var(--orange)'}">${parseFloat(fDelta)>0?'+':''}${fDelta}%</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+            <td>${wDelta!==null?`<span class="trend-pill" style="background:${wPos?'var(--green-dim)':'var(--orange-dim)'};color:${wPos?'var(--green)':'var(--orange)'}">${parseFloat(wDelta)>0?'+':''}${wDelta} kg</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+            <td>${fDelta!==null?`<span class="trend-pill" style="background:${fPos?'var(--green-dim)':'var(--orange-dim)'};color:${fPos?'var(--green)':'var(--orange)'}">${parseFloat(fDelta)>0?'+':''}${fDelta}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
           </tr>`;
         }).join('')}
       </tbody>
     </table>
+    </div>
   </div>`;
 
   // ── RENDER CHARTS ──
-  const gridOpts = {
-    color: 'rgba(255,255,255,0.05)',
-    borderColor: 'rgba(255,255,255,0.05)'
-  };
+  const gridOpts = { color: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.05)' };
   const tickOpts = { color: '#6b7394', font: { family: 'Inter', size: 11 } };
 
-  function baseOptions(yLabel) {
+  function baseOpts(unit) {
     return {
       responsive: true,
       plugins: {
@@ -718,9 +750,7 @@ function loadClient(name) {
           bodyColor: '#6b7394',
           padding: 12,
           titleFont: { family: 'Syne', size: 13 },
-          callbacks: {
-            label: ctx => ` ${ctx.parsed.y} ${yLabel}`
-          }
+          callbacks: { label: ctx => ` ${ctx.parsed.y} ${unit}` }
         }
       },
       scales: {
@@ -730,72 +760,65 @@ function loadClient(name) {
     };
   }
 
-  // Weight chart
   charts.weight = new Chart(document.getElementById('weightChart'), {
     type: 'line',
     data: {
       labels,
       datasets: [{
-        data: weights,
+        data: r.map(x => x.weight),
         borderColor: '#00e5a0',
         backgroundColor: 'rgba(0,229,160,0.08)',
-        fill: true,
-        tension: 0.45,
+        fill: true, tension: 0.45,
         pointBackgroundColor: '#00e5a0',
-        pointRadius: 5,
-        pointHoverRadius: 8,
-        borderWidth: 2.5
+        pointRadius: 5, pointHoverRadius: 8, borderWidth: 2.5
       }]
     },
-    options: baseOptions('kg')
+    options: baseOpts('kg')
   });
 
-  // Fat % chart
   charts.fat = new Chart(document.getElementById('fatChart'), {
     type: 'line',
     data: {
       labels,
       datasets: [{
-        data: fats,
+        data: r.map(x => x.fat),
         borderColor: '#ff7043',
         backgroundColor: 'rgba(255,112,67,0.08)',
-        fill: true,
-        tension: 0.45,
+        fill: true, tension: 0.45,
         pointBackgroundColor: '#ff7043',
-        pointRadius: 5,
-        pointHoverRadius: 8,
-        borderWidth: 2.5
+        pointRadius: 5, pointHoverRadius: 8, borderWidth: 2.5
       }]
     },
-    options: baseOptions('%')
+    options: baseOpts('%')
   });
 
-  // Visceral Fat chart (bar)
   charts.visceral = new Chart(document.getElementById('visceralChart'), {
     type: 'bar',
     data: {
       labels,
       datasets: [{
-        data: visceralArr,
-        backgroundColor: visceralArr.map(v =>
-          v >= 13 ? 'rgba(255,112,67,0.7)' : v >= 10 ? 'rgba(176,108,255,0.7)' : 'rgba(77,159,255,0.7)'
+        data: r.map(x => x.visceral),
+        backgroundColor: r.map(x =>
+          x.visceral >= 13 ? 'rgba(255,112,67,0.7)' :
+          x.visceral >= 10 ? 'rgba(176,108,255,0.7)' :
+                             'rgba(77,159,255,0.7)'
         ),
-        borderColor: visceralArr.map(v =>
-          v >= 13 ? '#ff7043' : v >= 10 ? '#b06cff' : '#4d9fff'
+        borderColor: r.map(x =>
+          x.visceral >= 13 ? '#ff7043' :
+          x.visceral >= 10 ? '#b06cff' : '#4d9fff'
         ),
         borderWidth: 1.5,
         borderRadius: 6
       }]
     },
-    options: {
-      ...baseOptions('level'),
-      plugins: {
-        ...baseOptions('level').plugins,
-        annotation: {}
-      }
-    }
+    options: baseOpts('level')
   });
 }
+
+// ─────────────────────────────────────────
+// INIT — load data on page open
+// ─────────────────────────────────────────
+fetchSheetData();
 </script>
 </body>
 </html>
