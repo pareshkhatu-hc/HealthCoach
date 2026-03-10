@@ -3,526 +3,436 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Dashboard</title>
+<title>VitalCoach — Client Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg: #0d0f14; --surface: #151820; --surface2: #1c2030; --border: #252a3a;
-  --green: #00e5a0; --green-dim: rgba(0,229,160,0.12);
-  --orange: #ff7043; --orange-dim: rgba(255,112,67,0.12);
-  --blue: #4d9fff; --blue-dim: rgba(77,159,255,0.12);
-  --purple: #b06cff; --purple-dim: rgba(176,108,255,0.12);
-  --text: #e8eaf2; --muted: #6b7394; --card-r: 16px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--border:#252a3a;
+  --green:#00e5a0;--green-dim:rgba(0,229,160,0.12);
+  --orange:#ff7043;--orange-dim:rgba(255,112,67,0.12);
+  --blue:#4d9fff;--blue-dim:rgba(77,159,255,0.12);
+  --purple:#b06cff;--purple-dim:rgba(176,108,255,0.12);
+  --yellow:#ffd166;--yellow-dim:rgba(255,209,102,0.12);
+  --teal:#00c9b8;--teal-dim:rgba(0,201,184,0.12);
+  --text:#e8eaf2;--muted:#6b7394;--card-r:16px;
 }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
-
-/* PASSWORD SCREEN */
-#passwordScreen {
-  position: fixed; inset: 0; background: var(--bg);
-  display: flex; align-items: center; justify-content: center; z-index: 9999;
-}
-.login-box {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 400px; text-align: center;
-}
-.login-logo {
-  width: 56px; height: 56px; background: var(--green); border-radius: 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; color: #0d0f14; margin: 0 auto 20px;
-}
-.login-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-.login-sub { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
-.login-input {
-  width: 100%; background: var(--surface2); border: 1px solid var(--border);
-  color: var(--text); padding: 13px 16px; border-radius: 12px;
-  font-family: 'Inter', sans-serif; font-size: 14px; outline: none; margin-bottom: 12px;
-  transition: border-color 0.2s; text-align: center; letter-spacing: 0.1em;
-}
-.login-input:focus { border-color: var(--green); }
-.login-btn {
-  width: 100%; background: var(--green); color: #0d0f14; border: none;
-  padding: 13px; border-radius: 12px; font-family: 'Inter', sans-serif;
-  font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;
-}
-.login-btn:hover { opacity: 0.85; }
-.login-error { color: var(--orange); font-size: 12px; margin-top: 10px; display: none; }
-
-/* LOADING */
-#loadingScreen {
-  position: fixed; inset: 0; background: var(--bg);
-  display: none; align-items: center; justify-content: center;
-  z-index: 9998; flex-direction: column; gap: 16px;
-}
-.spinner {
-  width: 40px; height: 40px; border: 3px solid var(--border);
-  border-top-color: var(--green); border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: var(--muted); }
-
-/* SIDEBAR */
-.sidebar {
-  position: fixed; left: 0; top: 0; bottom: 0; width: 72px;
-  background: var(--surface); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; align-items: center;
-  padding: 24px 0; z-index: 50; gap: 8px;
-}
-.logo-mark {
-  width: 40px; height: 40px; background: var(--green); border-radius: 12px;
-  display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: #0d0f14;
-}
-.nav-icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--muted); font-size: 18px; transition: all 0.2s;
-}
-.nav-icon:hover { background: var(--surface2); color: var(--text); }
-.nav-icon.active { background: var(--green-dim); color: var(--green); }
-
-/* MAIN */
-.main { margin-left: 72px; min-height: 100vh; display: flex; flex-direction: column; }
-
-/* TOPBAR */
-.topbar {
-  height: 68px; background: var(--surface); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 28px; gap: 16px;
-  position: sticky; top: 0; z-index: 40;
-}
-.topbar-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; flex: 1; }
-.topbar-title span { color: var(--green); }
-.client-selector-wrap { position: relative; }
-.client-selector-wrap::before {
-  content: '👤'; position: absolute; left: 14px; top: 50%;
-  transform: translateY(-50%); font-size: 14px; pointer-events: none;
-}
-select#clientSelect {
-  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-  padding: 9px 40px 9px 38px; border-radius: 10px; font-family: 'Inter', sans-serif;
-  font-size: 13px; font-weight: 500; cursor: pointer; outline: none;
-  appearance: none; min-width: 210px; transition: border-color 0.2s;
-}
-select#clientSelect:focus { border-color: var(--green); }
-.selector-arrow {
-  position: absolute; right: 12px; top: 50%;
-  transform: translateY(-50%); color: var(--muted); font-size: 11px; pointer-events: none;
-}
-.badge {
-  background: var(--green-dim); color: var(--green); font-size: 11px; font-weight: 600;
-  padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0,229,160,0.2);
-}
-.sync-btn {
-  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-  padding: 7px 14px; border-radius: 10px; font-family: 'Inter', sans-serif;
-  font-size: 12px; cursor: pointer; transition: all 0.2s;
-}
-.sync-btn:hover { border-color: var(--green); color: var(--green); }
-.logout-btn {
-  background: transparent; border: 1px solid var(--border); color: var(--muted);
-  padding: 7px 14px; border-radius: 10px; font-family: 'Inter', sans-serif;
-  font-size: 12px; cursor: pointer; transition: all 0.2s;
-}
-.logout-btn:hover { border-color: var(--orange); color: var(--orange); }
-
-/* CONTENT */
-.content { padding: 28px; flex: 1; }
-
-/* STAT CARDS */
-.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.stat-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r);
-  padding: 20px 22px; position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.2s;
-}
-.stat-card:hover { transform: translateY(-2px); border-color: #353a50; }
-.stat-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0;
-  height: 3px; border-radius: var(--card-r) var(--card-r) 0 0;
-}
-.stat-card.green::before { background: var(--green); }
-.stat-card.orange::before { background: var(--orange); }
-.stat-card.blue::before { background: var(--blue); }
-.stat-card.purple::before { background: var(--purple); }
-.stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 14px; }
-.stat-card.green .stat-icon { background: var(--green-dim); }
-.stat-card.orange .stat-icon { background: var(--orange-dim); }
-.stat-card.blue .stat-icon { background: var(--blue-dim); }
-.stat-card.purple .stat-icon { background: var(--purple-dim); }
-.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; margin-bottom: 6px; }
-.stat-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
-.stat-card.green .stat-value { color: var(--green); }
-.stat-card.orange .stat-value { color: var(--orange); }
-.stat-card.blue .stat-value { color: var(--blue); }
-.stat-card.purple .stat-value { color: var(--purple); }
-.stat-sub { font-size: 12px; color: var(--muted); }
-.stat-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
-.delta-good { background: var(--green-dim); color: var(--green); }
-
-/* CHARTS */
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); padding: 22px; }
-.chart-card.full-width { grid-column: 1 / -1; }
-.chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-.chart-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
-.chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.chart-badge { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
-.chart-badge.green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,229,160,0.2); }
-.chart-badge.orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,112,67,0.2); }
-.chart-badge.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(176,108,255,0.2); }
-canvas { width: 100% !important; }
-
-/* TABLE */
-.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-r); overflow: hidden; margin-bottom: 24px; }
-.table-head { padding: 20px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-table { width: 100%; border-collapse: collapse; }
-th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; padding: 12px 22px; text-align: left; background: var(--surface2); }
-td { padding: 13px 22px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
-tr:hover td { background: rgba(255,255,255,0.02); }
-.trend-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
-
-/* EMPTY / ERROR */
-.empty-state { text-align: center; padding: 80px 40px; color: var(--muted); }
-.empty-state .big { font-size: 48px; margin-bottom: 16px; }
-.empty-state p { font-size: 14px; line-height: 1.7; }
-.error-banner { background: var(--orange-dim); border: 1px solid rgba(255,112,67,0.3); border-radius: var(--card-r); padding: 16px 20px; font-size: 13px; color: var(--orange); margin-bottom: 20px; }
-
-/* ANIMATIONS */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.anim { opacity: 0; animation: fadeIn 0.5s ease forwards; }
-.anim-1 { animation-delay: 0.05s; } .anim-2 { animation-delay: 0.1s; }
-.anim-3 { animation-delay: 0.15s; } .anim-4 { animation-delay: 0.2s; }
-.anim-5 { animation-delay: 0.25s; }
-
-@media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } .charts-grid .chart-card.full-width { grid-column: 1; } }
-@media (max-width: 640px) { .sidebar { display: none; } .main { margin-left: 0; } .content { padding: 16px; } .stats-row { grid-template-columns: 1fr 1fr; } }
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+#passwordScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse at 20% 50%,rgba(0,229,160,0.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(77,159,255,0.04) 0%,transparent 60%)}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:48px 40px;width:100%;max-width:420px;text-align:center;box-shadow:0 40px 80px rgba(0,0,0,0.4)}
+.login-logo{width:64px;height:64px;background:var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#0d0f14;margin:0 auto 20px;box-shadow:0 8px 24px rgba(0,229,160,0.3)}
+.login-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:8px}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.6}
+.login-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:14px 16px;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s;text-align:center;letter-spacing:.15em}
+.login-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,229,160,.1)}
+.login-btn{width:100%;background:var(--green);color:#0d0f14;border:none;padding:14px;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(0,229,160,.3)}
+.login-btn:hover{opacity:.9;transform:translateY(-1px)}
+.login-error{color:var(--orange);font-size:12px;margin-top:10px;display:none}
+#loadingScreen{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9998;flex-direction:column;gap:16px}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--muted)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:24px 0;z-index:50;gap:6px}
+.logo-mark{width:42px;height:42px;background:var(--green);border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#0d0f14;box-shadow:0 4px 12px rgba(0,229,160,.25)}
+.nav-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px;transition:all .2s;position:relative}
+.nav-icon:hover{background:var(--surface2);color:var(--text)}
+.nav-icon.active{background:var(--green-dim);color:var(--green)}
+.main{margin-left:72px;min-height:100vh;display:flex;flex-direction:column}
+.topbar{height:68px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:14px;position:sticky;top:0;z-index:40}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;flex:1}
+.topbar-title span{color:var(--green)}
+.client-selector-wrap{position:relative}
+.client-selector-wrap::before{content:'👤';position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
+select#clientSelect{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 36px 9px 36px;border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;cursor:pointer;outline:none;appearance:none;min-width:210px;transition:border-color .2s}
+select#clientSelect:focus{border-color:var(--green)}
+.selector-arrow{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:10px;pointer-events:none}
+.topbar-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.topbar-btn:hover{border-color:var(--green);color:var(--green)}
+.topbar-btn.danger:hover{border-color:var(--orange);color:var(--orange)}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);background:var(--green-dim);padding:5px 10px;border-radius:20px;border:1px solid rgba(0,229,160,.2)}
+.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.content{padding:24px 28px;flex:1}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:8px}
+.section-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.section-line{flex:1;height:1px;background:var(--border)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:18px 20px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-3px);border-color:#353a50;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--card-r) var(--card-r) 0 0}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),#00b8ff)}
+.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),var(--yellow))}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),#ff6b9d)}
+.stat-card.yellow::before{background:linear-gradient(90deg,var(--yellow),var(--orange))}
+.stat-card.teal::before{background:linear-gradient(90deg,var(--teal),var(--green))}
+.stat-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:12px}
+.stat-card.green .stat-icon{background:var(--green-dim)}
+.stat-card.orange .stat-icon{background:var(--orange-dim)}
+.stat-card.blue .stat-icon{background:var(--blue-dim)}
+.stat-card.purple .stat-icon{background:var(--purple-dim)}
+.stat-card.yellow .stat-icon{background:var(--yellow-dim)}
+.stat-card.teal .stat-icon{background:var(--teal-dim)}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em;font-weight:600;margin-bottom:5px}
+.stat-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;line-height:1;margin-bottom:5px}
+.stat-card.green .stat-value{color:var(--green)}
+.stat-card.orange .stat-value{color:var(--orange)}
+.stat-card.blue .stat-value{color:var(--blue)}
+.stat-card.purple .stat-value{color:var(--purple)}
+.stat-card.yellow .stat-value{color:var(--yellow)}
+.stat-card.teal .stat-value{color:var(--teal)}
+.stat-sub{font-size:11px;color:var(--muted);line-height:1.4}
+.stat-delta{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px}
+.delta-good{background:var(--green-dim);color:var(--green)}
+.wellness-card{background:linear-gradient(135deg,#151820 0%,#1a1f2e 100%);border:1px solid var(--border);border-radius:var(--card-r);padding:24px;position:relative;overflow:hidden;margin-bottom:24px}
+.wellness-score-wrap{display:flex;align-items:center;gap:28px}
+.wellness-ring-wrap{position:relative;flex-shrink:0}
+.wellness-ring-wrap svg{transform:rotate(-90deg)}
+.wellness-number{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.wellness-num{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;line-height:1}
+.wellness-max{font-size:11px;color:var(--muted)}
+.wellness-info{flex:1}
+.wellness-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
+.wellness-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.wellness-bars{display:flex;flex-direction:column;gap:9px}
+.wellness-bar-row{display:flex;align-items:center;gap:10px}
+.wellness-bar-label{font-size:11px;color:var(--muted);width:120px;flex-shrink:0}
+.wellness-bar-track{flex:1;height:5px;background:var(--border);border-radius:10px;overflow:hidden}
+.wellness-bar-fill{height:100%;border-radius:10px;transition:width 1.2s ease}
+.wellness-bar-pct{font-size:11px;font-weight:600;width:34px;text-align:right}
+.habit-rings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:24px;margin-bottom:24px}
+.habit-rings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px;margin-top:8px}
+.habit-ring-item{display:flex;flex-direction:column;align-items:center;gap:10px}
+.habit-ring-wrap{position:relative}
+.habit-ring-wrap svg{transform:rotate(-90deg)}
+.habit-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.habit-ring-emoji{font-size:18px;line-height:1}
+.habit-ring-pct{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1}
+.habit-ring-label{font-size:12px;font-weight:600;color:var(--text)}
+.habit-ring-sub{font-size:11px;color:var(--muted)}
+.streak-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:22px;margin-bottom:24px}
+.streak-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:12px}
+.streak-item{background:var(--surface2);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--border);transition:all .2s}
+.streak-item:hover{border-color:#353a50;transform:translateY(-2px)}
+.streak-emoji{font-size:28px;margin-bottom:8px;display:block}
+.streak-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:4px}
+.streak-name{font-size:12px;color:var(--muted)}
+.badges-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.badge-item{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;transition:all .2s}
+.badge-item.earned{border-color:rgba(0,229,160,.3);background:var(--green-dim);color:var(--green)}
+.badge-item.locked{opacity:.35}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:22px}
+.chart-card.full-width{grid-column:1/-1}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.chart-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.chart-subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+.chart-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.chart-badge.green{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,229,160,.2)}
+.chart-badge.orange{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(255,112,67,.2)}
+.chart-badge.purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(176,108,255,.2)}
+.chart-badge.blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(77,159,255,.2)}
+.chart-badge.yellow{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(255,209,102,.2)}
+canvas{width:100%!important}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);overflow:hidden;margin-bottom:24px}
+.table-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;padding:11px 16px;text-align:left;background:var(--surface2)}
+td{padding:12px 16px;font-size:13px;border-top:1px solid var(--border);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.015)}
+.trend-pill{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.yes-pill{background:var(--green-dim);color:var(--green);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.no-pill{background:var(--orange-dim);color:var(--orange);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.notes-timeline{display:flex;flex-direction:column;gap:0}
+.note-item{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--border)}
+.note-item:last-child{border-bottom:none}
+.note-dot{width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:4px}
+.note-date{font-size:11px;color:var(--muted);margin-bottom:4px}
+.note-text{font-size:13px;line-height:1.6}
+.empty-state{text-align:center;padding:80px 40px;color:var(--muted)}
+.empty-state .big{font-size:52px;margin-bottom:16px}
+.empty-state p{font-size:14px;line-height:1.8}
+.error-banner{background:var(--orange-dim);border:1px solid rgba(255,112,67,.3);border-radius:var(--card-r);padding:16px 20px;font-size:13px;color:var(--orange);margin-bottom:20px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.anim{opacity:0;animation:fadeIn .5s ease forwards}
+.anim-1{animation-delay:.05s}.anim-2{animation-delay:.1s}.anim-3{animation-delay:.15s}
+.anim-4{animation-delay:.2s}.anim-5{animation-delay:.25s}.anim-6{animation-delay:.3s}
+@media(max-width:1100px){.charts-grid{grid-template-columns:1fr}.charts-grid .chart-card.full-width{grid-column:1}}
+@media(max-width:768px){.wellness-score-wrap{flex-direction:column}}
+@media(max-width:640px){.sidebar{display:none}.main{margin-left:0}.content{padding:16px}.stats-row{grid-template-columns:1fr 1fr}.topbar{padding:0 16px;gap:8px}}
 </style>
 </head>
 <body>
-
-<!-- PASSWORD SCREEN -->
 <div id="passwordScreen">
   <div class="login-box">
-    <div class="login-logo">PS</div>
-    <div class="login-title">Paresh Sampada</div>
-    <div class="login-sub">Enter your password to access the dashboard</div>
-    <input class="login-input" type="password" id="passwordInput" placeholder="Enter password"
-      onkeydown="if(event.key==='Enter') checkPassword()">
+    <div class="login-logo">VC</div>
+    <div class="login-title">VitalCoach</div>
+    <div class="login-sub">Your professional health coaching dashboard.<br>Sign in to continue.</div>
+    <input class="login-input" type="password" id="passwordInput" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkPassword()">
     <button class="login-btn" onclick="checkPassword()">🔐 Access Dashboard</button>
     <div class="login-error" id="loginError">❌ Incorrect password. Try again.</div>
   </div>
 </div>
-
-<!-- LOADING SCREEN -->
 <div id="loadingScreen">
   <div class="spinner"></div>
-  <div class="loading-text">Fetching client data from Google Sheets...</div>
+  <div class="loading-text">Connecting to Google Sheets...</div>
 </div>
-
-<!-- APP -->
 <div id="app" style="display:none">
   <nav class="sidebar">
     <div class="logo-mark">VC</div>
-    <div class="nav-icon active" title="Dashboard">📊</div>
-    <div class="nav-icon" title="Clients">👥</div>
-    <div class="nav-icon" title="Programs">🎯</div>
-    <div class="nav-icon" title="Nutrition">🥗</div>
-    <div class="nav-icon" title="Reports">📋</div>
+    <div class="nav-icon active">📊</div>
+    <div class="nav-icon">👥</div>
+    <div class="nav-icon">🎯</div>
+    <div class="nav-icon">🏋️</div>
+    <div class="nav-icon">🥗</div>
+    <div class="nav-icon">📋</div>
     <div style="flex:1"></div>
-    <div class="nav-icon" title="Settings">⚙️</div>
+    <div class="nav-icon">⚙️</div>
   </nav>
-
   <div class="main">
     <header class="topbar">
       <div class="topbar-title">Vital<span>Coach</span></div>
-      <button class="sync-btn" onclick="fetchData(true)">🔄 Sync Sheet</button>
+      <div class="live-badge"><div class="live-dot"></div>Live</div>
+      <button class="topbar-btn" onclick="fetchData(true)">🔄 Sync</button>
       <div class="client-selector-wrap">
-        <select id="clientSelect" onchange="loadClient(this.value)">
-          <option value="">— Select Client —</option>
-        </select>
+        <select id="clientSelect" onchange="loadClient(this.value)"><option value="">— Select Client —</option></select>
         <span class="selector-arrow">▼</span>
       </div>
-      <span class="badge" id="activeBadge" style="display:none">Active</span>
-      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+      <button class="topbar-btn danger" onclick="logout()">🚪 Logout</button>
     </header>
     <main class="content" id="content">
-      <div class="empty-state">
-        <div class="big">📈</div>
-        <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>
-        Track weight, body fat %, visceral fat and more.<br>All your client data in one beautiful view.</p>
+      <div class="empty-state"><div class="big">📈</div>
+        <p><strong style="color:var(--text);font-size:20px;">Welcome to VitalCoach Pro</strong><br><br>Select a client from the dropdown above to view<br>their complete health &amp; habit dashboard.</p>
       </div>
     </main>
   </div>
 </div>
-
 <script>
-// ═══════════════════════════════════
-// YOUR APPS SCRIPT API URL
-// ═══════════════════════════════════
-const API_URL  = 'https://script.google.com/macros/s/AKfycbyPVVqNme0ybqxX1cBR3KijQKsUWxgknn6-oRamMH80SwpiHRcq012Wg5ZtG6MXcJaN/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbyPVVqNme0ybqxX1cBR3KijQKsUWxgknn6-oRamMH80SwpiHRcq012Wg5ZtG6MXcJaN/exec';
+const PASSWORD='PS2026;
+const COL={name:'Client Name',date:'Date',weight:'Weight',fat:'Fat%',visceral:'Visceral Fat',workout:'Workout Done',meditation:'Meditation Done',food:'Food Plates Shared',water:'Water (L)',sleep:'Sleep (hrs)',energy:'Energy Level',notes:'Coach Notes'};
+const TARGETS={workout:5,meditation:7,food:5,water:2.5,sleep:7};
+let allData=[],charts={};
 
-// ⚠️ CHANGE THIS TO YOUR OWN PASSWORD
-const PASSWORD = 'PS2026';
-
-// ═══════════════════════════════════
-// COLUMN NAMES — must match your Sheet header exactly
-// ═══════════════════════════════════
-const COL = {
-  name:     'Client Name',
-  date:     'Date',
-  weight:   'Weight',
-  fat:      'Fat%',
-  visceral: 'Visceral Fat'
-};
-
-let allData = [];
-let charts  = {};
-
-// ── PASSWORD ──
-function checkPassword() {
-  if (document.getElementById('passwordInput').value === PASSWORD) {
-    document.getElementById('passwordScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
+function checkPassword(){
+  if(document.getElementById('passwordInput').value===PASSWORD){
+    document.getElementById('passwordScreen').style.display='none';
+    document.getElementById('app').style.display='block';
     fetchData();
-  } else {
-    document.getElementById('loginError').style.display = 'block';
-    document.getElementById('passwordInput').value = '';
+  }else{
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('passwordInput').value='';
     document.getElementById('passwordInput').focus();
   }
 }
-
-function logout() {
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('passwordScreen').style.display = 'flex';
-  document.getElementById('passwordInput').value = '';
-  document.getElementById('loginError').style.display = 'none';
+function logout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('passwordScreen').style.display='flex';
+  document.getElementById('passwordInput').value='';
+  document.getElementById('loginError').style.display='none';
   destroyCharts();
 }
-
-// ── FETCH DATA ──
-async function fetchData(showAlert = false) {
-  const loading = document.getElementById('loadingScreen');
-  loading.style.display = 'flex';
-  try {
-    const res  = await fetch(API_URL);
-    const json = await res.json();
-    if (json.error) throw new Error(json.error);
-
-    allData = json.data || [];
-
-    const sel   = document.getElementById('clientSelect');
-    const prev  = sel.value;
-    sel.innerHTML = '<option value="">— Select Client —</option>';
-
-    const clients = [...new Set(allData.map(r => r[COL.name]).filter(Boolean))];
-    clients.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      sel.appendChild(opt);
-    });
-
-    if (prev && clients.includes(prev)) { sel.value = prev; loadClient(prev); }
-    if (showAlert) alert(`✅ Synced!\n${json.total_records} records • ${json.total_clients} clients\nUpdated: ${json.last_updated}`);
-
-  } catch (err) {
-    document.getElementById('content').innerHTML = `
-      <div class="error-banner">⚠️ Could not load data: ${err.message}<br>
-      <small>Check your Apps Script is deployed and Sheet ID is correct.</small></div>
-      <div class="empty-state"><div class="big">⚠️</div>
-      <p>Unable to connect to Google Sheets.<br>Try clicking 🔄 Sync Sheet to retry.</p></div>`;
-  } finally {
-    loading.style.display = 'none';
-  }
+async function fetchData(showAlert=false){
+  const L=document.getElementById('loadingScreen');L.style.display='flex';
+  try{
+    const res=await fetch(API_URL);const json=await res.json();
+    if(json.error)throw new Error(json.error);
+    allData=json.data||[];
+    const sel=document.getElementById('clientSelect');const prev=sel.value;
+    sel.innerHTML='<option value="">— Select Client —</option>';
+    const clients=[...new Set(allData.map(r=>r[COL.name]).filter(Boolean))];
+    clients.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+    if(prev&&clients.includes(prev)){sel.value=prev;loadClient(prev);}
+    if(showAlert)alert('✅ Synced!\n'+json.total_records+' records • '+json.total_clients+' clients\n'+json.last_updated);
+  }catch(err){
+    document.getElementById('content').innerHTML='<div class="error-banner">⚠️ '+err.message+'<br><small>Check Apps Script deployment and Sheet ID.</small></div><div class="empty-state"><div class="big">⚠️</div><p>Could not connect to Google Sheets.<br>Click 🔄 Sync to retry.</p></div>';
+  }finally{L.style.display='none';}
 }
-
-// ── HELPERS ──
-function parseDate(s) {
-  if (!s) return new Date(0);
-  if (typeof s === 'string' && s.includes('/')) {
-    const p = s.split('/');
-    return new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
-  }
+function parseDate(s){
+  if(!s)return new Date(0);
+  if(typeof s==='string'&&s.includes('/')){const p=s.split('/');return new Date(p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0'));}
   return new Date(s);
 }
-
-function fmt(s) {
-  const d = parseDate(s);
-  if (isNaN(d)) return String(s);
-  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+function fmt(s){const d=parseDate(s);return isNaN(d)?String(s):d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'});}
+function fmtW(s){const d=parseDate(s);return isNaN(d)?String(s):d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
+function isYes(v){if(!v)return false;return String(v).toLowerCase().trim()==='yes'||v===true||v===1;}
+function nv(v,f=0){const x=parseFloat(v);return isNaN(x)?f:x;}
+function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
+function cOpts(yL,extra={}){
+  return Object.assign({responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1c2030',borderColor:'#252a3a',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#6b7394',padding:12,titleFont:{family:'Syne',size:13},callbacks:{label:ctx=>' '+ctx.parsed.y+' '+yL}}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}}}},extra);
+}
+function svgRing(pct,color,size=100,stroke=9){
+  const r=(size-stroke*2)/2;const circ=2*Math.PI*r;
+  const dash=(pct/100)*circ;const gap=circ-dash;
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'"><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="'+stroke+'"/><circle cx="'+(size/2)+'" cy="'+(size/2)+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+stroke+'" stroke-linecap="round" stroke-dasharray="'+dash+' '+gap+'" style="transition:stroke-dasharray 1.2s ease;"/></svg>';
+}
+function calcWellness(rows){
+  if(!rows.length)return 0;
+  const first=rows[0],last=rows[rows.length-1];
+  const last7=rows.slice(-7);
+  const wPct=first[COL.weight]?Math.min(100,Math.max(0,(nv(first[COL.weight])-nv(last[COL.weight]))/nv(first[COL.weight])*100*10)):50;
+  const woC=last7.filter(r=>isYes(r[COL.workout])).length/Math.min(7,last7.length)*100;
+  const mC=last7.filter(r=>isYes(r[COL.meditation])).length/Math.min(7,last7.length)*100;
+  const fC=last7.filter(r=>nv(r[COL.food])>0).length/Math.min(7,last7.length)*100;
+  const hAvg=(woC+mC+fC)/3;
+  const vPct=first[COL.visceral]?Math.min(100,Math.max(0,(nv(first[COL.visceral])-nv(last[COL.visceral]))/nv(first[COL.visceral])*100*5+50)):50;
+  return Math.round(wPct*0.3+hAvg*0.4+vPct*0.3);
+}
+function groupByWeek(rows){
+  const wks={};
+  rows.forEach(r=>{
+    const d=parseDate(r[COL.date]);const m=new Date(d);m.setDate(d.getDate()-d.getDay()+1);
+    const k=m.toISOString().split('T')[0];if(!wks[k])wks[k]=[];wks[k].push(r);
+  });
+  return Object.entries(wks).sort((a,b)=>a[0].localeCompare(b[0]));
 }
 
-function destroyCharts() {
-  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
-  charts = {};
-}
-
-function chartOpts(yLabel) {
-  return {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: '#1c2030', borderColor: '#252a3a', borderWidth: 1,
-        titleColor: '#e8eaf2', bodyColor: '#6b7394', padding: 12,
-        titleFont: { family: 'Syne', size: 13 },
-        callbacks: { label: ctx => ` ${ctx.parsed.y} ${yLabel}` }
-      }
-    },
-    scales: {
-      x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7394', font: { family: 'Inter', size: 11 } } },
-      y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7394', font: { family: 'Inter', size: 11 } } }
-    }
-  };
-}
-
-// ── LOAD CLIENT ──
-function loadClient(name) {
+function loadClient(name){
   destroyCharts();
-  const content = document.getElementById('content');
-  const badge   = document.getElementById('activeBadge');
+  const content=document.getElementById('content');
+  if(!name){content.innerHTML='<div class="empty-state"><div class="big">📈</div><p><strong style="color:var(--text);font-size:20px;">Select a client above</strong><br><br>All your client data in one beautiful view.</p></div>';return;}
+  const rows=allData.filter(r=>r[COL.name]===name).sort((a,b)=>parseDate(a[COL.date])-parseDate(b[COL.date]));
+  if(!rows.length){content.innerHTML='<div class="empty-state"><div class="big">🔍</div><p>No records found for <strong>'+name+'</strong>.</p></div>';return;}
+  const first=rows[0],last=rows[rows.length-1];
+  const wLost=(nv(first[COL.weight])-nv(last[COL.weight])).toFixed(1);
+  const fLost=(nv(first[COL.fat])-nv(last[COL.fat])).toFixed(1);
+  const vDrop=nv(first[COL.visceral])-nv(last[COL.visceral]);
+  const weeks=Math.max(1,Math.round((parseDate(last[COL.date])-parseDate(first[COL.date]))/(7*864e5)));
+  const last7=rows.slice(-7);
+  const woCount=last7.filter(r=>isYes(r[COL.workout])).length;
+  const medCount=last7.filter(r=>isYes(r[COL.meditation])).length;
+  const foodTotal=last7.reduce((s,r)=>s+nv(r[COL.food]),0);
+  const woPct=Math.round(woCount/Math.min(7,last7.length)*100);
+  const medPct=Math.round(medCount/Math.min(7,last7.length)*100);
+  const foodPct=Math.min(100,Math.round(foodTotal/Math.max(1,last7.length*5)*100));
+  const avgWater=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.water]),0)/last7.length).toFixed(1):'0';
+  const avgSleep=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.sleep]),0)/last7.length).toFixed(1):'0';
+  const avgEnergy=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.energy]),0)/last7.length).toFixed(1):'0';
+  let streak=0;
+  for(let i=rows.length-1;i>=0;i--){if(isYes(rows[i][COL.workout])&&isYes(rows[i][COL.meditation]))streak++;else break;}
+  const wellness=calcWellness(rows);
+  const leanMass=(nv(last[COL.weight])*(1-nv(last[COL.fat])/100)).toFixed(1);
+  const notedRows=rows.filter(r=>r[COL.notes]&&String(r[COL.notes]).trim()!='').slice(-5).reverse();
+  const badges=[
+    {emoji:'🎯',name:'First Check-in',earned:rows.length>=1},
+    {emoji:'📅',name:'1 Month In',earned:weeks>=4},
+    {emoji:'💪',name:'5 Workouts',earned:rows.filter(r=>isYes(r[COL.workout])).length>=5},
+    {emoji:'🧘',name:'7 Meditations',earned:rows.filter(r=>isYes(r[COL.meditation])).length>=7},
+    {emoji:'⚖️',name:'First 2kg Lost',earned:nv(wLost)>=2},
+    {emoji:'🔥',name:'5kg Milestone',earned:nv(wLost)>=5},
+    {emoji:'🏆',name:'10kg Champion',earned:nv(wLost)>=10},
+    {emoji:'💧',name:'Hydration Hero',earned:nv(avgWater)>=TARGETS.water},
+    {emoji:'😴',name:'Sleep Champion',earned:nv(avgSleep)>=TARGETS.sleep},
+    {emoji:'🌟',name:'Wellness 80+',earned:wellness>=80},
+  ];
+  const weekGroups=groupByWeek(rows);
+  const weekLabels=weekGroups.map(([k])=>fmtW(k.split('-').reverse().join('/')));
+  const weekWo=weekGroups.map(([,rs])=>rs.filter(r=>isYes(r[COL.workout])).length);
+  const weekMed=weekGroups.map(([,rs])=>rs.filter(r=>isYes(r[COL.meditation])).length);
+  const weekFood=weekGroups.map(([,rs])=>rs.reduce((s,r)=>s+nv(r[COL.food]),0));
+  const labels=rows.map(r=>fmt(r[COL.date]));
+  const weights=rows.map(r=>nv(r[COL.weight]));
+  const fats=rows.map(r=>nv(r[COL.fat]));
+  const viscerals=rows.map(r=>nv(r[COL.visceral]));
+  const energies=rows.map(r=>nv(r[COL.energy]));
+  const sleeps=rows.map(r=>nv(r[COL.sleep]));
+  const waters=rows.map(r=>nv(r[COL.water]));
+  const wColor=wellness>=80?'var(--green)':wellness>=60?'var(--yellow)':'var(--orange)';
+  const wLabel=wellness>=80?'Excellent 🌟':wellness>=60?'Good 👍':wellness>=40?'Fair 💪':'Needs Focus ⚡';
+  const compPct=Math.min(100,Math.round(Math.abs(wLost)*10));
+  const habitAvg=Math.round((woPct+medPct+foodPct)/3);
+  const metPct=Math.min(100,Math.round((Math.abs(vDrop)+Math.abs(fLost))*8));
 
-  if (!name) {
-    badge.style.display = 'none';
-    content.innerHTML = `<div class="empty-state"><div class="big">📈</div>
-      <p><strong style="color:var(--text);font-size:18px;">Select a client to view their dashboard</strong><br><br>All your client data in one beautiful view.</p></div>`;
-    return;
-  }
+  content.innerHTML=`
+  <div class="section-header anim anim-1"><span class="section-title">Overview</span><div class="section-line"></div></div>
+  <div class="stats-row anim anim-1">
+    <div class="stat-card green"><div class="stat-icon">📅</div><div class="stat-label">Start Date</div><div class="stat-value" style="font-size:17px">${fmt(first[COL.date])}</div><div class="stat-sub">${weeks} weeks on programme</div></div>
+    <div class="stat-card orange"><div class="stat-icon">⚖️</div><div class="stat-label">Starting Weight</div><div class="stat-value">${first[COL.weight]}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Current: <strong>${last[COL.weight]} kg</strong></div></div>
+    <div class="stat-card green"><div class="stat-icon">📉</div><div class="stat-label">Weight Lost</div><div class="stat-value">${Math.abs(wLost)}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub"><span class="stat-delta delta-good">${parseFloat(wLost)>0?'↓':'↑'} ${Math.abs((wLost/nv(first[COL.weight])*100)).toFixed(1)}%</span></div></div>
+    <div class="stat-card blue"><div class="stat-icon">🔥</div><div class="stat-label">Fat % Reduced</div><div class="stat-value">${Math.abs(fLost)}<span style="font-size:13px;font-weight:400"> %</span></div><div class="stat-sub">${first[COL.fat]}% → ${last[COL.fat]}%</div></div>
+    <div class="stat-card purple"><div class="stat-icon">🧠</div><div class="stat-label">Visceral Drop</div><div class="stat-value">${Math.abs(vDrop)}<span style="font-size:13px;font-weight:400"> pts</span></div><div class="stat-sub">Level ${first[COL.visceral]} → ${last[COL.visceral]}</div></div>
+    <div class="stat-card teal"><div class="stat-icon">🫀</div><div class="stat-label">Lean Mass</div><div class="stat-value">${leanMass}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Muscle &amp; bone mass</div></div>
+  </div>
 
-  const rows = allData
-    .filter(r => r[COL.name] === name)
-    .sort((a, b) => parseDate(a[COL.date]) - parseDate(b[COL.date]));
-
-  if (!rows.length) {
-    content.innerHTML = `<div class="empty-state"><div class="big">🔍</div>
-      <p>No records found for <strong>${name}</strong>.<br>Add data to your Google Sheet and click 🔄 Sync.</p></div>`;
-    return;
-  }
-
-  badge.style.display = 'inline-flex';
-  const first = rows[0], last = rows[rows.length - 1];
-  const wLost = (parseFloat(first[COL.weight])   - parseFloat(last[COL.weight])).toFixed(1);
-  const fLost = (parseFloat(first[COL.fat])       - parseFloat(last[COL.fat])).toFixed(1);
-  const vDrop =  parseFloat(first[COL.visceral])  - parseFloat(last[COL.visceral]);
-  const weeks = Math.max(1, Math.round((parseDate(last[COL.date]) - parseDate(first[COL.date])) / (7*24*3600*1000)));
-  const labels    = rows.map(r => fmt(r[COL.date]));
-  const weights   = rows.map(r => parseFloat(r[COL.weight]));
-  const fats      = rows.map(r => parseFloat(r[COL.fat]));
-  const viscerals = rows.map(r => parseFloat(r[COL.visceral]));
-
-  content.innerHTML = `
-  <div class="stats-row">
-    <div class="stat-card green anim anim-1">
-      <div class="stat-icon">📅</div>
-      <div class="stat-label">Start Date</div>
-      <div class="stat-value" style="font-size:18px">${fmt(first[COL.date])}</div>
-      <div class="stat-sub">${weeks} weeks on programme</div>
-    </div>
-    <div class="stat-card orange anim anim-2">
-      <div class="stat-icon">⚖️</div>
-      <div class="stat-label">Starting Weight</div>
-      <div class="stat-value">${first[COL.weight]}<span style="font-size:14px;font-weight:400"> kg</span></div>
-      <div class="stat-sub">Current: ${last[COL.weight]} kg</div>
-    </div>
-    <div class="stat-card green anim anim-3">
-      <div class="stat-icon">📉</div>
-      <div class="stat-label">Total Weight Lost</div>
-      <div class="stat-value">${Math.abs(wLost)}<span style="font-size:14px;font-weight:400"> kg</span></div>
-      <div class="stat-sub"><span class="stat-delta delta-good">${parseFloat(wLost)>0?'↓':'↑'} ${Math.abs((wLost/parseFloat(first[COL.weight])*100)).toFixed(1)}% of body weight</span></div>
-    </div>
-    <div class="stat-card blue anim anim-4">
-      <div class="stat-icon">🔥</div>
-      <div class="stat-label">Fat % Reduction</div>
-      <div class="stat-value">${Math.abs(fLost)}<span style="font-size:14px;font-weight:400"> %</span></div>
-      <div class="stat-sub">${first[COL.fat]}% → ${last[COL.fat]}%</div>
-    </div>
-    <div class="stat-card purple anim anim-5">
-      <div class="stat-icon">🧠</div>
-      <div class="stat-label">Visceral Fat Drop</div>
-      <div class="stat-value">${Math.abs(vDrop)}<span style="font-size:14px;font-weight:400"> pts</span></div>
-      <div class="stat-sub">Level ${first[COL.visceral]} → Level ${last[COL.visceral]}</div>
-    </div>
-    <div class="stat-card blue anim anim-1">
-      <div class="stat-icon">📋</div>
-      <div class="stat-label">Check-ins</div>
-      <div class="stat-value">${rows.length}</div>
-      <div class="stat-sub">Total sessions recorded</div>
+  <div class="section-header anim anim-2"><span class="section-title">Wellness Score</span><div class="section-line"></div></div>
+  <div class="wellness-card anim anim-2">
+    <div class="wellness-score-wrap">
+      <div class="wellness-ring-wrap">${svgRing(wellness,wColor,120,11)}<div class="wellness-number"><div class="wellness-num" style="color:${wColor}">${wellness}</div><div class="wellness-max">/100</div></div></div>
+      <div class="wellness-info">
+        <div class="wellness-title">Overall Wellness Score</div>
+        <div class="wellness-sub">Status: <strong style="color:${wColor}">${wLabel}</strong> — Based on body composition, habit compliance and metabolic health.</div>
+        <div class="wellness-bars">
+          <div class="wellness-bar-row"><span class="wellness-bar-label">Body Composition</span><div class="wellness-bar-track"><div class="wellness-bar-fill" style="width:${compPct}%;background:var(--green)"></div></div><span class="wellness-bar-pct" style="color:var(--green)">${compPct}%</span></div>
+          <div class="wellness-bar-row"><span class="wellness-bar-label">Habit Compliance</span><div class="wellness-bar-track"><div class="wellness-bar-fill" style="width:${habitAvg}%;background:var(--blue)"></div></div><span class="wellness-bar-pct" style="color:var(--blue)">${habitAvg}%</span></div>
+          <div class="wellness-bar-row"><span class="wellness-bar-label">Metabolic Health</span><div class="wellness-bar-track"><div class="wellness-bar-fill" style="width:${metPct}%;background:var(--purple)"></div></div><span class="wellness-bar-pct" style="color:var(--purple)">${metPct}%</span></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="charts-grid">
-    <div class="chart-card full-width anim anim-2">
-      <div class="chart-header">
-        <div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div>
-        <span class="chart-badge green">↓ ${Math.abs(wLost)} kg lost</span>
-      </div>
-      <canvas id="weightChart" height="90"></canvas>
-    </div>
-    <div class="chart-card anim anim-3">
-      <div class="chart-header">
-        <div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div>
-        <span class="chart-badge orange">↓ ${Math.abs(fLost)}% reduced</span>
-      </div>
-      <canvas id="fatChart" height="160"></canvas>
-    </div>
-    <div class="chart-card anim anim-4">
-      <div class="chart-header">
-        <div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–30 • healthy: below 13</div></div>
-        <span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels dropped</span>
-      </div>
-      <canvas id="visceralChart" height="160"></canvas>
+  <div class="section-header anim anim-3"><span class="section-title">This Week's Habit Compliance</span><div class="section-line"></div><span style="font-size:11px;color:var(--muted)">Last 7 records</span></div>
+  <div class="habit-rings-card anim anim-3">
+    <div class="habit-rings-grid">
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(woPct,'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💪</div><div class="habit-ring-pct" style="color:var(--blue)">${woPct}%</div></div></div><div class="habit-ring-label">Workouts</div><div class="habit-ring-sub">${woCount}/${Math.min(7,last7.length)} sessions</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(medPct,'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🧘</div><div class="habit-ring-pct" style="color:var(--purple)">${medPct}%</div></div></div><div class="habit-ring-label">Meditation</div><div class="habit-ring-sub">${medCount}/${Math.min(7,last7.length)} days</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(foodPct,'#00e5a0',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🍽️</div><div class="habit-ring-pct" style="color:var(--green)">${foodPct}%</div></div></div><div class="habit-ring-label">Food Plates</div><div class="habit-ring-sub">${foodTotal} plates</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgWater)/TARGETS.water*100)),'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💧</div><div class="habit-ring-pct" style="color:var(--blue)">${avgWater}L</div></div></div><div class="habit-ring-label">Avg Water</div><div class="habit-ring-sub">Target ${TARGETS.water}L</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgSleep)/TARGETS.sleep*100)),'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">😴</div><div class="habit-ring-pct" style="color:var(--purple)">${avgSleep}h</div></div></div><div class="habit-ring-label">Avg Sleep</div><div class="habit-ring-sub">Target ${TARGETS.sleep}h</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgEnergy)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${avgEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Avg out of 10</div></div>
     </div>
   </div>
 
-  <div class="table-card anim anim-5">
-    <div class="table-head">
-      <div><div class="chart-title">Session Log</div><div class="chart-subtitle" style="margin-top:4px">Complete history for ${name}</div></div>
-      <span class="chart-badge green">${rows.length} sessions</span>
+  <div class="section-header anim anim-4"><span class="section-title">Streaks &amp; Achievements</span><div class="section-line"></div></div>
+  <div class="streak-panel anim anim-4">
+    <div class="streak-grid">
+      <div class="streak-item"><span class="streak-emoji">🔥</span><div class="streak-num" style="color:var(--orange)">${streak}</div><div class="streak-name">Day Streak</div></div>
+      <div class="streak-item"><span class="streak-emoji">💪</span><div class="streak-num" style="color:var(--blue)">${rows.filter(r=>isYes(r[COL.workout])).length}</div><div class="streak-name">Total Workouts</div></div>
+      <div class="streak-item"><span class="streak-emoji">🧘</span><div class="streak-num" style="color:var(--purple)">${rows.filter(r=>isYes(r[COL.meditation])).length}</div><div class="streak-name">Meditations</div></div>
+      <div class="streak-item"><span class="streak-emoji">🍽️</span><div class="streak-num" style="color:var(--green)">${rows.reduce((s,r)=>s+nv(r[COL.food]),0)}</div><div class="streak-name">Plates Shared</div></div>
     </div>
-    <table>
-      <thead><tr><th>Date</th><th>Weight (kg)</th><th>Body Fat %</th><th>Visceral Fat</th><th>Wt Change</th><th>Fat % Change</th></tr></thead>
-      <tbody>
-        ${rows.map((row, i) => {
-          const prev = rows[i-1];
-          const wD = prev ? (parseFloat(row[COL.weight]) - parseFloat(prev[COL.weight])).toFixed(1) : null;
-          const fD = prev ? (parseFloat(row[COL.fat])    - parseFloat(prev[COL.fat])).toFixed(1)    : null;
-          const wG = wD !== null && parseFloat(wD) <= 0;
-          const fG = fD !== null && parseFloat(fD) <= 0;
-          return `<tr>
-            <td style="font-weight:500">${fmt(row[COL.date])}</td>
-            <td style="font-family:'Syne',sans-serif;font-weight:600">${row[COL.weight]}</td>
-            <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--orange)">${row[COL.fat]}%</td>
-            <td style="font-family:'Syne',sans-serif;font-weight:600;color:var(--purple)">${row[COL.visceral]}</td>
-            <td>${wD!==null?`<span class="trend-pill" style="background:${wG?'var(--green-dim)':'var(--orange-dim)'};color:${wG?'var(--green)':'var(--orange)'}">${parseFloat(wD)>0?'+':''}${wD} kg</span>`:'<span style="color:var(--muted)">—</span>'}</td>
-            <td>${fD!==null?`<span class="trend-pill" style="background:${fG?'var(--green-dim)':'var(--orange-dim)'};color:${fG?'var(--green)':'var(--orange)'}">${parseFloat(fD)>0?'+':''}${fD}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
+    <div style="margin-top:20px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Badges Earned</div>
+    <div class="badges-row">${badges.map(b=>'<div class="badge-item '+(b.earned?'earned':'locked')+'"><span>'+b.emoji+'</span>'+b.name+'</div>').join('')}</div></div>
+  </div>
+
+  <div class="section-header anim anim-5"><span class="section-title">Body Composition</span><div class="section-line"></div></div>
+  <div class="charts-grid anim anim-5">
+    <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div><span class="chart-badge green">↓ ${Math.abs(wLost)} kg lost</span></div><canvas id="weightChart" height="80"></canvas></div>
+    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div><span class="chart-badge orange">↓ ${Math.abs(fLost)}% reduced</span></div><canvas id="fatChart" height="150"></canvas></div>
+    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–30 • healthy: below 13</div></div><span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels</span></div><canvas id="visceralChart" height="150"></canvas></div>
+  </div>
+
+  <div class="section-header anim anim-5"><span class="section-title">Weekly Habit Trends</span><div class="section-line"></div></div>
+  <div class="charts-grid anim anim-5">
+    <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Habit Compliance by Week</div><div class="chart-subtitle">Workouts • Meditation days • Food plates shared</div></div><span class="chart-badge blue">${weekGroups.length} weeks</span></div><canvas id="habitTrendChart" height="80"></canvas></div>
+    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Daily Water Intake</div><div class="chart-subtitle">Litres per day • target ${TARGETS.water}L</div></div><span class="chart-badge blue">Avg ${avgWater}L</span></div><canvas id="waterChart" height="150"></canvas></div>
+    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Sleep &amp; Energy</div><div class="chart-subtitle">Sleep hours vs energy level (1–10)</div></div><span class="chart-badge yellow">Avg ${avgSleep}h sleep</span></div><canvas id="sleepChart" height="150"></canvas></div>
+  </div>
+
+  ${notedRows.length?`<div class="section-header anim anim-6"><span class="section-title">Coach Notes</span><div class="section-line"></div></div>
+  <div class="table-card anim anim-6"><div class="table-head"><div><div class="chart-title">Session Notes</div><div class="chart-subtitle" style="margin-top:4px">Latest coaching observations</div></div></div>
+  <div style="padding:0 22px"><div class="notes-timeline">${notedRows.map(r=>'<div class="note-item"><div style="display:flex;flex-direction:column;align-items:center;gap:0"><div class="note-dot"></div></div><div style="margin-left:12px"><div class="note-date">'+fmt(r[COL.date])+'</div><div class="note-text">'+r[COL.notes]+'</div></div></div>').join('')}</div></div></div>`:''}
+
+  <div class="section-header anim anim-6"><span class="section-title">Session Log</span><div class="section-line"></div></div>
+  <div class="table-card anim anim-6">
+    <div class="table-head"><div><div class="chart-title">Complete Measurement History</div><div class="chart-subtitle" style="margin-top:4px">${name} • All ${rows.length} sessions</div></div><span class="chart-badge green">${rows.length} records</span></div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th><th>Workout</th><th>Meditation</th><th>Food Plates</th><th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>
+      <tbody>${[...rows].reverse().map((row,i,arr)=>{
+        const prev=arr[i+1];const wD=prev?(nv(row[COL.weight])-nv(prev[COL.weight])).toFixed(1):null;const wG=wD!==null&&parseFloat(wD)<=0;
+        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td>'+(row[COL.workout]?'<span class="'+(isYes(row[COL.workout])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.workout])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td>'+(row[COL.meditation]?'<span class="'+(isYes(row[COL.meditation])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.meditation])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+(row[COL.energy]?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'/10</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
+      }).join('')}</tbody>
+    </table></div>
   </div>`;
 
-  // CHARTS
-  charts.weight = new Chart(document.getElementById('weightChart'), {
-    type: 'line',
-    data: { labels, datasets: [{ data: weights, borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.08)', fill: true, tension: 0.45, pointBackgroundColor: '#00e5a0', pointRadius: 5, pointHoverRadius: 8, borderWidth: 2.5 }] },
-    options: chartOpts('kg')
-  });
-
-  charts.fat = new Chart(document.getElementById('fatChart'), {
-    type: 'line',
-    data: { labels, datasets: [{ data: fats, borderColor: '#ff7043', backgroundColor: 'rgba(255,112,67,0.08)', fill: true, tension: 0.45, pointBackgroundColor: '#ff7043', pointRadius: 5, pointHoverRadius: 8, borderWidth: 2.5 }] },
-    options: chartOpts('%')
-  });
-
-  charts.visceral = new Chart(document.getElementById('visceralChart'), {
-    type: 'bar',
-    data: { labels, datasets: [{ data: viscerals,
-      backgroundColor: viscerals.map(v => v>=13?'rgba(255,112,67,0.7)':v>=10?'rgba(176,108,255,0.7)':'rgba(77,159,255,0.7)'),
-      borderColor: viscerals.map(v => v>=13?'#ff7043':v>=10?'#b06cff':'#4d9fff'),
-      borderWidth: 1.5, borderRadius: 6
-    }]},
-    options: chartOpts('level')
+  requestAnimationFrame(()=>{
+    charts.weight=new Chart(document.getElementById('weightChart'),{type:'line',data:{labels,datasets:[{data:weights,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#00e5a0',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('kg')});
+    charts.fat=new Chart(document.getElementById('fatChart'),{type:'line',data:{labels,datasets:[{data:fats,borderColor:'#ff7043',backgroundColor:'rgba(255,112,67,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#ff7043',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('%')});
+    charts.visceral=new Chart(document.getElementById('visceralChart'),{type:'bar',data:{labels,datasets:[{data:viscerals,backgroundColor:viscerals.map(v=>v>=13?'rgba(255,112,67,0.7)':v>=10?'rgba(176,108,255,0.7)':'rgba(77,159,255,0.7)'),borderColor:viscerals.map(v=>v>=13?'#ff7043':v>=10?'#b06cff':'#4d9fff'),borderWidth:1.5,borderRadius:6}]},options:cOpts('level')});
+    charts.habitTrend=new Chart(document.getElementById('habitTrendChart'),{type:'bar',data:{labels:weekLabels,datasets:[{label:'Workouts',data:weekWo,backgroundColor:'rgba(77,159,255,0.7)',borderColor:'#4d9fff',borderWidth:1.5,borderRadius:5},{label:'Meditation',data:weekMed,backgroundColor:'rgba(176,108,255,0.7)',borderColor:'#b06cff',borderWidth:1.5,borderRadius:5},{label:'Food Plates',data:weekFood,backgroundColor:'rgba(0,229,160,0.7)',borderColor:'#00e5a0',borderWidth:1.5,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:true,labels:{color:'#6b7394',font:{family:'Inter',size:11},boxWidth:10,boxHeight:10}},tooltip:{backgroundColor:'#1c2030',borderColor:'#252a3a',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#6b7394',padding:12}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}}}}});
+    if(waters.some(v=>v>0))charts.water=new Chart(document.getElementById('waterChart'),{type:'line',data:{labels,datasets:[{data:waters,borderColor:'#4d9fff',backgroundColor:'rgba(77,159,255,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#4d9fff',pointRadius:4,borderWidth:2.5},{data:Array(labels.length).fill(TARGETS.water),borderColor:'rgba(77,159,255,0.3)',borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false,tension:0}]},options:cOpts('L')});
+    if(sleeps.some(v=>v>0))charts.sleep=new Chart(document.getElementById('sleepChart'),{type:'line',data:{labels,datasets:[{label:'Sleep',data:sleeps,borderColor:'#b06cff',backgroundColor:'rgba(176,108,255,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#b06cff',pointRadius:4,borderWidth:2.5},{label:'Energy',data:energies,borderColor:'#ffd166',backgroundColor:'transparent',tension:0.4,pointBackgroundColor:'#ffd166',pointRadius:4,borderWidth:2,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{display:true,labels:{color:'#6b7394',font:{family:'Inter',size:11},boxWidth:10,boxHeight:10}},tooltip:{backgroundColor:'#1c2030',borderColor:'#252a3a',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#6b7394',padding:12}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y2:{position:'right',grid:{display:false},ticks:{color:'#ffd166',font:{family:'Inter',size:10}}}}}});
   });
 }
 </script>
