@@ -321,9 +321,9 @@ function loadClient(name){
   const woCount=last7.filter(r=>isYes(r[COL.workout])).length;
   const medCount=last7.filter(r=>isYes(r[COL.meditation])).length;
   const foodTotal=last7.reduce((s,r)=>s+nv(r[COL.food]),0);
-  const woPct=Math.round(woCount/Math.min(7,last7.length)*100);
+  const woPct=Math.round(woCount/Math.max(1,last7.length)*100);
   const medPct=Math.round(medCount/Math.min(7,last7.length)*100);
-  const foodPct=Math.min(100,Math.round(foodTotal/Math.max(1,last7.length*5)*100));
+  const foodPct=Math.min(100,Math.round(foodTotal/14*100));
   const avgWater=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.water]),0)/last7.length).toFixed(1):'0';
   const avgSleep=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.sleep]),0)/last7.length).toFixed(1):'0';
   const avgEnergy=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.energy]),0)/last7.length).toFixed(1):'0';
@@ -356,11 +356,7 @@ function loadClient(name){
   const energies=rows.map(r=>nv(r[COL.energy]));
   const sleeps=rows.map(r=>nv(r[COL.sleep]));
   const waters=rows.map(r=>nv(r[COL.water]));
-  const wColor=wellness>=80?'var(--green)':wellness>=60?'var(--yellow)':'var(--orange)';
-  const wLabel=wellness>=80?'Excellent 🌟':wellness>=60?'Good 👍':wellness>=40?'Fair 💪':'Needs Focus ⚡';
-  const compPct=Math.min(100,Math.round(Math.abs(wLost)*10));
-  const habitAvg=Math.round((woPct+medPct+foodPct)/3);
-  const metPct=Math.min(100,Math.round((Math.abs(vDrop)+Math.abs(fLost))*8));
+
 
   content.innerHTML=`
   <div class="section-header anim anim-1"><span class="section-title">Overview</span><div class="section-line"></div></div>
@@ -373,21 +369,7 @@ function loadClient(name){
     <div class="stat-card teal"><div class="stat-icon">🫀</div><div class="stat-label">Lean Mass</div><div class="stat-value">${leanMass}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Muscle &amp; bone mass</div></div>
   </div>
 
-  <div class="section-header anim anim-2"><span class="section-title">Wellness Score</span><div class="section-line"></div></div>
-  <div class="wellness-card anim anim-2">
-    <div class="wellness-score-wrap">
-      <div class="wellness-ring-wrap">${svgRing(wellness,wColor,120,11)}<div class="wellness-number"><div class="wellness-num" style="color:${wColor}">${wellness}</div><div class="wellness-max">/100</div></div></div>
-      <div class="wellness-info">
-        <div class="wellness-title">Overall Wellness Score</div>
-        <div class="wellness-sub">Status: <strong style="color:${wColor}">${wLabel}</strong> — Based on body composition, habit compliance and metabolic health.</div>
-        <div class="wellness-bars">
-          <div class="wellness-bar-row"><span class="wellness-bar-label">Body Composition</span><div class="wellness-bar-track"><div class="wellness-bar-fill" style="width:${compPct}%;background:var(--green)"></div></div><span class="wellness-bar-pct" style="color:var(--green)">${compPct}%</span></div>
-          <div class="wellness-bar-row"><span class="wellness-bar-label">Habit Compliance</span><div class="wellness-bar-track"><div class="wellness-bar-fill" style="width:${habitAvg}%;background:var(--blue)"></div></div><span class="wellness-bar-pct" style="color:var(--blue)">${habitAvg}%</span></div>
-          <div class="wellness-bar-row"><span class="wellness-bar-label">Metabolic Health</span><div class="wellness-bar-track"><div class="wellness-bar-fill" style="width:${metPct}%;background:var(--purple)"></div></div><span class="wellness-bar-pct" style="color:var(--purple)">${metPct}%</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <div class="section-header anim anim-3"><span class="section-title">This Week's Habit Compliance</span><div class="section-line"></div><span style="font-size:11px;color:var(--muted)">Last 7 records</span></div>
   <div class="habit-rings-card anim anim-3">
@@ -397,7 +379,7 @@ function loadClient(name){
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(foodPct,'#00e5a0',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🍽️</div><div class="habit-ring-pct" style="color:var(--green)">${foodPct}%</div></div></div><div class="habit-ring-label">Food Plates</div><div class="habit-ring-sub">${foodTotal} plates</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgWater)/TARGETS.water*100)),'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💧</div><div class="habit-ring-pct" style="color:var(--blue)">${avgWater}L</div></div></div><div class="habit-ring-label">Avg Water</div><div class="habit-ring-sub">Target ${TARGETS.water}L</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgSleep)/TARGETS.sleep*100)),'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">😴</div><div class="habit-ring-pct" style="color:var(--purple)">${avgSleep}h</div></div></div><div class="habit-ring-label">Avg Sleep</div><div class="habit-ring-sub">Target ${TARGETS.sleep}h</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgEnergy)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${avgEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Avg out of 10</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgEnergy)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${avgEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">From sheet</div></div>
     </div>
   </div>
 
@@ -423,8 +405,8 @@ function loadClient(name){
   <div class="section-header anim anim-5"><span class="section-title">Weekly Habit Trends</span><div class="section-line"></div></div>
   <div class="charts-grid anim anim-5">
     <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Habit Compliance by Week</div><div class="chart-subtitle">Workouts • Meditation days • Food plates shared</div></div><span class="chart-badge blue">${weekGroups.length} weeks</span></div><canvas id="habitTrendChart" height="80"></canvas></div>
-    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Daily Water Intake</div><div class="chart-subtitle">Litres per day • target ${TARGETS.water}L</div></div><span class="chart-badge blue">Avg ${avgWater}L</span></div><canvas id="waterChart" height="150"></canvas></div>
-    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Sleep &amp; Energy</div><div class="chart-subtitle">Sleep hours vs energy level (1–10)</div></div><span class="chart-badge yellow">Avg ${avgSleep}h sleep</span></div><canvas id="sleepChart" height="150"></canvas></div>
+
+
   </div>
 
   ${notedRows.length?`<div class="section-header anim anim-6"><span class="section-title">Coach Notes</span><div class="section-line"></div></div>
@@ -438,7 +420,7 @@ function loadClient(name){
       <thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th><th>Workout</th><th>Meditation</th><th>Food Plates</th><th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>
       <tbody>${[...rows].reverse().map((row,i,arr)=>{
         const prev=arr[i+1];const wD=prev?(nv(row[COL.weight])-nv(prev[COL.weight])).toFixed(1):null;const wG=wD!==null&&parseFloat(wD)<=0;
-        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td>'+(row[COL.workout]?'<span class="'+(isYes(row[COL.workout])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.workout])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td>'+(row[COL.meditation]?'<span class="'+(isYes(row[COL.meditation])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.meditation])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+(row[COL.energy]?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'/10</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
+        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td>'+(row[COL.workout]?'<span class="'+(isYes(row[COL.workout])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.workout])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td>'+(row[COL.meditation]?'<span class="'+(isYes(row[COL.meditation])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.meditation])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+(row[COL.energy]?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
       }).join('')}</tbody>
     </table></div>
   </div>`;
@@ -448,8 +430,8 @@ function loadClient(name){
     charts.fat=new Chart(document.getElementById('fatChart'),{type:'line',data:{labels,datasets:[{data:fats,borderColor:'#ff7043',backgroundColor:'rgba(255,112,67,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#ff7043',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('%')});
     charts.visceral=new Chart(document.getElementById('visceralChart'),{type:'bar',data:{labels,datasets:[{data:viscerals,backgroundColor:viscerals.map(v=>v>=13?'rgba(255,112,67,0.7)':v>=10?'rgba(176,108,255,0.7)':'rgba(77,159,255,0.7)'),borderColor:viscerals.map(v=>v>=13?'#ff7043':v>=10?'#b06cff':'#4d9fff'),borderWidth:1.5,borderRadius:6}]},options:cOpts('level')});
     charts.habitTrend=new Chart(document.getElementById('habitTrendChart'),{type:'bar',data:{labels:weekLabels,datasets:[{label:'Workouts',data:weekWo,backgroundColor:'rgba(77,159,255,0.7)',borderColor:'#4d9fff',borderWidth:1.5,borderRadius:5},{label:'Meditation',data:weekMed,backgroundColor:'rgba(176,108,255,0.7)',borderColor:'#b06cff',borderWidth:1.5,borderRadius:5},{label:'Food Plates',data:weekFood,backgroundColor:'rgba(0,229,160,0.7)',borderColor:'#00e5a0',borderWidth:1.5,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:true,labels:{color:'#6b7394',font:{family:'Inter',size:11},boxWidth:10,boxHeight:10}},tooltip:{backgroundColor:'#1c2030',borderColor:'#252a3a',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#6b7394',padding:12}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}}}}});
-    if(waters.some(v=>v>0))charts.water=new Chart(document.getElementById('waterChart'),{type:'line',data:{labels,datasets:[{data:waters,borderColor:'#4d9fff',backgroundColor:'rgba(77,159,255,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#4d9fff',pointRadius:4,borderWidth:2.5},{data:Array(labels.length).fill(TARGETS.water),borderColor:'rgba(77,159,255,0.3)',borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false,tension:0}]},options:cOpts('L')});
-    if(sleeps.some(v=>v>0))charts.sleep=new Chart(document.getElementById('sleepChart'),{type:'line',data:{labels,datasets:[{label:'Sleep',data:sleeps,borderColor:'#b06cff',backgroundColor:'rgba(176,108,255,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#b06cff',pointRadius:4,borderWidth:2.5},{label:'Energy',data:energies,borderColor:'#ffd166',backgroundColor:'transparent',tension:0.4,pointBackgroundColor:'#ffd166',pointRadius:4,borderWidth:2,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{display:true,labels:{color:'#6b7394',font:{family:'Inter',size:11},boxWidth:10,boxHeight:10}},tooltip:{backgroundColor:'#1c2030',borderColor:'#252a3a',borderWidth:1,titleColor:'#e8eaf2',bodyColor:'#6b7394',padding:12}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6b7394',font:{family:'Inter',size:10}}},y2:{position:'right',grid:{display:false},ticks:{color:'#ffd166',font:{family:'Inter',size:10}}}}}});
+
+
   });
 }
 </script>
