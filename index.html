@@ -313,13 +313,13 @@ function loadClient(name){
   const rows=allData.filter(r=>r[COL.name]===name).sort((a,b)=>parseDate(a[COL.date])-parseDate(b[COL.date]));
   if(!rows.length){content.innerHTML='<div class="empty-state"><div class="big">🔍</div><p>No records found for <strong>'+name+'</strong>.</p></div>';return;}
   const first=rows[0],last=rows[rows.length-1];
-  const wLost=(nv(first[COL.weight])-nv(last[COL.weight])).toFixed(1);
-  const fLost=(nv(first[COL.fat])-nv(last[COL.fat])).toFixed(1);
-  const vDrop=nv(first[COL.visceral])-nv(last[COL.visceral]);
+  const wLost=(nv(first[COL.weight])-nv(last[COL.weight])).toFixed(2);
+  const fLost=(nv(first[COL.fat])-nv(last[COL.fat])).toFixed(2);
+  const vDrop=(nv(first[COL.visceral])-nv(last[COL.visceral])).toFixed(2);
   const weeks=Math.max(1,Math.round((parseDate(last[COL.date])-parseDate(first[COL.date]))/(7*864e5)));
   const last7=rows.slice(-7);
-  const woCount=last7.filter(r=>isYes(r[COL.workout])).length;
-  const medCount=last7.filter(r=>isYes(r[COL.meditation])).length;
+  const woCount=last7.reduce((s,r)=>s+nv(r[COL.workout]),0);
+  const medCount=last7.reduce((s,r)=>s+nv(r[COL.meditation]),0);
   const foodTotal=last7.reduce((s,r)=>s+nv(r[COL.food]),0);
   const woPct=Math.round(woCount/7*100);
   const medPct=Math.round(medCount/7*100);
@@ -328,15 +328,15 @@ function loadClient(name){
   const avgSleep=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.sleep]),0)/last7.length).toFixed(1):'0';
   var _rawEnergy=last7.length?last7[last7.length-1][COL.energy]:null; var lastEnergy=(_rawEnergy!==null&&_rawEnergy!==undefined&&_rawEnergy!=='')?String(_rawEnergy):'—';
   let streak=0;
-  for(let i=rows.length-1;i>=0;i--){if(isYes(rows[i][COL.workout])&&isYes(rows[i][COL.meditation]))streak++;else break;}
+  for(let i=rows.length-1;i>=0;i--){if(nv(rows[i][COL.workout])>0&&nv(rows[i][COL.meditation])>0)streak++;else break;}
   const wellness=calcWellness(rows);
   const leanMass=(nv(last[COL.weight])*(1-nv(last[COL.fat])/100)).toFixed(1);
   const notedRows=rows.filter(r=>r[COL.notes]&&String(r[COL.notes]).trim()!='').slice(-5).reverse();
   const badges=[
     {emoji:'🎯',name:'First Check-in',earned:rows.length>=1},
     {emoji:'📅',name:'1 Month In',earned:weeks>=4},
-    {emoji:'💪',name:'5 Workouts',earned:rows.filter(r=>isYes(r[COL.workout])).length>=7},
-    {emoji:'🧘',name:'7 Meditations',earned:rows.filter(r=>isYes(r[COL.meditation])).length>=7},
+    {emoji:'💪',name:'5 Workouts',earned:rows.reduce((s,r)=>s+nv(r[COL.workout]),0)>=5},
+    {emoji:'🧘',name:'7 Meditations',earned:rows.reduce((s,r)=>s+nv(r[COL.meditation]),0)>=7},
     {emoji:'⚖️',name:'First 2kg Lost',earned:nv(wLost)>=2},
     {emoji:'🔥',name:'5kg Milestone',earned:nv(wLost)>=5},
     {emoji:'🏆',name:'10kg Champion',earned:nv(wLost)>=10},
@@ -346,8 +346,8 @@ function loadClient(name){
   ];
   const weekGroups=groupByWeek(rows);
   const weekLabels=weekGroups.map(([k])=>fmtW(k.split('-').reverse().join('/')));
-  const weekWo=weekGroups.map(([,rs])=>rs.filter(r=>isYes(r[COL.workout])).length);
-  const weekMed=weekGroups.map(([,rs])=>rs.filter(r=>isYes(r[COL.meditation])).length);
+  const weekWo=weekGroups.map(([,rs])=>rs.reduce((s,r)=>s+nv(r[COL.workout]),0));
+  const weekMed=weekGroups.map(([,rs])=>rs.reduce((s,r)=>s+nv(r[COL.meditation]),0));
   const weekFood=weekGroups.map(([,rs])=>rs.reduce((s,r)=>s+nv(r[COL.food]),0));
   const labels=rows.map(r=>fmt(r[COL.date]));
   const weights=rows.map(r=>nv(r[COL.weight]));
@@ -387,8 +387,8 @@ function loadClient(name){
   <div class="streak-panel anim anim-4">
     <div class="streak-grid">
       <div class="streak-item"><span class="streak-emoji">🔥</span><div class="streak-num" style="color:var(--orange)">${streak}</div><div class="streak-name">Day Streak</div></div>
-      <div class="streak-item"><span class="streak-emoji">💪</span><div class="streak-num" style="color:var(--blue)">${rows.filter(r=>isYes(r[COL.workout])).length}</div><div class="streak-name">Total Workouts</div></div>
-      <div class="streak-item"><span class="streak-emoji">🧘</span><div class="streak-num" style="color:var(--purple)">${rows.filter(r=>isYes(r[COL.meditation])).length}</div><div class="streak-name">Meditations</div></div>
+      <div class="streak-item"><span class="streak-emoji">💪</span><div class="streak-num" style="color:var(--blue)">${rows.reduce((s,r)=>s+nv(r[COL.workout]),0)}</div><div class="streak-name">Total Workouts</div></div>
+      <div class="streak-item"><span class="streak-emoji">🧘</span><div class="streak-num" style="color:var(--purple)">${rows.reduce((s,r)=>s+nv(r[COL.meditation]),0)}</div><div class="streak-name">Meditations</div></div>
       <div class="streak-item"><span class="streak-emoji">🍽️</span><div class="streak-num" style="color:var(--green)">${rows.reduce((s,r)=>s+nv(r[COL.food]),0)}</div><div class="streak-name">Plates Shared</div></div>
     </div>
     <div style="margin-top:20px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Badges Earned</div>
@@ -420,7 +420,7 @@ function loadClient(name){
       <thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th><th>Workout</th><th>Meditation</th><th>Food Plates</th><th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>
       <tbody>${[...rows].reverse().map((row,i,arr)=>{
         const prev=arr[i+1];const wD=prev?(nv(row[COL.weight])-nv(prev[COL.weight])).toFixed(1):null;const wG=wD!==null&&parseFloat(wD)<=0;
-        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td>'+(row[COL.workout]?'<span class="'+(isYes(row[COL.workout])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.workout])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td>'+(row[COL.meditation]?'<span class="'+(isYes(row[COL.meditation])?'yes-pill':'no-pill')+'">'+(isYes(row[COL.meditation])?'✅ Yes':'❌ No')+'</span>':'—')+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+(row[COL.energy]?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
+        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td><td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+(row[COL.energy]?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
       }).join('')}</tbody>
     </table></div>
   </div>`;
