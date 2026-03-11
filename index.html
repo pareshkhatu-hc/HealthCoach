@@ -229,7 +229,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
   </div>
 </div>
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbz094KgAk5Ix-Vrh1AbfVIGvWkXHbuSpcOc4f3Q3dnG4bCWLBVKrLkWoh4IJVsEcoAa/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbyPVVqNme0ybqxX1cBR3KijQKsUWxgknn6-oRamMH80SwpiHRcq012Wg5ZtG6MXcJaN/exec';
 const PASSWORD='PS2026';
 const COL={name:'Client Name',date:'Date',weight:'Weight',fat:'Fat%',visceral:'Visceral Fat',workout:'Workout Done',meditation:'Meditation Done',food:'Food Plates Shared',water:'Water (L)',sleep:'Sleep (hrs)',energy:'Energy Level',notes:'Coach Notes'};
 // Robust value getter — handles column name case/spacing mismatches from Google Sheets
@@ -361,9 +361,21 @@ async function loadClient(name){
   const rows=allData.filter(r=>r[COL.name]===name).sort((a,b)=>parseDate(a[COL.date])-parseDate(b[COL.date]));
   if(!rows.length){content.innerHTML='<div class="empty-state"><div class="big">🔍</div><p>No records found for <strong>'+name+'</strong>.</p></div>';return;}
   const first=rows[0],last=rows[rows.length-1];
-  const wLost=(nv(first[COL.weight])-nv(last[COL.weight])).toFixed(2);
-  const fLost=(nv(first[COL.fat])-nv(last[COL.fat])).toFixed(2);
-  const vDrop=(nv(first[COL.visceral])-nv(last[COL.visceral])).toFixed(2);
+  // Use first/last row that actually HAS each value — avoids blank early records
+  const rowsWithWeight   = rows.filter(r=>nv(r[COL.weight])>0);
+  const rowsWithFat      = rows.filter(r=>r[COL.fat]!==undefined&&String(r[COL.fat]).trim()!=='');
+  const rowsWithVisceral = rows.filter(r=>r[COL.visceral]!==undefined&&String(r[COL.visceral]).trim()!=='');
+
+  const firstW = rowsWithWeight[0]   || first;
+  const lastW  = rowsWithWeight[rowsWithWeight.length-1]     || last;
+  const firstF = rowsWithFat[0]      || first;
+  const lastF  = rowsWithFat[rowsWithFat.length-1]           || last;
+  const firstV = rowsWithVisceral[0] || first;
+  const lastV  = rowsWithVisceral[rowsWithVisceral.length-1] || last;
+
+  const wLost=(nv(firstW[COL.weight])-nv(lastW[COL.weight])).toFixed(2);
+  const fLost=(nv(firstF[COL.fat])-nv(lastF[COL.fat])).toFixed(2);
+  const vDrop=(nv(firstV[COL.visceral])-nv(lastV[COL.visceral])).toFixed(2);
   const weeks=Math.max(1,Math.round((parseDate(last[COL.date])-parseDate(first[COL.date]))/(7*864e5)));
   const last7=rows.slice(-7);
   const woCount=last7.length?nv(last7[last7.length-1][COL.workout]):0;
@@ -412,12 +424,12 @@ async function loadClient(name){
   content.innerHTML=`
   <div class="section-header anim anim-1"><span class="section-title">Overview</span><div class="section-line"></div></div>
   <div class="stats-row anim anim-1">
-    <div class="stat-card green"><div class="stat-icon">📅</div><div class="stat-label">Start Date</div><div class="stat-value" style="font-size:17px">${fmt(first[COL.date])}</div><div class="stat-sub">${weeks} weeks on programme</div></div>
-    <div class="stat-card orange"><div class="stat-icon">⚖️</div><div class="stat-label">Starting Weight</div><div class="stat-value">${first[COL.weight]}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Current: <strong>${last[COL.weight]} kg</strong></div></div>
-    <div class="stat-card green"><div class="stat-icon">📉</div><div class="stat-label">Weight Lost</div><div class="stat-value">${Math.abs(wLost)}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub"><span class="stat-delta delta-good">${parseFloat(wLost)>0?'↓':'↑'} ${Math.abs((wLost/nv(first[COL.weight])*100)).toFixed(1)}%</span></div></div>
-    <div class="stat-card blue"><div class="stat-icon">🔥</div><div class="stat-label">Fat % Reduced</div><div class="stat-value">${Math.abs(fLost)}<span style="font-size:13px;font-weight:400"> %</span></div><div class="stat-sub">${first[COL.fat]}% → ${last[COL.fat]}%</div></div>
-    <div class="stat-card purple"><div class="stat-icon">🧠</div><div class="stat-label">Visceral Drop</div><div class="stat-value">${Math.abs(vDrop)}<span style="font-size:13px;font-weight:400"> pts</span></div><div class="stat-sub">Level ${first[COL.visceral]} → ${last[COL.visceral]}</div></div>
-    <div class="stat-card teal"><div class="stat-icon">🫀</div><div class="stat-label">Lean Mass</div><div class="stat-value">${leanMass}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Muscle &amp; bone mass</div></div>
+    <div class="stat-card green"><div class="stat-icon">📅</div><div class="stat-label">Start Date</div><div class="stat-value" style="font-size:19px;font-weight:800;color:#00e5a0;text-shadow:0 0 16px rgba(0,229,160,0.6)">${fmt(first[COL.date])}</div><div class="stat-sub">${weeks} weeks on program</div></div>
+    <div class="stat-card orange"><div class="stat-icon">⚖️</div><div class="stat-label">Starting Weight</div><div class="stat-value" style="font-weight:800;color:#ff7043;text-shadow:0 0 16px rgba(255,112,67,0.6)">${first[COL.weight]}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Current: <strong style="color:#ff7043;text-shadow:0 0 10px rgba(255,112,67,0.5);font-size:15px">${last[COL.weight]} kg</strong></div></div>
+    <div class="stat-card green"><div class="stat-icon">📉</div><div class="stat-label">Weight Lost</div><div class="stat-value" style="font-weight:800;color:#00e5a0;text-shadow:0 0 16px rgba(0,229,160,0.6)">${Math.abs(wLost)}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub"><span class="stat-delta delta-good">${parseFloat(wLost)>0?'↓':'↑'} ${Math.abs((wLost/nv(first[COL.weight])*100)).toFixed(1)}%</span></div></div>
+    <div class="stat-card blue"><div class="stat-icon">🔥</div><div class="stat-label">Fat % Reduced</div><div class="stat-value" style="font-weight:800;color:#4d9fff;text-shadow:0 0 16px rgba(77,159,255,0.6)">${Math.abs(fLost)}<span style="font-size:13px;font-weight:400"> %</span></div><div class="stat-sub">${firstF[COL.fat]}% → ${lastF[COL.fat]}%</div></div>
+    <div class="stat-card purple"><div class="stat-icon">🧠</div><div class="stat-label">Visceral Drop</div><div class="stat-value" style="font-weight:800;color:#b06cff;text-shadow:0 0 16px rgba(176,108,255,0.6)">${Math.abs(vDrop)}<span style="font-size:13px;font-weight:400"> pts</span></div><div class="stat-sub">Level ${firstV[COL.visceral]} → ${lastV[COL.visceral]}</div></div>
+    <div class="stat-card teal"><div class="stat-icon">🫀</div><div class="stat-label">Lean Mass</div><div class="stat-value" style="font-weight:800;color:#00c9b1;text-shadow:0 0 16px rgba(0,201,177,0.6)">${leanMass}<span style="font-size:13px;font-weight:400"> kg</span></div><div class="stat-sub">Muscle &amp; bone mass</div></div>
   </div>
 
 
@@ -438,7 +450,7 @@ async function loadClient(name){
   <div class="charts-grid anim anim-5">
     <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div><span class="chart-badge green">↓ ${Math.abs(wLost)} kg lost</span></div><canvas id="weightChart" height="80"></canvas></div>
     <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div><span class="chart-badge orange">↓ ${Math.abs(fLost)}% reduced</span></div><canvas id="fatChart" height="150"></canvas></div>
-    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–30 • healthy: below 13</div></div><span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels</span></div><canvas id="visceralChart" height="150"></canvas></div>
+    <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–9 • Optimum: below 7</div></div><span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels</span></div><canvas id="visceralChart" height="150"></canvas></div>
   </div>
 
   <div class="section-header anim anim-4"><span class="section-title">Streaks &amp; Achievements</span><div class="section-line"></div></div>
@@ -656,19 +668,7 @@ function renderHistory(rows, page) {
     const sign = parseFloat(wD)>0 ? '+' : '';
     return '<span class="trend-pill" style="background:'+bg+';color:'+cl+';">'+sign+wD+'kg</span>';
   })()
-    return '<tr>'
-      +'<td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td>'
-      +'<td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td>'
-      +'<td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td>'
-      +'<td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td>'
-      +'<td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td>'
-      +'<td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td>'
-      +'<td style="text-align:center">'+(row[COL.food]||'—')+'</td>'
-      +'<td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td>'
-      +'<td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td>'
-      +'<td>'+eTd+'</td>'
-      +'<td>'+wTd+'</td>'
-      +'</tr>';
+    return '<tr>'+'<td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td>'+'<td>'+wTd+'</td>'+'<td style="font-family:Syne,sans-serif;font-weight:700;color:#ff7043;text-shadow:0 0 8px rgba(255,112,67,.4)">'+(row[COL.weight]||'\u2014')+'</td>'+'<td style="color:#4d9fff;font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'\u2014')+'</td>'+'<td style="color:#b06cff;font-weight:600">'+(row[COL.visceral]||'\u2014')+'</td>'+'<td style="text-align:center;font-weight:600;color:#4d9fff">'+nv(row[COL.workout])+'</td>'+'<td style="text-align:center;font-weight:600;color:#b06cff">'+nv(row[COL.meditation])+'</td>'+'<td style="text-align:center;color:#00e5a0">'+(row[COL.food]||'\u2014')+'</td>'+'<td style="color:#4d9fff">'+(row[COL.water]?row[COL.water]+'L':'\u2014')+'</td>'+'<td style="color:#b06cff">'+(row[COL.sleep]?row[COL.sleep]+'h':'\u2014')+'</td>'+'<td>'+eTd+'</td>'+'</tr>';
   }).join('');
 
   // Build pagination controls
@@ -693,9 +693,7 @@ function renderHistory(rows, page) {
 
   wrap.innerHTML =
     '<div style="overflow-x:auto"><table>'
-    +'<thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th>'
-    +'<th>Workout</th><th>Meditation</th><th>Food Plates</th>'
-    +'<th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>'
+    +'<thead><tr>'+'<th style="color:#00e5a0;text-shadow:0 0 8px rgba(0,229,160,0.5)">Date</th>'+'<th style="color:#ff7043;text-shadow:0 0 8px rgba(255,112,67,0.5)">Wt Δ</th>'+'<th style="color:#ff7043;text-shadow:0 0 8px rgba(255,112,67,0.5)">Weight</th>'+'<th style="color:#4d9fff;text-shadow:0 0 8px rgba(77,159,255,0.5)">Fat%</th>'+'<th style="color:#b06cff;text-shadow:0 0 8px rgba(176,108,255,0.5)">Visceral</th>'+'<th style="color:#4d9fff;text-shadow:0 0 8px rgba(77,159,255,0.5)">Workout</th>'+'<th style="color:#b06cff;text-shadow:0 0 8px rgba(176,108,255,0.5)">Meditation</th>'+'<th style="color:#00e5a0;text-shadow:0 0 8px rgba(0,229,160,0.5)">Food Plates</th>'+'<th style="color:#4d9fff;text-shadow:0 0 8px rgba(77,159,255,0.5)">Water</th>'+'<th style="color:#b06cff;text-shadow:0 0 8px rgba(176,108,255,0.5)">Sleep</th>'+'<th style="color:#ffd166;text-shadow:0 0 8px rgba(255,209,102,0.5)">Energy</th>'+'</tr></thead>'
     +'<tbody>'+rowsHtml+'</tbody></table></div>'
     + paginHtml;
 }
