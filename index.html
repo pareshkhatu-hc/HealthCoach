@@ -181,9 +181,127 @@ tr:hover td{background:rgba(255,255,255,.015)}
 .anim{opacity:0;animation:fadeIn .5s ease forwards}
 .anim-1{animation-delay:.05s}.anim-2{animation-delay:.1s}.anim-3{animation-delay:.15s}
 .anim-4{animation-delay:.2s}.anim-5{animation-delay:.25s}.anim-6{animation-delay:.3s}
-@media(max-width:1100px){.charts-grid{grid-template-columns:1fr}.charts-grid .chart-card.full-width{grid-column:1}}
-@media(max-width:768px){.wellness-score-wrap{flex-direction:column}}
-@media(max-width:640px){.sidebar{display:none}.main{margin-left:0}.content{padding:16px}.stats-row{grid-template-columns:1fr 1fr}.topbar{padding:0 16px;gap:8px}}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — all breakpoints
+   ══════════════════════════════════════════ */
+
+/* Bottom nav bar for mobile (hidden by default) */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--surface);border-top:1px solid var(--border);z-index:50;align-items:center;justify-content:space-around;padding:0 8px}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 12px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:18px;transition:.2s;border:none;background:none;min-width:44px}
+.bottom-nav-item.active{color:var(--green)}
+.bottom-nav-item span{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+
+/* Tablet — 900px and below */
+@media(max-width:900px){
+  .charts-grid{grid-template-columns:1fr}
+  .charts-grid .chart-card.full-width{grid-column:1}
+  .stats-row{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+  .streak-grid{grid-template-columns:repeat(2,1fr)}
+  select#clientSelect{min-width:160px}
+  .habit-rings-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* Small tablet / large phone landscape — 768px */
+@media(max-width:768px){
+  .wellness-score-wrap{flex-direction:column}
+  .topbar{height:60px;padding:0 16px;gap:10px}
+  .topbar-title{font-size:16px}
+  .live-badge{display:none}
+  .content{padding:18px 16px}
+  select#clientSelect{min-width:140px;font-size:12px}
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat-card{padding:14px 16px}
+  .stat-value{font-size:20px}
+  .habit-rings-grid{grid-template-columns:repeat(3,1fr);gap:12px}
+  .streak-grid{grid-template-columns:repeat(2,1fr)}
+  .date-range-bar{gap:8px;padding:12px 14px}
+  #settingsPanel{width:100% !important;left:0 !important}
+}
+
+/* Mobile — 640px and below */
+@media(max-width:640px){
+  /* Hide sidebar, show bottom nav */
+  .sidebar{display:none}
+  .bottom-nav{display:flex}
+  .main{margin-left:0;padding-bottom:60px}
+
+  /* Topbar — compact */
+  .topbar{height:56px;padding:0 14px;gap:8px}
+  .topbar-title{font-size:15px}
+  .live-badge{display:none}
+  #syncBtn .btn-text{display:none}
+  #syncBtn{padding:7px 10px}
+  #logoutBtn .btn-text{display:none}
+  #logoutBtn{padding:7px 10px}
+
+  /* Client selector — full available width */
+  .client-selector-wrap{flex:1}
+  select#clientSelect{min-width:0;width:100%;font-size:12px}
+
+  /* Content padding */
+  .content{padding:14px 12px}
+
+  /* Stats — 2 columns */
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card{padding:14px 14px}
+  .stat-value{font-size:20px}
+  .stat-icon{width:28px;height:28px;font-size:13px;margin-bottom:8px}
+
+  /* Rings — 3 per row */
+  .habit-rings-grid{grid-template-columns:repeat(3,1fr);gap:10px}
+  .habit-rings-card{padding:16px}
+  .habit-ring-wrap svg{width:80px !important;height:80px !important}
+
+  /* Charts */
+  .charts-grid{grid-template-columns:1fr;gap:12px}
+  .chart-card{padding:16px}
+  .chart-title{font-size:13px}
+  .chart-badge{font-size:10px;padding:3px 8px}
+
+  /* Streaks */
+  .streak-panel{padding:16px}
+  .streak-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .streak-item{padding:12px}
+  .streak-num{font-size:22px}
+  .date-range-bar{flex-direction:column;align-items:flex-start;gap:10px;padding:12px}
+  .streak-week-row{flex-wrap:wrap;gap:8px}
+  .streak-week-label{width:auto;min-width:80px}
+  .streak-pips{flex-wrap:wrap}
+
+  /* Badges */
+  .badges-row{gap:7px}
+  .badge-item{font-size:11px;padding:5px 10px}
+
+  /* Section headers */
+  .section-header{margin-top:6px;margin-bottom:12px}
+
+  /* Table */
+  .table-card{border-radius:12px}
+  th{font-size:9px;padding:9px 10px}
+  td{font-size:12px;padding:10px 10px}
+  .table-head{padding:14px 16px}
+
+  /* Settings panel */
+  #settingsPanel{left:0 !important;width:100% !important;top:56px !important}
+
+  /* Login box */
+  .login-box{padding:36px 24px;border-radius:20px;margin:16px}
+  .login-title{font-size:20px}
+
+  /* Notes */
+  .note-item{gap:12px}
+}
+
+/* Small phones — 380px and below */
+@media(max-width:380px){
+  .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+  .stat-value{font-size:18px}
+  .habit-rings-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar-title{font-size:13px}
+  .content{padding:12px 10px}
+  .streak-grid{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
@@ -228,12 +346,12 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <header class="topbar">
       <div class="topbar-title" id="topbarTitle">Paresh<span>Sampada</span></div>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
-      <button class="topbar-btn" id="syncBtn" onclick="currentClientName=null;fetchData(true)">🔄 Sync</button>
+      <button class="topbar-btn" id="syncBtn" onclick="currentClientName=null;fetchData(true)">🔄 <span class="btn-text">Sync</span></button>
       <div class="client-selector-wrap" id="clientSelectorWrap">
         <select id="clientSelect" onchange="loadClient(this.value)"><option value="">— Select Client —</option></select>
         <span class="selector-arrow">▼</span>
       </div>
-      <button class="topbar-btn danger" id="logoutBtn" onclick="logout()">🚪 Logout</button>
+      <button class="topbar-btn danger" id="logoutBtn" onclick="logout()">🚪 <span class="btn-text">Logout</span></button>
     </header>
     <main class="content" id="content">
       <div class="empty-state"><div class="big">📈</div>
@@ -245,6 +363,14 @@ tr:hover td{background:rgba(255,255,255,.015)}
     </footer>
   </div>
 </div>
+
+<!-- Bottom nav for mobile -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bottom-nav-item active" id="bnDash">📊<span>Dashboard</span></button>
+  <button class="bottom-nav-item" id="bnSync" onclick="currentClientName=null;fetchData(true)">🔄<span>Sync</span></button>
+  <button class="bottom-nav-item" id="bnSettings" onclick="toggleSettings()">⚙️<span>Links</span></button>
+  <button class="bottom-nav-item" id="bnLogout" onclick="logout()">🚪<span>Logout</span></button>
+</nav>
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbw-EtFykaGOEXdD2wSf-5UKgNODncQzwPhDWH49W1qZSyvLCNUtq1yACLqXGT9Q4fFY/exec';
 
