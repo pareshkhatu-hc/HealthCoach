@@ -4,120 +4,198 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>#getfitwithpareshsampada</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0d0f14;--card:#161a22;--card2:#1c2230;--border:#252d3d;
-  --green:#00e5a0;--orange:#ff7043;--blue:#4d9fff;--purple:#b06cff;--teal:#00c9b1;--yellow:#ffd600;
-  --text:#e8ecf4;--muted:#5a6478;--sidebar:68px;
+  --bg:#0b0d12;--surface:#13161e;--surface2:#1a1f2e;--border:#222736;
+  --green:#00e5a0;--orange:#ff7043;--blue:#4d9fff;--purple:#b06cff;--teal:#00c9b1;--yellow:#ffd600;--red:#ff4d6a;
+  --text:#e8ecf4;--muted:#505870;--card-r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
 /* ── LOGIN ── */
-#loginWrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#162030 0%,var(--bg) 70%)}
-.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:400px;text-align:center}
-.login-logo{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#000;margin:0 auto 20px}
-.login-title{font-size:22px;font-weight:700;margin-bottom:4px}
+#loginWrap{display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:var(--bg);
+  background-image:radial-gradient(ellipse at 20% 50%,rgba(0,229,160,.05) 0%,transparent 60%),
+                   radial-gradient(ellipse at 80% 20%,rgba(77,159,255,.05) 0%,transparent 60%)}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:400px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.4)}
+.login-logo{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#000;margin:0 auto 20px}
+.login-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:4px}
+.login-title span{color:var(--green)}
 .login-sub{font-size:13px;color:var(--muted);margin-bottom:32px}
-.login-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:13px 16px;font-size:15px;color:var(--text);outline:none;margin-bottom:16px;transition:.2s}
+.login-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px 16px;font-size:15px;color:var(--text);outline:none;margin-bottom:14px;transition:.2s}
 .login-input:focus{border-color:var(--green)}
-.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--green),var(--teal));border:none;border-radius:10px;font-size:15px;font-weight:700;color:#000;cursor:pointer;transition:.15s}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--green),var(--teal));border:none;border-radius:10px;font-size:15px;font-weight:700;color:#000;cursor:pointer;transition:.15s;font-family:'Syne',sans-serif}
 .login-btn:hover{opacity:.88}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
 .login-err{color:var(--orange);font-size:13px;margin-top:10px;min-height:18px}
 
-/* ── LOADING SCREEN ── */
+/* ── LOADING ── */
 #loadingScreen{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;z-index:9998;flex-direction:column;gap:16px}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:13px;color:var(--muted)}
 
 /* ── SHELL ── */
-#app{display:none;height:100vh;overflow:hidden}
-#sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;z-index:40;gap:4px}
-.nav-logo{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#000;margin-bottom:12px;cursor:default}
-.nav-btn{width:44px;height:44px;border-radius:12px;border:none;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
-.nav-btn:hover,.nav-btn.active{background:var(--card2);color:var(--text)}
-#topbar{position:fixed;left:var(--sidebar);right:0;top:0;height:56px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;z-index:39}
-#coachTitle{font-size:17px;font-weight:700;flex:1}
-#clientSelectorWrap select{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 12px;font-size:13px;cursor:pointer;outline:none}
-.topbar-btn{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 12px;font-size:13px;cursor:pointer;transition:.15s}
+#app{display:none}
+.layout{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:68px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;flex-shrink:0;gap:2px}
+.logo-mark{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#000;margin-bottom:14px;cursor:default}
+.nav-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;transition:.15s;color:var(--muted)}
+.nav-icon:hover,.nav-icon.active{background:var(--surface2);color:var(--text)}
+
+/* ── MAIN AREA ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.topbar-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;flex:1}
+.topbar-title span{color:var(--green)}
+.live-badge{display:flex;align-items:center;gap:6px;background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.25);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--green)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.client-selector-wrap{position:relative;display:flex;align-items:center}
+.client-selector-wrap select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 32px 7px 12px;font-size:13px;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none}
+.selector-arrow{position:absolute;right:10px;pointer-events:none;font-size:10px;color:var(--muted)}
+.topbar-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 13px;font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap}
 .topbar-btn:hover{border-color:var(--green);color:var(--green)}
-#main{margin-left:var(--sidebar);margin-top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:24px}
-#content{}
+.topbar-btn.danger:hover{border-color:var(--red);color:var(--red)}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:24px 28px}
 
 /* ── SETTINGS PANEL ── */
-#settingsPanel{position:fixed;left:var(--sidebar);top:56px;bottom:0;width:340px;background:var(--card);border-right:1px solid var(--border);z-index:45;transform:translateX(-100%);transition:transform .25s ease;overflow-y:auto;padding:24px}
-#settingsPanel.open{transform:translateX(0)}
-.settings-title{font-size:16px;font-weight:700;margin-bottom:8px}
-.settings-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
-.client-link-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+#settingsPanel{display:none;position:fixed;top:0;left:68px;bottom:0;width:340px;background:var(--surface);border-right:1px solid var(--border);z-index:45;padding:28px 24px;overflow-y:auto}
+.settings-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:2px}
+.settings-close:hover{color:var(--text)}
+.client-link-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
 .client-link-name{flex:1;font-size:13px}
-.copy-btn{background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap;transition:.15s}
-.copy-btn:hover{border-color:var(--green);color:var(--green)}
+.copy-link-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:5px 11px;cursor:pointer;white-space:nowrap;transition:.15s}
+.copy-link-btn:hover,.copy-link-btn.copied{border-color:var(--green);color:var(--green)}
 
-/* ── CARDS / STATS ── */
-.section-title{font-size:17px;font-weight:700;margin-bottom:16px}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:28px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
-.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-.stat-value{font-size:22px;font-weight:800}
-.stat-sub{font-size:12px;color:var(--muted);margin-top:4px}
+/* ── SECTION TITLES ── */
+.section-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;margin-top:4px}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:18px 20px;position:relative;overflow:hidden;transition:.2s;cursor:default}
+.stat-card:hover{transform:translateY(-2px);border-color:#353a50;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--card-r) var(--card-r) 0 0}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),#00b8ff)}
+.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),var(--yellow))}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.stat-card.teal::before{background:linear-gradient(90deg,var(--teal),var(--green))}
+.stat-icon{font-size:22px;margin-bottom:8px}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px}
+.stat-value{font-size:24px;font-weight:800;line-height:1}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:5px}
+.stat-delta{font-size:12px;font-weight:600;padding:2px 7px;border-radius:4px}
+.delta-good{background:rgba(0,229,160,.12);color:var(--green)}
+.delta-bad{background:rgba(255,112,67,.12);color:var(--orange)}
 
 /* ── RINGS ── */
-.rings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;margin-bottom:28px}
-.ring-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;text-align:center}
-.ring-wrap{position:relative;width:80px;height:80px;margin:0 auto 10px}
+.rings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:8px}
+.ring-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:22px 16px;text-align:center;position:relative}
+.ring-wrap{position:relative;width:84px;height:84px;margin:0 auto 12px}
 .ring-wrap svg{transform:rotate(-90deg)}
-.ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800}
-.ring-label{font-size:12px;color:var(--muted)}
-.ring-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
+.ring-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.ring-sub{font-size:11px;color:var(--muted)}
+.rings-note{font-size:11px;color:var(--muted);text-align:right;margin-bottom:20px}
 
 /* ── CHARTS ── */
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:28px}
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
-.chart-title{font-size:14px;font-weight:600;margin-bottom:4px}
-.chart-sub{font-size:11px;color:var(--muted);margin-bottom:14px}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:28px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:20px}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.chart-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.chart-subtitle{font-size:11px;color:var(--muted)}
+.chart-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.chart-badge.green{background:rgba(0,229,160,.12);color:var(--green)}
+.chart-badge.orange{background:rgba(255,112,67,.12);color:var(--orange)}
+.chart-badge.blue{background:rgba(77,159,255,.12);color:var(--blue)}
+.chart-badge.purple{background:rgba(176,108,255,.12);color:var(--purple)}
 
 /* ── STREAKS ── */
-.streak-controls{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-.streak-controls label{font-size:12px;color:var(--muted)}
-.streak-controls input[type=date]{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:12px}
-.badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
-.badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px}
-.week-streak-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
-.streak-week-label{color:var(--muted);min-width:90px}
-.streak-dot{width:10px;height:10px;border-radius:50%}
+.streak-top{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.streak-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.streak-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px 10px;font-size:12px}
+.streak-preset-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--green);padding:6px 12px;font-size:12px;cursor:pointer;font-weight:600;transition:.15s}
+.streak-preset-btn:hover{border-color:var(--green)}
+.streak-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.streak-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--card-r);padding:16px;text-align:center}
+.streak-stat-icon{font-size:24px;margin-bottom:6px}
+.streak-stat-val{font-size:22px;font-weight:800;margin-bottom:2px}
+.streak-stat-label{font-size:11px;color:var(--muted)}
+.streak-weeks-wrap{margin-bottom:10px}
+.streak-week-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.streak-week-label{color:var(--muted);min-width:110px;font-size:12px}
+.streak-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.streak-week-pill{font-size:11px;font-weight:600;padding:2px 10px;border-radius:12px}
+.streak-week-pill.hit{background:rgba(0,229,160,.12);color:var(--green)}
+.streak-week-pill.miss{background:rgba(255,77,106,.1);color:var(--red)}
+.streak-week-nums{font-size:11px;color:var(--muted);margin-left:auto}
+
+/* ── BADGES ── */
+.badges-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:20px;margin-bottom:28px}
+.badges-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px}
+.badges-grid{display:flex;flex-wrap:wrap;gap:8px}
+.badge-chip{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;transition:.15s}
+.badge-chip.earned{border-color:rgba(0,229,160,.3);background:rgba(0,229,160,.07);color:var(--text)}
+.badge-chip.locked{opacity:.35;filter:grayscale(1)}
 
 /* ── NOTES ── */
-.note-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
-.note-date{font-size:11px;color:var(--green);margin-bottom:4px}
-.note-text{font-size:13px;line-height:1.5}
+.notes-list{margin-bottom:28px}
+.note-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:14px 18px;margin-bottom:10px}
+.note-date{font-size:11px;color:var(--green);font-weight:600;margin-bottom:5px}
+.note-text{font-size:13px;line-height:1.6;color:var(--text)}
 
-/* ── HISTORY TABLE ── */
-.history-table-wrap{overflow-x:auto}
+/* ── SESSION LOG / HISTORY ── */
+.session-log-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:20px;margin-bottom:28px}
+.session-log-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.session-log-title{font-size:15px;font-weight:700}
+.session-log-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.session-count-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 12px;font-size:12px;color:var(--muted)}
+.table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{padding:10px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap}
-td{padding:9px 8px;border-bottom:1px solid var(--border)}
-tr:hover td{background:var(--card2)}
-.pagination{display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap}
-.page-btn{background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 11px;font-size:12px;cursor:pointer;transition:.15s}
+th{padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;white-space:nowrap;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+td{padding:10px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.th-date{color:var(--green)}
+.th-wt{color:var(--orange)}
+.th-fat{color:var(--blue)}
+.th-vis{color:var(--purple)}
+.th-wo{color:var(--blue)}
+.th-med{color:var(--purple)}
+.th-food{color:var(--green)}
+.th-water{color:var(--blue)}
+.th-sleep{color:var(--purple)}
+.th-energy{color:var(--yellow)}
+.pagination{display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap}
+.page-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 12px;font-size:12px;cursor:pointer;transition:.15s}
 .page-btn:hover,.page-btn.active{border-color:var(--green);color:var(--green)}
+.page-btn:disabled{opacity:.35;cursor:not-allowed}
 
 /* ── MISC ── */
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
-.big{font-size:48px;margin-bottom:12px}
-.error-banner{background:#2a1010;border:1px solid var(--orange);border-radius:10px;padding:14px;color:var(--orange);font-size:13px;margin-bottom:16px}
-footer{text-align:center;color:var(--muted);font-size:11px;padding:24px 0 8px}
+.big{font-size:52px;margin-bottom:14px}
+.error-banner{background:rgba(255,77,106,.08);border:1px solid rgba(255,77,106,.3);border-radius:10px;padding:14px;color:var(--red);font-size:13px;margin-bottom:16px}
+footer{text-align:center;padding:20px 0 28px}
+footer span{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ═══ LOGIN ═══ -->
 <div id="loginWrap">
   <div class="login-card">
     <div class="login-logo">PS</div>
-    <div class="login-title">PareshSampada</div>
+    <div class="login-title">Paresh<span>Sampada</span></div>
     <div class="login-sub">Coach Dashboard — Sign in to continue</div>
     <input class="login-input" type="password" id="pwInput" placeholder="Enter password" autocomplete="current-password">
     <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
@@ -125,66 +203,88 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px 0 8px}
   </div>
 </div>
 
-<!-- LOADING -->
+<!-- ═══ LOADING ═══ -->
 <div id="loadingScreen">
   <div class="spinner"></div>
   <div class="loading-text" id="loadingText">Loading…</div>
 </div>
 
-<!-- APP SHELL -->
+<!-- ═══ APP ═══ -->
 <div id="app">
-  <!-- Sidebar -->
-  <nav id="sidebar">
-    <div class="nav-logo">PS</div>
-    <button class="nav-btn active" id="navReport" title="Dashboard" onclick="showSection('report',this)">📋</button>
-    <button class="nav-btn" id="navClients" title="Clients" onclick="showSection('clients',this)" style="display:none">👥</button>
-    <button class="nav-btn" id="navSettings" title="Share Links" onclick="toggleSettings()">⚙️</button>
-  </nav>
+  <div class="layout">
 
-  <!-- Top Bar -->
-  <div id="topbar">
-    <div id="coachTitle" style="flex:1"></div>
-    <div id="clientSelectorWrap">
-      <select id="clientSelect" onchange="onClientChange()">
-        <option value="">— Select client —</option>
-      </select>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebarNav">
+      <div class="logo-mark">PS</div>
+      <div class="nav-icon active" id="navDash" title="Dashboard">📊</div>
+      <div class="nav-icon" id="navClients" title="Clients">👥</div>
+      <div class="nav-icon" id="navGoals" title="Goals">🎯</div>
+      <div class="nav-icon" id="navWorkout" title="Workout">🏋️</div>
+      <div class="nav-icon" id="navFood" title="Food">🥗</div>
+      <div class="nav-icon" id="navReport" title="Report">📋</div>
+      <div style="flex:1"></div>
+      <div class="nav-icon" id="navSettings" title="Settings" onclick="toggleSettings()">⚙️</div>
+    </nav>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800">⚙️ Settings</span>
+        <button class="settings-close" onclick="toggleSettings()">×</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:10px">Client Share Links</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6">Share these links with clients. They can view their own dashboard without a password.</div>
+      <div id="clientLinksList"><div style="color:var(--muted);font-size:13px">Loading clients…</div></div>
     </div>
-    <button class="topbar-btn" id="syncBtn" onclick="doSync()" title="Sync">🔄 Sync</button>
-    <button class="topbar-btn" id="logoutBtn" onclick="doLogout()">Logout</button>
-  </div>
 
-  <!-- Settings Panel -->
-  <div id="settingsPanel">
-    <div class="settings-title">📋 Client Share Links</div>
-    <div class="settings-sub">Send these links to clients. Each link is unique and secure — no password needed.</div>
-    <div id="clientLinksList"><div style="color:var(--muted);font-size:13px">Loading…</div></div>
-  </div>
+    <!-- Main -->
+    <div class="main">
 
-  <!-- Main -->
-  <div id="main">
-    <div id="content"></div>
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-title" id="topbarTitle">Paresh<span>Sampada</span></div>
+        <div class="live-badge"><div class="live-dot"></div>Live</div>
+        <button class="topbar-btn" id="syncBtn" onclick="doSync()">🔄 Sync</button>
+        <div class="client-selector-wrap" id="clientSelectorWrap">
+          <select id="clientSelect" onchange="onClientChange()">
+            <option value="">— Select Client —</option>
+          </select>
+          <span class="selector-arrow">▼</span>
+        </div>
+        <button class="topbar-btn danger" id="logoutBtn" onclick="doLogout()">🚪 Logout</button>
+      </header>
+
+      <!-- Content -->
+      <main class="content" id="content">
+        <div class="empty-state">
+          <div class="big">📈</div>
+          <p><strong style="color:var(--text);font-size:20px">Welcome to Paresh-Sampada</strong><br><br>Select a client from the dropdown above to view<br>their complete health &amp; habit dashboard.</p>
+        </div>
+      </main>
+
+      <footer><span>#getfitwithpareshsampada</span></footer>
+    </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// CONFIG  — Update API_URL after deploying Code_v5.js
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
 const API_URL = 'https://script.google.com/macros/s/AKfycbw-EtFykaGOEXdD2wSf-5UKgNODncQzwPhDWH49W1qZSyvLCNUtq1yACLqXGT9Q4fFY/exec';
 
-// ═══════════════════════════════════════════════════════
-// SECURITY — tokens stored in memory only, never in HTML
-// ═══════════════════════════════════════════════════════
-let SESSION_TOKEN = null;   // coach 24-hour token
-let CLIENT_TOKEN  = null;   // client share-link token
-
+// ═══════════════════════════════════════════
+// SECURITY — tokens in memory only
+// ═══════════════════════════════════════════
+let SESSION_TOKEN = null;
+let CLIENT_TOKEN  = null;
 const URL_PARAMS   = new URLSearchParams(window.location.search);
-const CLIENT_PARAM = URL_PARAMS.get('client');   // ?client=Name
-const CTOKEN_PARAM = URL_PARAMS.get('ctoken');   // ?ctoken=xxx
+const CLIENT_PARAM = URL_PARAMS.get('client');
+const CTOKEN_PARAM = URL_PARAMS.get('ctoken');
 
-// ═══════════════════════════════════════════════════════
-// COLUMN MAPPING & TARGETS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// COLUMN MAP & TARGETS
+// ═══════════════════════════════════════════
 const COL = {
   name:'Client Name', date:'Date', weight:'Weight', fat:'Fat%',
   visceral:'Visceral Fat', workout:'Workout Done', meditation:'Meditation Done',
@@ -193,38 +293,38 @@ const COL = {
 };
 const TARGETS = { workout:5, meditation:7, food:5, water:2.5, sleep:7 };
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function getVal(obj, colName) {
   if (!obj) return '';
   const k = Object.keys(obj).find(x => x.trim().toLowerCase() === colName.trim().toLowerCase());
   return k !== undefined ? obj[k] : '';
 }
-function nv(v, f=0) {
-  const n = parseFloat(v);
-  return isNaN(n) ? f : n;
-}
-function setLoadingText(t) {
-  const el = document.getElementById('loadingText');
-  if (el) el.textContent = t;
+function nv(v, f=0) { const n = parseFloat(v); return isNaN(n) ? f : n; }
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  const p = String(dateStr).split('/');
+  if (p.length === 3) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return p[0] + ' ' + (months[parseInt(p[1])-1]||p[1]) + ' ' + p[2].slice(-2);
+  }
+  return dateStr;
 }
 function showLoading(txt='Loading…') {
-  setLoadingText(txt);
+  const el = document.getElementById('loadingText'); if (el) el.textContent = txt;
   document.getElementById('loadingScreen').style.display = 'flex';
 }
-function hideLoading() {
-  document.getElementById('loadingScreen').style.display = 'none';
-}
+function hideLoading() { document.getElementById('loadingScreen').style.display = 'none'; }
 
-// ═══════════════════════════════════════════════════════
-// AUTH — LOGIN
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════
 async function doLogin() {
   const pw = document.getElementById('pwInput').value.trim();
   if (!pw) { document.getElementById('loginErr').textContent = 'Please enter the password.'; return; }
   const btn = document.getElementById('loginBtn');
-  btn.textContent = 'Checking…'; btn.disabled = true;
+  btn.textContent = 'Signing in…'; btn.disabled = true;
   document.getElementById('loginErr').textContent = '';
   try {
     const res  = await fetch(API_URL + '?action=auth&password=' + encodeURIComponent(pw));
@@ -244,129 +344,113 @@ async function doLogin() {
 }
 document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // LOGOUT
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function doLogout() {
-  SESSION_TOKEN = null;
-  CLIENT_TOKEN  = null;
+  SESSION_TOKEN = null; CLIENT_TOKEN = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('pwInput').value = '';
   document.getElementById('loginErr').textContent = '';
-  document.getElementById('clientSelect').innerHTML = '<option value="">— Select client —</option>';
-  document.getElementById('content').innerHTML = '';
+  document.getElementById('clientSelect').innerHTML = '<option value="">— Select Client —</option>';
+  document.getElementById('content').innerHTML = '<div class="empty-state"><div class="big">📈</div><p><strong style="color:var(--text);font-size:20px">Welcome to Paresh-Sampada</strong><br><br>Select a client from the dropdown above to view<br>their complete health &amp; habit dashboard.</p></div>';
 }
 
-// ═══════════════════════════════════════════════════════
-// COACH MODE — after login
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// COACH MODE
+// ═══════════════════════════════════════════
 function startCoachMode() {
   document.getElementById('app').style.display = 'block';
-  document.getElementById('coachTitle').innerHTML = '<span style="color:var(--text)">Paresh</span><span style="color:var(--green)"> & Sampada</span>';
-  document.getElementById('clientSelectorWrap').style.display = '';
-  document.getElementById('syncBtn').style.display = '';
-  document.getElementById('logoutBtn').style.display = '';
-  document.getElementById('navSettings').style.display = '';
+  document.getElementById('topbarTitle').innerHTML = 'Paresh<span style="color:var(--green)">Sampada</span>';
   fetchClients();
 }
 
-// ═══════════════════════════════════════════════════════
-// CLIENT URL MODE — ?client=Name&ctoken=xxx
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// CLIENT URL MODE
+// ═══════════════════════════════════════════
 function startClientMode() {
   CLIENT_TOKEN = CTOKEN_PARAM;
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  // Hide coach-only UI
-  document.getElementById('clientSelectorWrap').style.display = 'none';
-  document.getElementById('syncBtn').style.display = 'none';
-  document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('navSettings').style.display = 'none';
-  // Set title: first word white, rest green
+  ['navDash','navClients','navGoals','navWorkout','navFood','navSettings'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  ['syncBtn','clientSelectorWrap','logoutBtn'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
   setClientTitle(CLIENT_PARAM);
   fetchClientData(CLIENT_PARAM);
 }
 function setClientTitle(name) {
   if (!name) return;
   const parts = name.trim().split(' ');
-  const first = parts[0];
-  const rest  = parts.slice(1).join(' ');
-  document.getElementById('coachTitle').innerHTML =
-    '<span style="color:var(--text)">' + first + '</span>' +
-    (rest ? '<span style="color:var(--green)"> ' + rest + '</span>' : '');
+  document.getElementById('topbarTitle').innerHTML =
+    '<span style="color:var(--text)">' + parts[0] + '</span>' +
+    (parts.length>1 ? '<span style="color:var(--green)"> '+parts.slice(1).join(' ')+'</span>' : '');
 }
 
-// ═══════════════════════════════════════════════════════
-// FETCH CLIENTS LIST (coach mode)
-// ═══════════════════════════════════════════════════════
-let _clientTokenMap = {};  // name → client_token cache
+// ═══════════════════════════════════════════
+// FETCH CLIENTS
+// ═══════════════════════════════════════════
+let _clientTokenMap = {};
 async function fetchClients() {
   showLoading('Loading client list…');
   try {
     const res  = await fetch(API_URL + '?action=clients&token=' + encodeURIComponent(SESSION_TOKEN));
     const data = await res.json();
     hideLoading();
-    if (!data.success) { showError(data.error || 'Failed to load clients.'); return; }
+    if (!data.success) { showError(data.error||'Failed to load clients.'); return; }
     _clientTokenMap = {};
     const sel = document.getElementById('clientSelect');
-    sel.innerHTML = '<option value="">— Select client —</option>';
-    (data.clients || []).forEach(c => {
+    sel.innerHTML = '<option value="">— Select Client —</option>';
+    (data.clients||[]).forEach(c => {
       _clientTokenMap[c.name] = c.client_token;
       const opt = document.createElement('option');
-      opt.value = c.name; opt.textContent = c.name;
-      sel.appendChild(opt);
+      opt.value = c.name; opt.textContent = c.name; sel.appendChild(opt);
     });
   } catch(e) {
-    hideLoading();
-    showError('Could not connect to server. Click 🔄 Sync to retry.');
+    hideLoading(); showError('Could not connect. Click 🔄 Sync to retry.');
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// FETCH SINGLE CLIENT DATA
-// ═══════════════════════════════════════════════════════
-let _currentClient = null;
+// ═══════════════════════════════════════════
+// FETCH CLIENT DATA
+// ═══════════════════════════════════════════
 async function fetchClientData(name) {
   showLoading('Fetching client data…');
   try {
     const token = CLIENT_TOKEN || SESSION_TOKEN;
-    const url   = API_URL + '?action=client&name=' + encodeURIComponent(name) + '&token=' + encodeURIComponent(token);
-    const res   = await fetch(url);
-    const data  = await res.json();
+    const url = API_URL + '?action=client&name=' + encodeURIComponent(name) + '&token=' + encodeURIComponent(token);
+    const res  = await fetch(url);
+    const data = await res.json();
     hideLoading();
-    if (!data.success) { showError(data.error || 'Failed to load client data.'); return; }
-    _currentClient = name;
-    renderDashboard(data.data || []);
+    if (!data.success) { showError(data.error||'Failed to load client data.'); return; }
+    renderDashboard(name, data.data||[]);
   } catch(e) {
-    hideLoading();
-    showError('Could not fetch client data. Check your connection.');
+    hideLoading(); showError('Could not fetch client data. Check your connection.');
   }
 }
-
 function onClientChange() {
   const name = document.getElementById('clientSelect').value;
-  if (!name) { document.getElementById('content').innerHTML = ''; return; }
+  if (!name) { document.getElementById('content').innerHTML = '<div class="empty-state"><div class="big">📈</div><p>Select a client to view their dashboard.</p></div>'; return; }
   setClientTitle(name);
   fetchClientData(name);
 }
-
 function doSync() {
-  if (CLIENT_PARAM) {
-    fetchClientData(CLIENT_PARAM);
-  } else {
-    _currentClient = null;
-    fetchClients();
-  }
+  if (CLIENT_PARAM) { fetchClientData(CLIENT_PARAM); }
+  else { fetchClients(); }
 }
 
-// ═══════════════════════════════════════════════════════
-// SETTINGS PANEL — SHARE LINKS
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
+let _settingsOpen = false;
 function toggleSettings() {
-  const p = document.getElementById('settingsPanel');
-  const isOpen = p.classList.toggle('open');
-  if (isOpen) loadClientLinks();
+  _settingsOpen = !_settingsOpen;
+  document.getElementById('settingsPanel').style.display = _settingsOpen ? 'block' : 'none';
+  document.getElementById('navSettings').classList.toggle('active', _settingsOpen);
+  if (_settingsOpen) loadClientLinks();
 }
 async function loadClientLinks() {
   const list = document.getElementById('clientLinksList');
@@ -384,8 +468,8 @@ async function loadClientLinks() {
       window['_clurl_'+i] = url;
       const row = document.createElement('div');
       row.className = 'client-link-row';
-      row.innerHTML = '<span class="client-link-name">' + c.name + '</span>' +
-        '<button class="copy-btn" onclick="copyLink(this,' + i + ')">📋 Copy</button>';
+      row.innerHTML = '<span class="client-link-name">👤 ' + c.name + '</span>' +
+        '<button class="copy-link-btn" onclick="copyLink(this,' + i + ')">📋 Copy Link</button>';
       list.appendChild(row);
     });
   } catch(e) {
@@ -393,330 +477,440 @@ async function loadClientLinks() {
   }
 }
 function copyLink(btn, i) {
-  const url = window['_clurl_'+i];
-  navigator.clipboard.writeText(url).then(() => {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✅ Copied!';
-    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  navigator.clipboard.writeText(window['_clurl_'+i]).then(() => {
+    btn.textContent = '✅ Copied!'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
-// ═══════════════════════════════════════════════════════
-// ERROR DISPLAY
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// ERROR
+// ═══════════════════════════════════════════
 function showError(msg) {
   document.getElementById('content').innerHTML =
-    '<div class="error-banner">⚠️ ' + msg + '</div>' +
-    '<div class="empty-state"><div class="big">⚠️</div><p>' + msg + '</p></div>';
+    '<div class="error-banner">⚠️ ' + msg + '</div>';
 }
 
-// ═══════════════════════════════════════════════════════
-// SECTION NAV
-// ═══════════════════════════════════════════════════════
-function showSection(sec, btn) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-}
-
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // MAIN RENDER
-// ═══════════════════════════════════════════════════════
-function renderDashboard(rows) {
+// ═══════════════════════════════════════════
+function renderDashboard(clientName, rows) {
   if (!rows || rows.length === 0) {
     document.getElementById('content').innerHTML =
       '<div class="empty-state"><div class="big">📋</div><p>No data found for this client.</p></div>';
     return;
   }
-  // Sort by date ascending
   rows.sort((a,b) => {
     const pa = (getVal(a,COL.date)||'').split('/').reverse().join('');
     const pb = (getVal(b,COL.date)||'').split('/').reverse().join('');
     return pa.localeCompare(pb);
   });
-
   const html = [
-    renderOverview(rows),
+    renderOverview(clientName, rows),
     renderRings(rows),
     renderBodyCharts(rows),
-    renderHabitChart(rows),
     renderStreaks(rows),
+    renderBadges(rows),
+    renderHabitChart(rows),
     renderNotes(rows),
-    renderHistory(rows, 1)
+    renderHistory(clientName, rows, 1)
   ].join('');
-  document.getElementById('content').innerHTML = html + '<footer>#getfitwithpareshsampada</footer>';
-  window._vcRows = rows;
+  document.getElementById('content').innerHTML = html + '<footer><span>#getfitwithpareshsampada</span></footer>';
+  window._vcRows = rows; window._vcClient = clientName;
   drawCharts(rows);
   updateStreaks(rows);
 }
 
-// ═══════════════════════════════════════════════════════
-// OVERVIEW STATS
-// ═══════════════════════════════════════════════════════
-function renderOverview(rows) {
+// ═══════════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════════
+function renderOverview(clientName, rows) {
   const rowsW = rows.filter(r => getVal(r,COL.weight)!=='' && getVal(r,COL.weight)!==undefined);
   const rowsF = rows.filter(r => getVal(r,COL.fat)!=='' && getVal(r,COL.fat)!==undefined);
   const rowsV = rows.filter(r => getVal(r,COL.visceral)!=='' && getVal(r,COL.visceral)!==undefined);
-
+  const first = rows[0], last = rows[rows.length-1];
   const firstW = rowsW[0], lastW = rowsW[rowsW.length-1];
   const firstF = rowsF[0], lastF = rowsF[rowsF.length-1];
   const firstV = rowsV[0], lastV = rowsV[rowsV.length-1];
-  const first  = rows[0];
 
-  const startDate = getVal(first, COL.date) || '—';
-  const wLost  = firstW && lastW ? (nv(getVal(firstW,COL.weight)) - nv(getVal(lastW,COL.weight))).toFixed(1) : '—';
-  const fDrop  = firstF && lastF ? (nv(getVal(firstF,COL.fat))    - nv(getVal(lastF,COL.fat))).toFixed(1)    : '—';
-  const vDrop  = firstV && lastV ? (nv(getVal(firstV,COL.visceral))- nv(getVal(lastV,COL.visceral))).toFixed(1): '—';
+  // Weeks on programme
+  const d1 = (getVal(first,COL.date)||'').split('/');
+  const d2 = (getVal(last,COL.date)||'').split('/');
+  let weeks = '?';
+  if (d1.length===3 && d2.length===3) {
+    const ms = new Date(d2[2],d2[1]-1,d2[0]) - new Date(d1[2],d1[1]-1,d1[0]);
+    weeks = Math.round(ms/604800000);
+  }
+
+  const wLost  = firstW && lastW ? (nv(getVal(firstW,COL.weight)) - nv(getVal(lastW,COL.weight))).toFixed(1) : null;
+  const fLost  = firstF && lastF ? (nv(getVal(firstF,COL.fat))    - nv(getVal(lastF,COL.fat))).toFixed(1)    : null;
+  const vDrop  = firstV && lastV ? (nv(getVal(firstV,COL.visceral))- nv(getVal(lastV,COL.visceral))).toFixed(1): null;
   const startW = firstW ? nv(getVal(firstW,COL.weight)).toFixed(1) : '—';
   const curW   = lastW  ? nv(getVal(lastW, COL.weight)).toFixed(1) : '—';
   const leanGain = firstF && lastF && firstW && lastW ?
     ((nv(getVal(lastW,COL.weight))*(1-nv(getVal(lastF,COL.fat))/100)) -
-     (nv(getVal(firstW,COL.weight))*(1-nv(getVal(firstF,COL.fat))/100))).toFixed(1) : '—';
+     (nv(getVal(firstW,COL.weight))*(1-nv(getVal(firstF,COL.fat))/100))).toFixed(1) : null;
 
-  const glow = (c,v) => `<span style="font-weight:800;color:${c};text-shadow:0 0 16px ${c}88">${v}</span>`;
+  const wPct = wLost !== null && firstW ? Math.abs((wLost/nv(getVal(firstW,COL.weight))*100)).toFixed(1) : null;
 
-  const cards = [
-    {l:'Start Date',        v:glow('var(--green)',startDate),  c:'var(--green)'},
-    {l:'Starting Weight',   v:glow('var(--orange)',startW+' kg') + '<div style="font-size:15px;font-weight:800;color:var(--orange);text-shadow:0 0 16px #ff704388;margin-top:2px">Now: '+curW+' kg</div>', c:'var(--orange)', raw:true},
-    {l:'Weight Lost',       v:glow('var(--orange)', (parseFloat(wLost)>0?'-':'')+wLost+' kg'), c:'var(--orange)'},
-    {l:'Fat% Reduced',      v:glow('var(--blue)',   (parseFloat(fDrop)>0?'-':'')+fDrop+'%'),   c:'var(--blue)'},
-    {l:'Visceral Drop',     v:glow('var(--purple)',  (parseFloat(vDrop)>0?'-':'')+vDrop),       c:'var(--purple)'},
-    {l:'Lean Mass Change',  v:glow('var(--teal)',   (parseFloat(leanGain)>=0?'+':'')+leanGain+' kg'), c:'var(--teal)'},
-  ];
-
-  return '<div class="section-title">📊 Overview</div><div class="stats-grid">' +
-    cards.map(c => `<div class="stat-card" style="border-color:${c.c}22">
-      <div class="stat-label">${c.l}</div>
-      <div class="stat-value">${c.v}</div>
-    </div>`).join('') + '</div>';
-}
-
-// ═══════════════════════════════════════════════════════
-// HABIT RINGS
-// ═══════════════════════════════════════════════════════
-function renderRings(rows) {
-  const last = rows[rows.length-1];
-  const _r = (col) => {
-    const v = getVal(last, col);
-    return (v !== undefined && v !== null && String(v).trim() !== '') ? nv(v) : null;
-  };
-
-  const workout   = _r(COL.workout);
-  const meditation= _r(COL.meditation);
-  const food      = _r(COL.food);
-  const water     = _r(COL.water);
-  const sleep     = _r(COL.sleep);
-  const energy    = _r(COL.energy);
-
-  const rings = [
-    { icon:'💪', label:'Workout',    pct: workout!==null ? Math.min(100,(workout/7)*100) : null,
-      disp: workout!==null ? workout+'/7' : '—', color:'var(--green)', sub:'sessions this week' },
-    { icon:'🧘', label:'Meditation', pct: meditation!==null ? Math.min(100,(meditation/7)*100) : null,
-      disp: meditation!==null ? meditation+'/7' : '—', color:'var(--purple)', sub:'days this week' },
-    { icon:'🍽️', label:'Food Plates',pct: food!==null ? Math.min(100,(food/14)*100) : null,
-      disp: food!==null ? food+'/14' : '—', color:'var(--orange)', sub:'plates shared' },
-    { icon:'💧', label:'Water',      pct: water!==null ? Math.min(100,(water/2.5)*100) : null,
-      disp: water!==null ? water+'L' : '—', color:'var(--blue)', sub:'target 2.5L' },
-    { icon:'😴', label:'Sleep',      pct: sleep!==null ? Math.min(100,(sleep/7)*100) : null,
-      disp: sleep!==null ? sleep+'h' : '—', color:'var(--teal)', sub:'target 7h' },
-    { icon:'⚡', label:'Energy',     pct: energy!==null ? energy*10 : null,
-      disp: energy!==null ? energy+'/10' : '—', color:'var(--yellow)', sub:'energy level' },
-  ];
-
-  const ring = (r) => {
-    const pct = r.pct !== null ? r.pct : 0;
-    const circ = 2*Math.PI*34;
-    const dash = (pct/100)*circ;
-    const color = r.pct !== null ? r.color : 'var(--muted)';
-    return `<div class="ring-card">
-      <div class="ring-wrap">
-        <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="34" fill="none" stroke="var(--border)" stroke-width="7"/>
-          <circle cx="40" cy="40" r="34" fill="none" stroke="${color}" stroke-width="7"
-            stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}"
-            stroke-linecap="round" style="transition:stroke-dasharray .8s ease"/>
-        </svg>
-        <div class="ring-val" style="color:${color}">${r.icon}</div>
-      </div>
-      <div class="ring-label">${r.label}</div>
-      <div class="ring-sub">${r.disp}</div>
-    </div>`;
-  };
-
-  return '<div class="section-title">🎯 This Week\'s Habit Compliance</div><div class="rings-grid">' +
-    rings.map(ring).join('') + '</div>';
-}
-
-// ═══════════════════════════════════════════════════════
-// BODY COMPOSITION CHARTS
-// ═══════════════════════════════════════════════════════
-function renderBodyCharts(rows) {
-  return `<div class="section-title">📈 Body Composition</div>
-  <div class="charts-grid">
-    <div class="chart-card"><div class="chart-title">⚖️ Weight Progression</div><div class="chart-sub">kg over time</div><canvas id="chartWeight" height="180"></canvas></div>
-    <div class="chart-card"><div class="chart-title">🔵 Body Fat %</div><div class="chart-sub">% over time</div><canvas id="chartFat" height="180"></canvas></div>
-    <div class="chart-card"><div class="chart-title">🟣 Visceral Fat</div><div class="chart-sub">Scale 1–9 • Optimum: below 7</div><canvas id="chartVisceral" height="180"></canvas></div>
+  return `<div class="section-label">Overview</div>
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-icon">📅</div>
+      <div class="stat-label">Start Date</div>
+      <div class="stat-value" style="font-size:17px">${fmt(getVal(first,COL.date))}</div>
+      <div class="stat-sub">${weeks} weeks on program</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon">⚖️</div>
+      <div class="stat-label">Starting Weight</div>
+      <div class="stat-value">${startW}<span style="font-size:13px;font-weight:400"> kg</span></div>
+      <div class="stat-sub">Current: <strong>${curW} kg</strong></div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon">📉</div>
+      <div class="stat-label">Weight Lost</div>
+      <div class="stat-value">${wLost!==null?Math.abs(wLost):'—'}<span style="font-size:13px;font-weight:400"> kg</span></div>
+      <div class="stat-sub">${wPct!==null?`<span class="stat-delta ${parseFloat(wLost)>0?'delta-good':'delta-bad'}">${parseFloat(wLost)>0?'↓':'↑'} ${wPct}%</span>`:'—'}</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-label">Fat % Reduced</div>
+      <div class="stat-value">${fLost!==null?Math.abs(fLost):'—'}<span style="font-size:13px;font-weight:400"> %</span></div>
+      <div class="stat-sub">${firstF&&lastF?nv(getVal(firstF,COL.fat))+'% → '+nv(getVal(lastF,COL.fat))+'%':'—'}</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon">🧠</div>
+      <div class="stat-label">Visceral Drop</div>
+      <div class="stat-value">${vDrop!==null?Math.abs(vDrop):'—'}<span style="font-size:13px;font-weight:400"> pts</span></div>
+      <div class="stat-sub">${firstV&&lastV?'Level '+nv(getVal(firstV,COL.visceral))+' → '+nv(getVal(lastV,COL.visceral)):'—'}</div>
+    </div>
+    <div class="stat-card teal">
+      <div class="stat-icon">💪</div>
+      <div class="stat-label">Lean Mass</div>
+      <div class="stat-value">${leanGain!==null?(parseFloat(leanGain)>=0?'+':'')+leanGain:'—'}<span style="font-size:13px;font-weight:400"> kg</span></div>
+      <div class="stat-sub">Muscle &amp; bone mass</div>
+    </div>
   </div>`;
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// RINGS
+// ═══════════════════════════════════════════
+function renderRings(rows) {
+  const last = rows[rows.length-1];
+  const _r = col => {
+    const v = getVal(last, col);
+    return (v !== undefined && v !== null && String(v).trim() !== '') ? nv(v) : null;
+  };
+  const workout    = _r(COL.workout);
+  const meditation = _r(COL.meditation);
+  const food       = _r(COL.food);
+  const water      = _r(COL.water);
+  const sleep      = _r(COL.sleep);
+  const energy     = _r(COL.energy);
+
+  const ring = ({icon, label, pct, disp, sub, color}) => {
+    const p = pct !== null ? Math.min(100, pct) : 0;
+    const circ = 2*Math.PI*36;
+    const dash = (p/100)*circ;
+    const c = pct !== null ? color : 'var(--muted)';
+    return `<div class="ring-card">
+      <div class="ring-wrap">
+        <svg width="84" height="84" viewBox="0 0 84 84">
+          <circle cx="42" cy="42" r="36" fill="none" stroke="var(--border)" stroke-width="7"/>
+          <circle cx="42" cy="42" r="36" fill="none" stroke="${c}" stroke-width="7"
+            stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"
+            style="transition:stroke-dasharray .9s ease"/>
+        </svg>
+        <div class="ring-val" style="color:${c}">${icon}</div>
+      </div>
+      <div class="ring-name">${label}</div>
+      <div class="ring-sub">${disp}</div>
+    </div>`;
+  };
+
+  return `<div class="section-label">This Week's Habit Compliance</div>
+  <div class="rings-note">Last 7 records</div>
+  <div class="rings-grid">
+    ${ring({icon:'💪', label:'Workouts',    pct: workout!==null?(workout/7)*100:null,    disp: workout!==null?workout+' sessions':'—',  color:'var(--green)'})}
+    ${ring({icon:'🧘', label:'Meditation',  pct: meditation!==null?(meditation/7)*100:null, disp: meditation!==null?meditation+' days':'—', color:'var(--purple)'})}
+    ${ring({icon:'🍽️', label:'Food Plates', pct: food!==null?(food/14)*100:null,         disp: food!==null?food+' plates':'—',           color:'var(--orange)'})}
+    ${ring({icon:'💧', label:'Water',       pct: water!==null?(water/2.5)*100:null,      disp: water!==null?water+'L':'—',              color:'var(--blue)', sub:'Target 2.5L'})}
+    ${ring({icon:'😴', label:'Sleep',       pct: sleep!==null?(sleep/7)*100:null,        disp: sleep!==null?sleep+'h':'—',              color:'var(--teal)', sub:'Target 7h'})}
+    ${ring({icon:'⚡', label:'Energy Level',pct: energy!==null?energy*10:null,           disp: energy!==null?energy+'/10':'—',          color:'var(--yellow)', sub:'Latest entry'})}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// BODY CHARTS
+// ═══════════════════════════════════════════
+function renderBodyCharts(rows) {
+  const rowsW = rows.filter(r => getVal(r,COL.weight)!=='' && getVal(r,COL.weight)!==undefined);
+  const rowsF = rows.filter(r => getVal(r,COL.fat)!=='' && getVal(r,COL.fat)!==undefined);
+  const rowsV = rows.filter(r => getVal(r,COL.visceral)!=='' && getVal(r,COL.visceral)!==undefined);
+  const firstW=rowsW[0], lastW=rowsW[rowsW.length-1];
+  const firstF=rowsF[0], lastF=rowsF[rowsF.length-1];
+  const firstV=rowsV[0], lastV=rowsV[rowsV.length-1];
+  const wLost = firstW&&lastW ? (nv(getVal(firstW,COL.weight))-nv(getVal(lastW,COL.weight))).toFixed(1) : null;
+  const fLost = firstF&&lastF ? (nv(getVal(firstF,COL.fat))-nv(getVal(lastF,COL.fat))).toFixed(1) : null;
+  const vDrop = firstV&&lastV ? (nv(getVal(firstV,COL.visceral))-nv(getVal(lastV,COL.visceral))).toFixed(1) : null;
+
+  return `<div class="section-label">Body Composition</div>
+  <div class="charts-grid">
+    <div class="chart-card" style="grid-column:1/-1">
+      <div class="chart-header">
+        <div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div>
+        ${wLost!==null?`<span class="chart-badge ${parseFloat(wLost)>0?'green':'orange'}">${parseFloat(wLost)>0?'↓':'↑'} ${Math.abs(wLost)} kg lost</span>`:''}
+      </div>
+      <canvas id="chartWeight" height="140"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div>
+        ${fLost!==null?`<span class="chart-badge ${parseFloat(fLost)>0?'blue':'orange'}">↓ ${Math.abs(fLost)}% reduced</span>`:''}
+      </div>
+      <canvas id="chartFat" height="180"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–9 • Optimum: below 7</div></div>
+        ${vDrop!==null?`<span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels</span>`:''}
+      </div>
+      <canvas id="chartVisceral" height="180"></canvas>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// STREAKS
+// ═══════════════════════════════════════════
+function renderStreaks(rows) {
+  const today = new Date();
+  const d4w = new Date(today); d4w.setDate(d4w.getDate()-28);
+  const fmtDate = d => d.toISOString().split('T')[0];
+  return `<div class="section-label">Streaks &amp; Achievements</div>
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="streak-top">
+      <span class="streak-label">Date Range</span>
+      <input type="date" class="streak-date-input" id="streakFrom" value="${fmtDate(d4w)}" onchange="updateStreaks()">
+      <span style="color:var(--muted);font-size:13px">to</span>
+      <input type="date" class="streak-date-input" id="streakTo" value="${fmtDate(today)}" onchange="updateStreaks()">
+      <button class="streak-preset-btn" onclick="resetStreakDates()">Last 4 Weeks</button>
+      <span id="streakRangeInfo" style="margin-left:auto;font-size:11px;color:var(--muted)"></span>
+    </div>
+    <div class="streak-stat-grid" id="streakStatGrid"></div>
+    <div class="streak-weeks-wrap" id="streakWeeksWrap"></div>
+  </div>`;
+}
+function resetStreakDates() {
+  const today = new Date();
+  const d4w = new Date(today); d4w.setDate(d4w.getDate()-28);
+  document.getElementById('streakFrom').value = d4w.toISOString().split('T')[0];
+  document.getElementById('streakTo').value   = today.toISOString().split('T')[0];
+  updateStreaks();
+}
+function updateStreaks(rows) {
+  rows = rows || window._vcRows; if (!rows) return;
+  const from = new Date(document.getElementById('streakFrom').value);
+  const to   = new Date(document.getElementById('streakTo').value); to.setHours(23,59,59);
+
+  const weeks = {};
+  rows.forEach(r => {
+    const dStr = getVal(r, COL.date); if (!dStr) return;
+    const p = String(dStr).split('/'); if (p.length<3) return;
+    const d = new Date(p[2], p[1]-1, p[0]);
+    if (d < from || d > to) return;
+    const mon = new Date(d); mon.setDate(d.getDate()-((d.getDay()+6)%7));
+    const key = mon.toISOString().split('T')[0];
+    if (!weeks[key]) weeks[key] = {wo:0, med:0, food:0};
+    weeks[key].wo   = Math.max(weeks[key].wo,   nv(getVal(r,COL.workout)));
+    weeks[key].med  = Math.max(weeks[key].med,  nv(getVal(r,COL.meditation)));
+    weeks[key].food = Math.max(weeks[key].food, nv(getVal(r,COL.food)));
+  });
+
+  const keys = Object.keys(weeks).sort();
+  const results = keys.map(k => ({
+    key:k, ...weeks[k],
+    pass: weeks[k].wo>=4 && weeks[k].med>=3 && weeks[k].food>=10
+  }));
+
+  let streakCount=0;
+  for(let i=results.length-1;i>=0;i--){ if(results[i].pass) streakCount++; else break; }
+  const woWeeks   = results.filter(w=>w.wo>=4).length;
+  const medWeeks  = results.filter(w=>w.med>=3).length;
+  const foodWeeks = results.filter(w=>w.food>=10).length;
+
+  const streakColor = streakCount>0?'var(--yellow)':'var(--muted)';
+  document.getElementById('streakStatGrid').innerHTML = `
+    <div class="streak-stat"><div class="streak-stat-icon">⚡</div><div class="streak-stat-val" style="color:${streakColor}">${streakCount}</div><div class="streak-stat-label">Streak Weeks</div></div>
+    <div class="streak-stat"><div class="streak-stat-icon">💪</div><div class="streak-stat-val" style="color:var(--green)">${woWeeks}/${keys.length}</div><div class="streak-stat-label">Workout Weeks</div></div>
+    <div class="streak-stat"><div class="streak-stat-icon">🧘</div><div class="streak-stat-val" style="color:var(--purple)">${medWeeks}/${keys.length}</div><div class="streak-stat-label">Meditation Weeks</div></div>
+    <div class="streak-stat"><div class="streak-stat-icon">🍽️</div><div class="streak-stat-val" style="color:var(--orange)">${foodWeeks}/${keys.length}</div><div class="streak-stat-label">Food Weeks</div></div>`;
+
+  document.getElementById('streakRangeInfo').textContent = keys.length + ' records • ' + keys.length + ' weeks';
+
+  document.getElementById('streakWeeksWrap').innerHTML = results.map(w => {
+    const sun = new Date(w.key); sun.setDate(sun.getDate()+6);
+    const label = w.key.slice(5).replace('-','/') + ' – ' + String(sun.getDate()).padStart(2,'0')+'/'+String(sun.getMonth()+1).padStart(2,'0');
+    const color = w.pass ? 'var(--green)' : 'var(--red)';
+    return `<div class="streak-week-row">
+      <span class="streak-week-label">${label}</span>
+      <div class="streak-dot" style="background:${color}"></div>
+      <span class="streak-week-pill ${w.pass?'hit':'miss'}">${w.pass?'✅ Hit':'✗ Missed'}</span>
+      <span class="streak-week-nums">💪${w.wo} 🧘${w.med} 🍽️${w.food}</span>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:10px 0">No data in this range.</div>';
+}
+
+// ═══════════════════════════════════════════
+// BADGES
+// ═══════════════════════════════════════════
+function renderBadges(rows) {
+  const first = rows[0], last = rows[rows.length-1];
+  const rowsW = rows.filter(r => getVal(r,COL.weight)!==''&&getVal(r,COL.weight)!==undefined);
+  const firstW=rowsW[0], lastW=rowsW[rowsW.length-1];
+  const wLost = firstW&&lastW ? nv(getVal(firstW,COL.weight))-nv(getVal(lastW,COL.weight)) : 0;
+  const d1=String(getVal(first,COL.date)||'').split('/');
+  const d2=String(getVal(last,COL.date)||'').split('/');
+  let totalDays=0;
+  if(d1.length===3&&d2.length===3){
+    totalDays=Math.round((new Date(d2[2],d2[1]-1,d2[0])-new Date(d1[2],d1[1]-1,d1[0]))/86400000);
+  }
+  const maxWo  = Math.max(...rows.map(r=>nv(getVal(r,COL.workout))));
+  const maxMed = Math.max(...rows.map(r=>nv(getVal(r,COL.meditation))));
+  const maxWater = Math.max(...rows.map(r=>nv(getVal(r,COL.water))));
+  const maxSleep = Math.max(...rows.map(r=>nv(getVal(r,COL.sleep))));
+
+  const badges = [
+    {emoji:'🎯', name:'First Check-in',   earned: rows.length >= 1},
+    {emoji:'📅', name:'1 Month In',       earned: totalDays >= 28},
+    {emoji:'💪', name:'5 Workouts',       earned: maxWo >= 5},
+    {emoji:'🧘', name:'7 Meditations',    earned: maxMed >= 7},
+    {emoji:'⚖️', name:'First 2kg Lost',   earned: wLost >= 2},
+    {emoji:'🔥', name:'5kg Milestone',    earned: wLost >= 5},
+    {emoji:'🏆', name:'10kg Champion',    earned: wLost >= 10},
+    {emoji:'💧', name:'Hydration Hero',   earned: maxWater >= 3},
+    {emoji:'😴', name:'Sleep Champion',   earned: maxSleep >= 8},
+    {emoji:'⭐', name:'Wellness 80+',     earned: false},
+  ];
+
+  return `<div class="badges-section">
+    <div class="badges-title">Badges Earned</div>
+    <div class="badges-grid">
+      ${badges.map(b=>`<div class="badge-chip ${b.earned?'earned':'locked'}">${b.emoji} ${b.name}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
 // WEEKLY HABIT CHART
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function renderHabitChart(rows) {
-  return `<div class="section-title">📅 Weekly Habit Trends</div>
+  // Count weeks
+  const wkMap = {};
+  rows.forEach(r => {
+    const dStr = getVal(r,COL.date); if (!dStr) return;
+    const p = String(dStr).split('/'); if (p.length<3) return;
+    const d = new Date(p[2],p[1]-1,p[0]);
+    const mon = new Date(d); mon.setDate(d.getDate()-((d.getDay()+6)%7));
+    const key = mon.toISOString().split('T')[0];
+    if (!wkMap[key]) wkMap[key] = {wo:0,med:0,food:0};
+    wkMap[key].wo   = Math.max(wkMap[key].wo,   nv(getVal(r,COL.workout)));
+    wkMap[key].med  = Math.max(wkMap[key].med,  nv(getVal(r,COL.meditation)));
+    wkMap[key].food = Math.max(wkMap[key].food, nv(getVal(r,COL.food)));
+  });
+  const wks = Object.keys(wkMap).sort();
+  const numWeeks = wks.length;
+  return `<div class="section-label">Weekly Habit Trends</div>
   <div class="chart-card" style="margin-bottom:28px">
+    <div class="chart-header">
+      <div><div class="chart-title">Habit Compliance by Week</div><div class="chart-subtitle">Workouts • Meditation days • Food plates shared</div></div>
+      <span class="chart-badge blue">${numWeeks} week${numWeeks!==1?'s':''}</span>
+    </div>
     <canvas id="chartHabits" height="200"></canvas>
   </div>`;
 }
 
-// ═══════════════════════════════════════════════════════
-// STREAKS
-// ═══════════════════════════════════════════════════════
-function renderStreaks(rows) {
-  const today = new Date();
-  const d4wAgo = new Date(today); d4wAgo.setDate(d4wAgo.getDate()-28);
-  const fmt = d => d.toISOString().split('T')[0];
-
-  return `<div class="section-title">🔥 Streaks & Achievements</div>
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:28px">
-    <div class="streak-controls">
-      <label>From</label>
-      <input type="date" id="streakFrom" value="${fmt(d4wAgo)}" onchange="updateStreaks()">
-      <label>To</label>
-      <input type="date" id="streakTo" value="${fmt(today)}" onchange="updateStreaks()">
-    </div>
-    <div id="streakBadges" class="badge-row"></div>
-    <div id="streakWeeks"></div>
+// ═══════════════════════════════════════════
+// NOTES
+// ═══════════════════════════════════════════
+function renderNotes(rows) {
+  const notes = rows.filter(r => {
+    const n = getVal(r, COL.notes); return n && String(n).trim() !== '';
+  }).slice().reverse().slice(0,10);
+  if (!notes.length) return '';
+  return `<div class="section-label">Coach Notes</div>
+  <div class="notes-list">
+    ${notes.map(r=>`<div class="note-item">
+      <div class="note-date">${fmt(getVal(r,COL.date))}</div>
+      <div class="note-text">${getVal(r,COL.notes)}</div>
+    </div>`).join('')}
   </div>`;
 }
 
-function updateStreaks(rows) {
-  rows = rows || window._vcRows;
-  if (!rows) return;
-  const from = new Date(document.getElementById('streakFrom').value);
-  const to   = new Date(document.getElementById('streakTo').value);
-  to.setHours(23,59,59);
-
-  // Group by week (Mon–Sun)
-  const weeks = {};
-  rows.forEach(r => {
-    const dStr = getVal(r, COL.date);
-    if (!dStr) return;
-    const parts = dStr.split('/');
-    if (parts.length < 3) return;
-    const d = new Date(parts[2], parts[1]-1, parts[0]);
-    if (d < from || d > to) return;
-    // Monday of that week
-    const mon = new Date(d);
-    mon.setDate(d.getDate() - ((d.getDay()+6)%7));
-    const key = mon.toISOString().split('T')[0];
-    if (!weeks[key]) weeks[key] = { workout:0, meditation:0, food:0 };
-    weeks[key].workout    = Math.max(weeks[key].workout,    nv(getVal(r,COL.workout)));
-    weeks[key].meditation = Math.max(weeks[key].meditation, nv(getVal(r,COL.meditation)));
-    weeks[key].food       = Math.max(weeks[key].food,       nv(getVal(r,COL.food)));
-  });
-
-  const keys = Object.keys(weeks).sort();
-  let streak = 0, maxStreak = 0, curStreak = 0;
-  const weekResults = keys.map(k => {
-    const w = weeks[k];
-    const pass = w.workout>=4 && w.meditation>=3 && w.food>=10;
-    return { key:k, ...w, pass };
-  });
-  weekResults.forEach(w => { if(w.pass) curStreak++; else curStreak=0; maxStreak=Math.max(maxStreak,curStreak); });
-  // count from end
-  let streakFromEnd = 0;
-  for(let i=weekResults.length-1;i>=0;i--){ if(weekResults[i].pass) streakFromEnd++; else break; }
-
-  const badges = [];
-  if (streakFromEnd >= 1) badges.push('🔥 On a streak!');
-  if (maxStreak >= 4)     badges.push('🏆 4-Week Champion');
-  if (maxStreak >= 2)     badges.push('⭐ 2-Week Warrior');
-  if (weekResults.filter(w=>w.pass).length >= keys.length && keys.length > 0) badges.push('💪 Perfect Run');
-
-  document.getElementById('streakBadges').innerHTML = badges.length ?
-    badges.map(b=>`<span class="badge">${b}</span>`).join('') :
-    '<span style="color:var(--muted);font-size:13px">Keep going — badges unlock at 2+ streak weeks!</span>';
-
-  document.getElementById('streakWeeks').innerHTML = weekResults.map(w => {
-    const sun = new Date(w.key); sun.setDate(sun.getDate()+6);
-    const label = w.key.split('-').slice(1).join('/') + ' – ' + String(sun.getDate()).padStart(2,'0')+'/'+String(sun.getMonth()+1).padStart(2,'0');
-    const color = w.pass ? 'var(--green)' : 'var(--orange)';
-    return `<div class="week-streak-row">
-      <span class="streak-week-label">${label}</span>
-      <div class="streak-dot" style="background:${color}"></div>
-      <span style="font-size:12px;color:${color}">${w.pass?'✅ Week Complete':'Incomplete'}</span>
-      <span style="font-size:11px;color:var(--muted);margin-left:auto">W:${w.workout} M:${w.meditation} F:${w.food}</span>
-    </div>`;
-  }).join('') || '<div style="color:var(--muted);font-size:13px;padding:10px 0">No data in range.</div>';
-}
-
-// ═══════════════════════════════════════════════════════
-// COACH NOTES
-// ═══════════════════════════════════════════════════════
-function renderNotes(rows) {
-  const notes = rows.filter(r => {
-    const n = getVal(r, COL.notes);
-    return n && String(n).trim() !== '';
-  }).reverse().slice(0,10);
-  if (!notes.length) return '<div class="section-title">📝 Coach Notes</div><div class="empty-state" style="padding:20px"><p>No notes yet.</p></div>';
-  return '<div class="section-title">📝 Coach Notes</div>' +
-    notes.map(r => `<div class="note-item">
-      <div class="note-date">${getVal(r,COL.date)}</div>
-      <div class="note-text">${getVal(r,COL.notes)}</div>
-    </div>`).join('') + '<div style="margin-bottom:28px"></div>';
-}
-
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // HISTORY TABLE
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 const PAGE_SIZE = 10;
-function renderHistory(rows, page) {
+function renderHistory(clientName, rows, page) {
   const total = rows.length;
   const pages = Math.ceil(total/PAGE_SIZE);
-  const start = (page-1)*PAGE_SIZE;
-  const slice = rows.slice().reverse().slice(start, start+PAGE_SIZE);
+  const reversed = rows.slice().reverse();
+  const slice = reversed.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
 
-  const hColor = {
-    'Date':'var(--green)', 'Wt Δ':'var(--orange)', 'Weight':'var(--orange)',
-    'Fat%':'var(--blue)', 'Visceral':'var(--purple)',
-    'Workout':'var(--blue)', 'Meditation':'var(--purple)',
-    'Food Plates':'var(--green)', 'Water':'var(--blue)',
-    'Sleep':'var(--purple)', 'Energy':'var(--yellow)'
-  };
-  const cols = ['Date','Wt Δ','Weight','Fat%','Visceral','Workout','Meditation','Food Plates','Water','Sleep','Energy'];
-
-  const thead = '<tr>' + cols.map(c => `<th style="color:${hColor[c]||'var(--muted)'}">${c}</th>`).join('') + '</tr>';
   const tbody = slice.map((r, i) => {
-    const allRows = rows.slice().reverse();
-    const globalIdx = start + i;
-    const prevRow = allRows[globalIdx+1];
+    const globalIdx = (page-1)*PAGE_SIZE + i;
+    const prevRow   = reversed[globalIdx+1];
     const curW  = nv(getVal(r, COL.weight), null);
     const prevW = prevRow ? nv(getVal(prevRow, COL.weight), null) : null;
-    const wDelta = (curW !== null && prevW !== null) ? (curW - prevW).toFixed(1) : '—';
-    const wDeltaColor = parseFloat(wDelta) < 0 ? 'var(--green)' : parseFloat(wDelta) > 0 ? 'var(--orange)' : 'var(--muted)';
-    return '<tr>' +
-      `<td>${getVal(r,COL.date)||'—'}</td>` +
-      `<td style="color:${wDeltaColor}">${wDelta !== '—' ? (parseFloat(wDelta)>0?'+':'')+wDelta : '—'}</td>` +
-      `<td>${getVal(r,COL.weight)||'—'}</td>` +
-      `<td>${getVal(r,COL.fat)||'—'}</td>` +
-      `<td>${getVal(r,COL.visceral)||'—'}</td>` +
-      `<td>${getVal(r,COL.workout)||'—'}</td>` +
-      `<td>${getVal(r,COL.meditation)||'—'}</td>` +
-      `<td>${getVal(r,COL.food)||'—'}</td>` +
-      `<td>${getVal(r,COL.water)||'—'}</td>` +
-      `<td>${getVal(r,COL.sleep)||'—'}</td>` +
-      `<td>${getVal(r,COL.energy)||'—'}</td>` +
-    '</tr>';
+    const wD = (curW!==null&&prevW!==null) ? (curW-prevW).toFixed(1) : null;
+    const wDColor = wD===null?'var(--muted)':parseFloat(wD)<0?'var(--green)':parseFloat(wD)>0?'var(--orange)':'var(--muted)';
+    return `<tr>
+      <td style="color:var(--green)">${getVal(r,COL.date)||'—'}</td>
+      <td style="color:${wDColor}">${wD!==null?(parseFloat(wD)>0?'+':'')+wD:'—'}</td>
+      <td style="color:var(--orange);font-weight:700">${getVal(r,COL.weight)||'—'}</td>
+      <td style="color:var(--blue)">${getVal(r,COL.fat)||'—'}</td>
+      <td style="color:var(--purple)">${getVal(r,COL.visceral)||'—'}</td>
+      <td>${getVal(r,COL.workout)||'—'}</td>
+      <td>${getVal(r,COL.meditation)||'—'}</td>
+      <td>${getVal(r,COL.food)||'—'}</td>
+      <td>${getVal(r,COL.water)||'—'}</td>
+      <td>${getVal(r,COL.sleep)||'—'}</td>
+      <td style="color:var(--yellow)">${getVal(r,COL.energy)||'—'}</td>
+    </tr>`;
   }).join('');
 
   const pageButtons = Array.from({length:pages},(_,i) =>
     `<button class="page-btn${i+1===page?' active':''}" onclick="goPage(${i+1})">${i+1}</button>`
   ).join('');
 
-  return `<div class="section-title">📋 Complete Measurement History</div>
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:28px">
-    <div class="history-table-wrap">
-      <table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
+  return `<div class="section-label">Session Log</div>
+  <div class="session-log-card">
+    <div class="session-log-header">
+      <div>
+        <div class="session-log-title">Complete Measurement History</div>
+        <div class="session-log-sub">${clientName} • ${total} session${total!==1?'s':''}</div>
+      </div>
+      <span class="session-count-badge">${total} records</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th class="th-date">Date</th>
+          <th class="th-wt">Wt Δ</th>
+          <th class="th-wt">Weight</th>
+          <th class="th-fat">Fat%</th>
+          <th class="th-vis">Visceral</th>
+          <th class="th-wo">Workout</th>
+          <th class="th-med">Meditation</th>
+          <th class="th-food">Food Plates</th>
+          <th class="th-water">Water</th>
+          <th class="th-sleep">Sleep</th>
+          <th class="th-energy">Energy</th>
+        </tr></thead>
+        <tbody>${tbody}</tbody>
+      </table>
     </div>
     <div class="pagination">
       <button class="page-btn" onclick="goPage(${Math.max(1,page-1)})" ${page===1?'disabled':''}>← Prev</button>
@@ -727,138 +921,128 @@ function renderHistory(rows, page) {
 }
 
 function goPage(p) {
-  const rows = window._vcRows;
-  if (!rows) return;
-  const saved = {
-    from: document.getElementById('streakFrom') ? document.getElementById('streakFrom').value : null,
-    to:   document.getElementById('streakTo')   ? document.getElementById('streakTo').value   : null
-  };
+  const rows = window._vcRows; if (!rows) return;
+  const client = window._vcClient || '';
+  const savedFrom = document.getElementById('streakFrom')?.value;
+  const savedTo   = document.getElementById('streakTo')?.value;
   const html = [
-    renderOverview(rows),
+    renderOverview(client, rows),
     renderRings(rows),
     renderBodyCharts(rows),
-    renderHabitChart(rows),
     renderStreaks(rows),
+    renderBadges(rows),
+    renderHabitChart(rows),
     renderNotes(rows),
-    renderHistory(rows, p)
+    renderHistory(client, rows, p)
   ].join('');
-  document.getElementById('content').innerHTML = html + '<footer>#getfitwithpareshsampada</footer>';
+  document.getElementById('content').innerHTML = html + '<footer><span>#getfitwithpareshsampada</span></footer>';
   drawCharts(rows);
-  if (saved.from) document.getElementById('streakFrom').value = saved.from;
-  if (saved.to)   document.getElementById('streakTo').value   = saved.to;
+  if (savedFrom) document.getElementById('streakFrom').value = savedFrom;
+  if (savedTo)   document.getElementById('streakTo').value   = savedTo;
   updateStreaks(rows);
 }
 
-// ═══════════════════════════════════════════════════════
-// CHART.JS DRAWING
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════
 const _charts = {};
 function destroyChart(id) { if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; } }
 
 function drawCharts(rows) {
   const labels = rows.map(r => getVal(r, COL.date));
+  const gridColor = 'rgba(255,255,255,.05)';
+  const tickColor = '#505870';
+  const baseOpts = (extra={}) => ({
+    responsive:true,
+    plugins:{legend:{display:false},...(extra.plugins||{})},
+    scales:{
+      x:{ticks:{color:tickColor,maxTicksLimit:6,font:{size:11}},grid:{color:gridColor}},
+      y:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor},...(extra.y||{})}
+    }
+  });
 
   // Weight
   destroyChart('chartWeight');
   const wCtx = document.getElementById('chartWeight');
-  if (wCtx) _charts['chartWeight'] = new Chart(wCtx.getContext('2d'), {
+  if (wCtx) _charts['chartWeight'] = new Chart(wCtx, {
     type:'line',
-    data:{
-      labels,
-      datasets:[{label:'Weight (kg)',data:rows.map(r=>nv(getVal(r,COL.weight),null)),
-        borderColor:'var(--orange)',backgroundColor:'#ff704322',fill:true,tension:.3,pointRadius:3,
-        spanGaps:true}]
-    },
-    options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'var(--muted)',maxTicksLimit:6},grid:{color:'var(--border)'}},
-              y:{ticks:{color:'var(--muted)'},grid:{color:'var(--border)'}}}}
+    data:{labels, datasets:[{
+      label:'Weight (kg)', data:rows.map(r=>{ const v=nv(getVal(r,COL.weight),null); return v===0?null:v; }),
+      borderColor:'var(--green)',backgroundColor:'rgba(0,229,160,.08)',fill:true,tension:.3,
+      pointRadius:3,pointBackgroundColor:'var(--green)',spanGaps:true
+    }]},
+    options: baseOpts()
   });
 
   // Fat
   destroyChart('chartFat');
   const fCtx = document.getElementById('chartFat');
-  if (fCtx) _charts['chartFat'] = new Chart(fCtx.getContext('2d'), {
+  if (fCtx) _charts['chartFat'] = new Chart(fCtx, {
     type:'line',
-    data:{
-      labels,
-      datasets:[{label:'Fat%',data:rows.map(r=>nv(getVal(r,COL.fat),null)),
-        borderColor:'var(--blue)',backgroundColor:'#4d9fff22',fill:true,tension:.3,pointRadius:3,
-        spanGaps:true}]
-    },
-    options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'var(--muted)',maxTicksLimit:6},grid:{color:'var(--border)'}},
-              y:{ticks:{color:'var(--muted)'},grid:{color:'var(--border)'}}}}
+    data:{labels, datasets:[{
+      label:'Fat%', data:rows.map(r=>{ const v=nv(getVal(r,COL.fat),null); return v===0?null:v; }),
+      borderColor:'var(--orange)',backgroundColor:'rgba(255,112,67,.08)',fill:true,tension:.3,
+      pointRadius:3,pointBackgroundColor:'var(--orange)',spanGaps:true
+    }]},
+    options: baseOpts()
   });
 
   // Visceral
   destroyChart('chartVisceral');
   const vCtx = document.getElementById('chartVisceral');
-  if (vCtx) _charts['chartVisceral'] = new Chart(vCtx.getContext('2d'), {
-    type:'line',
-    data:{
-      labels,
-      datasets:[{label:'Visceral Fat',data:rows.map(r=>nv(getVal(r,COL.visceral),null)),
-        borderColor:'var(--purple)',backgroundColor:'#b06cff22',fill:true,tension:.3,pointRadius:3,
-        spanGaps:true}]
-    },
-    options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{x:{ticks:{color:'var(--muted)',maxTicksLimit:6},grid:{color:'var(--border)'}},
-              y:{ticks:{color:'var(--muted)'},grid:{color:'var(--border)'},min:1,max:9,
-                suggestedMin:1}}}
+  if (vCtx) _charts['chartVisceral'] = new Chart(vCtx, {
+    type:'bar',
+    data:{labels, datasets:[{
+      label:'Visceral Fat', data:rows.map(r=>{ const v=nv(getVal(r,COL.visceral),null); return v===0?null:v; }),
+      backgroundColor:'rgba(176,108,255,.6)',borderColor:'var(--purple)',borderWidth:1,borderRadius:4,spanGaps:true
+    }]},
+    options: baseOpts({y:{suggestedMin:1}})
   });
 
-  // Weekly habit bar chart — group by week
+  // Habits weekly
   destroyChart('chartHabits');
   const hCtx = document.getElementById('chartHabits');
   if (hCtx) {
-    // Build weekly aggregation
-    const weeklyMap = {};
+    const wkMap = {};
     rows.forEach(r => {
-      const dStr = getVal(r, COL.date);
-      if (!dStr) return;
-      const parts = dStr.split('/');
-      if (parts.length < 3) return;
-      const d = new Date(parts[2], parts[1]-1, parts[0]);
+      const dStr = getVal(r,COL.date); if (!dStr) return;
+      const p = String(dStr).split('/'); if (p.length<3) return;
+      const d = new Date(p[2],p[1]-1,p[0]);
       const mon = new Date(d); mon.setDate(d.getDate()-((d.getDay()+6)%7));
       const key = mon.toISOString().split('T')[0];
-      if (!weeklyMap[key]) weeklyMap[key] = { workout:0, meditation:0, food:0, water:0, sleep:0 };
-      const w = weeklyMap[key];
-      w.workout    = Math.max(w.workout,    nv(getVal(r,COL.workout)));
-      w.meditation = Math.max(w.meditation, nv(getVal(r,COL.meditation)));
-      w.food       = Math.max(w.food,       nv(getVal(r,COL.food)));
-      w.water      = Math.max(w.water,      nv(getVal(r,COL.water)));
-      w.sleep      = Math.max(w.sleep,      nv(getVal(r,COL.sleep)));
+      if (!wkMap[key]) wkMap[key] = {wo:0,med:0,food:0};
+      wkMap[key].wo   = Math.max(wkMap[key].wo,   nv(getVal(r,COL.workout)));
+      wkMap[key].med  = Math.max(wkMap[key].med,  nv(getVal(r,COL.meditation)));
+      wkMap[key].food = Math.max(wkMap[key].food, nv(getVal(r,COL.food)));
     });
-    const wks = Object.keys(weeklyMap).sort().slice(-8);
-    const wLabels = wks.map(k => k.split('-').slice(1).join('/'));
-    _charts['chartHabits'] = new Chart(hCtx.getContext('2d'), {
+    const wks = Object.keys(wkMap).sort().slice(-12);
+    _charts['chartHabits'] = new Chart(hCtx, {
       type:'bar',
       data:{
-        labels:wLabels,
+        labels: wks.map(k => k.slice(5).replace('-','/')),
         datasets:[
-          {label:'Workout',    data:wks.map(k=>weeklyMap[k].workout),    backgroundColor:'#00e5a0aa'},
-          {label:'Meditation', data:wks.map(k=>weeklyMap[k].meditation), backgroundColor:'#b06cffaa'},
-          {label:'Food Plates',data:wks.map(k=>weeklyMap[k].food),       backgroundColor:'#ff7043aa'},
+          {label:'Workouts',    data:wks.map(k=>wkMap[k].wo),   backgroundColor:'rgba(0,229,160,.7)',  borderRadius:4},
+          {label:'Meditation',  data:wks.map(k=>wkMap[k].med),  backgroundColor:'rgba(176,108,255,.7)',borderRadius:4},
+          {label:'Food Plates', data:wks.map(k=>wkMap[k].food), backgroundColor:'rgba(255,112,67,.7)', borderRadius:4},
         ]
       },
-      options:{responsive:true,plugins:{legend:{labels:{color:'var(--text)'}}},
-        scales:{x:{ticks:{color:'var(--muted)'},grid:{color:'var(--border)'}},
-                y:{ticks:{color:'var(--muted)'},grid:{color:'var(--border)'}}}}
+      options:{
+        responsive:true,
+        plugins:{legend:{labels:{color:'var(--text)',font:{size:11}}}},
+        scales:{
+          x:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor}},
+          y:{ticks:{color:tickColor,font:{size:11}},grid:{color:gridColor}}
+        }
+      }
     });
   }
-
-  // Run streaks after charts
 }
 
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 // BOOT
-// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════
 function initApp() {
-  if (CLIENT_PARAM && CTOKEN_PARAM) {
-    // Client share-link mode
-    startClientMode();
-  }
-  // else: coach login screen shown by default
+  if (CLIENT_PARAM && CTOKEN_PARAM) { startClientMode(); }
 }
 initApp();
 </script>
