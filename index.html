@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VitalCoach — Client Dashboard</title>
+<title>#getfitwithpareshsampada</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -183,8 +183,8 @@ tr:hover td{background:rgba(255,255,255,.015)}
 <body>
 <div id="passwordScreen">
   <div class="login-box">
-    <div class="login-logo">VC</div>
-    <div class="login-title">VitalCoach</div>
+    <div class="login-logo">PS</div>
+    <div class="login-title">Paresh-Sampada</div>
     <div class="login-sub">Your professional health coaching dashboard.<br>Sign in to continue.</div>
     <input class="login-input" type="password" id="passwordInput" placeholder="Enter password" onkeydown="if(event.key==='Enter'){event.preventDefault();checkPassword();}">
     <button class="login-btn" id="loginBtn" onclick="checkPassword()">🔐 Access Dashboard</button>
@@ -197,7 +197,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 </div>
 <div id="app" style="display:none">
   <nav class="sidebar">
-    <div class="logo-mark">VC</div>
+    <div class="logo-mark">PS</div>
     <div class="nav-icon active">📊</div>
     <div class="nav-icon">👥</div>
     <div class="nav-icon">🎯</div>
@@ -209,7 +209,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
   </nav>
   <div class="main">
     <header class="topbar">
-      <div class="topbar-title">Vital<span>Coach</span></div>
+      <div class="topbar-title">Paresh<span>Sampada</span></div>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
       <button class="topbar-btn" onclick="fetchData(true)">🔄 Sync</button>
       <div class="client-selector-wrap">
@@ -220,9 +220,12 @@ tr:hover td{background:rgba(255,255,255,.015)}
     </header>
     <main class="content" id="content">
       <div class="empty-state"><div class="big">📈</div>
-        <p><strong style="color:var(--text);font-size:20px;">Welcome to VitalCoach Pro</strong><br><br>Select a client from the dropdown above to view<br>their complete health &amp; habit dashboard.</p>
+        <p><strong style="color:var(--text);font-size:20px;">Welcome to Paresh-Sampada</strong><br><br>Select a client from the dropdown above to view<br>their complete health &amp; habit dashboard.</p>
       </div>
     </main>
+    <footer style="text-align:center;padding:24px 28px 20px;margin-left:0">
+      <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--muted);letter-spacing:.04em">#getfitwithpareshsampada</span>
+    </footer>
   </div>
 </div>
 <script>
@@ -354,7 +357,7 @@ function loadClient(name){
   const lastWater=String(nv(lastRec[COL.water]));
   const lastSleep=String(nv(lastRec[COL.sleep]));
   const _er=getVal(lastRec,COL.energy); const lastEnergy=(_er!==undefined&&_er!==null&&String(_er).trim()!=='')?nv(_er):null;
-  console.log('[VitalCoach DEBUG] lastRec keys:', Object.keys(lastRec), '| _er:', _er, '| lastEnergy:', lastEnergy);
+  console.log('[PS DEBUG] lastRec keys:', Object.keys(lastRec), '| _er:', _er, '| lastEnergy:', lastEnergy);
   // ── Streak: store rows on window so date-range filter can access ──
   window._vcRows = rows;
   window._vcName = name;
