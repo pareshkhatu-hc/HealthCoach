@@ -213,6 +213,16 @@ tr:hover td{background:rgba(255,255,255,.015)}
 const API_URL='https://script.google.com/macros/s/AKfycbyPVVqNme0ybqxX1cBR3KijQKsUWxgknn6-oRamMH80SwpiHRcq012Wg5ZtG6MXcJaN/exec';
 const PASSWORD='vitalcoach2024';
 const COL={name:'Client Name',date:'Date',weight:'Weight',fat:'Fat%',visceral:'Visceral Fat',workout:'Workout Done',meditation:'Meditation Done',food:'Food Plates Shared',water:'Water (L)',sleep:'Sleep (hrs)',energy:'Energy Level',notes:'Coach Notes'};
+// Robust value getter — handles column name case/spacing mismatches from Google Sheets
+function getVal(obj, colName) {
+  if (!obj) return undefined;
+  // 1. Exact match
+  if (obj[colName] !== undefined) return obj[colName];
+  // 2. Case-insensitive + trimmed match
+  const lower = colName.toLowerCase().trim();
+  const key = Object.keys(obj).find(k => k.toLowerCase().trim() === lower);
+  return key !== undefined ? obj[key] : undefined;
+}
 const TARGETS={workout:5,meditation:7,food:5,water:2.5,sleep:7};
 let allData=[],charts={};
 
@@ -327,7 +337,8 @@ function loadClient(name){
   const foodPct=Math.min(100,Math.round(foodTotal/14*100));
   const lastWater=String(nv(lastRec[COL.water]));
   const lastSleep=String(nv(lastRec[COL.sleep]));
-  const _er=lastRec[COL.energy]; const lastEnergy=(_er!==undefined&&_er!==null&&String(_er).trim()!=='')?nv(_er):null;
+  const _er=getVal(lastRec,COL.energy); const lastEnergy=(_er!==undefined&&_er!==null&&String(_er).trim()!=='')?nv(_er):null;
+  console.log('[VitalCoach DEBUG] lastRec keys:', Object.keys(lastRec), '| _er:', _er, '| lastEnergy:', lastEnergy);
   let streak=0;
   for(let i=rows.length-1;i>=0;i--){if(nv(rows[i][COL.workout])>0&&nv(rows[i][COL.meditation])>0)streak++;else break;}
   const wellness=calcWellness(rows);
@@ -421,7 +432,7 @@ function loadClient(name){
       <thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th><th>Workout</th><th>Meditation</th><th>Food Plates</th><th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>
       <tbody>${[...rows].reverse().map((row,i,arr)=>{
         const prev=arr[i+1];const wD=prev?(nv(row[COL.weight])-nv(prev[COL.weight])).toFixed(1):null;const wG=wD!==null&&parseFloat(wD)<=0;
-        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td><td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+((row[COL.energy]!==undefined&&String(row[COL.energy]).trim()!=='')?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
+        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td><td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+((()=>{const _e=getVal(row,COL.energy);return (_e!==undefined&&_e!==null&&String(_e).trim()!=='')?'<span style="color:var(--yellow);font-weight:600">'+_e+'</span>':'—';})())+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
       }).join('')}</tbody>
     </table></div>
   </div>`;
