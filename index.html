@@ -412,18 +412,18 @@ function loadClient(name){
     </div>
   </div>
 
-  <div class="section-header anim anim-4"><span class="section-title">Streaks &amp; Achievements</span><div class="section-line"></div></div>
-  <div id="streakSection" class="anim anim-4"></div>
-  <div class="streak-panel anim anim-4" style="border-top:none;border-radius:0 0 var(--card-r) var(--card-r);margin-top:0">
-    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Badges Earned</div>
-    <div class="badges-row">${badges.map(b=>'<div class="badge-item '+(b.earned?'earned':'locked')+'"><span>'+b.emoji+'</span>'+b.name+'</div>').join('')}</div>
-  </div>
-
   <div class="section-header anim anim-5"><span class="section-title">Body Composition</span><div class="section-line"></div></div>
   <div class="charts-grid anim anim-5">
     <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div><span class="chart-badge green">↓ ${Math.abs(wLost)} kg lost</span></div><canvas id="weightChart" height="80"></canvas></div>
     <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div><span class="chart-badge orange">↓ ${Math.abs(fLost)}% reduced</span></div><canvas id="fatChart" height="150"></canvas></div>
     <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–30 • healthy: below 13</div></div><span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels</span></div><canvas id="visceralChart" height="150"></canvas></div>
+  </div>
+
+  <div class="section-header anim anim-4"><span class="section-title">Streaks &amp; Achievements</span><div class="section-line"></div></div>
+  <div id="streakSection" class="anim anim-4"></div>
+  <div class="streak-panel anim anim-4" style="border-top:none;border-radius:0 0 var(--card-r) var(--card-r);margin-top:0">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Badges Earned</div>
+    <div class="badges-row">${badges.map(b=>'<div class="badge-item '+(b.earned?'earned':'locked')+'"><span>'+b.emoji+'</span>'+b.name+'</div>').join('')}</div>
   </div>
 
   <div class="section-header anim anim-5"><span class="section-title">Weekly Habit Trends</span><div class="section-line"></div></div>
@@ -504,9 +504,9 @@ function renderStreak(fromDate, toDate) {
     const wo   = wrows.reduce((s,r) => s+nv(getVal(r,COL.workout)),   0);
     const med  = wrows.reduce((s,r) => s+nv(getVal(r,COL.meditation)), 0);
     const food = wrows.reduce((s,r) => s+nv(getVal(r,COL.food)),       0);
-    const woThresh   = days * 0.7;
-    const medThresh  = days * 0.6;
-    const foodThresh = 14  * 0.8; // 11.2
+    const woThresh   = 4;
+    const medThresh  = 3;
+    const foodThresh = 10;
     const woPass   = wo   >= woThresh;
     const medPass  = med  >= medThresh;
     const foodPass = food >= foodThresh;
@@ -579,9 +579,9 @@ function renderStreak(fromDate, toDate) {
     <!-- Threshold legend -->
     <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--muted)">Thresholds:</span>
-      <span style="font-size:11px;color:var(--blue)">💪 Workout ≥70% of days</span>
-      <span style="font-size:11px;color:var(--purple)">🧘 Meditation ≥60% of days</span>
-      <span style="font-size:11px;color:var(--green)">🍽️ Food ≥80% of 14 plates</span>
+      <span style="font-size:11px;color:var(--blue)">💪 Workout ≥4 sessions/week</span>
+      <span style="font-size:11px;color:var(--purple)">🧘 Meditation ≥3 sessions/week</span>
+      <span style="font-size:11px;color:var(--green)">🍽️ Food ≥10 plates/week</span>
     </div>
 
     <!-- Week-by-week breakdown -->
@@ -590,13 +590,13 @@ function renderStreak(fromDate, toDate) {
       <div class="streak-week-row">
         <div class="streak-week-label">${w.label}</div>
         <div class="streak-pips">
-          <div class="pip ${w.woPass?'pass':'fail'}" title="Workout: ${w.wo} sessions (need ≥${w.woThresh.toFixed(1)})">
+          <div class="pip ${w.woPass?'pass':'fail'}" title="Workout: ${w.wo} sessions (need ≥4)">
             💪${w.wo}
           </div>
-          <div class="pip ${w.medPass?'pass':'fail'}" title="Meditation: ${w.med} sessions (need ≥${w.medThresh.toFixed(1)})">
+          <div class="pip ${w.medPass?'pass':'fail'}" title="Meditation: ${w.med} sessions (need ≥3)">
             🧘${w.med}
           </div>
-          <div class="pip ${w.foodPass?'pass':'fail'}" title="Food: ${w.food} plates (need ≥${w.foodThresh.toFixed(1)})">
+          <div class="pip ${w.foodPass?'pass':'fail'}" title="Food: ${w.food} plates (need ≥10)">
             🍽️${w.food}
           </div>
         </div>
