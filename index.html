@@ -320,13 +320,14 @@ function loadClient(name){
   const last7=rows.slice(-7);
   const woCount=last7.length?nv(last7[last7.length-1][COL.workout]):0;
   const medCount=last7.length?nv(last7[last7.length-1][COL.meditation]):0;
-  const foodTotal=last7.reduce((s,r)=>s+nv(r[COL.food]),0);
+  const lastRec=last7.length?last7[last7.length-1]:{};
+  const foodTotal=nv(lastRec[COL.food]);
   const woPct=Math.round(woCount/7*100);
   const medPct=Math.round(medCount/7*100);
   const foodPct=Math.min(100,Math.round(foodTotal/14*100));
-  const avgWater=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.water]),0)/last7.length).toFixed(1):'0';
-  const avgSleep=last7.length?(last7.reduce((s,r)=>s+nv(r[COL.sleep]),0)/last7.length).toFixed(1):'0';
-  var _rawEnergy=last7.length?last7[last7.length-1][COL.energy]:null; var lastEnergy=(_rawEnergy!==null&&_rawEnergy!==undefined&&_rawEnergy!=='')?String(_rawEnergy):'—';
+  const lastWater=String(nv(lastRec[COL.water]));
+  const lastSleep=String(nv(lastRec[COL.sleep]));
+  const _er=lastRec[COL.energy]; const lastEnergy=(_er!==undefined&&_er!==null&&String(_er).trim()!=='')?nv(_er):null;
   let streak=0;
   for(let i=rows.length-1;i>=0;i--){if(nv(rows[i][COL.workout])>0&&nv(rows[i][COL.meditation])>0)streak++;else break;}
   const wellness=calcWellness(rows);
@@ -340,8 +341,8 @@ function loadClient(name){
     {emoji:'⚖️',name:'First 2kg Lost',earned:nv(wLost)>=2},
     {emoji:'🔥',name:'5kg Milestone',earned:nv(wLost)>=5},
     {emoji:'🏆',name:'10kg Champion',earned:nv(wLost)>=10},
-    {emoji:'💧',name:'Hydration Hero',earned:nv(avgWater)>=TARGETS.water},
-    {emoji:'😴',name:'Sleep Champion',earned:nv(avgSleep)>=TARGETS.sleep},
+    {emoji:'💧',name:'Hydration Hero',earned:nv(lastWater)>=TARGETS.water},
+    {emoji:'😴',name:'Sleep Champion',earned:nv(lastSleep)>=TARGETS.sleep},
     {emoji:'🌟',name:'Wellness 80+',earned:wellness>=80},
   ];
   const weekGroups=groupByWeek(rows);
@@ -377,9 +378,9 @@ function loadClient(name){
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(woPct,'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💪</div><div class="habit-ring-pct" style="color:var(--blue)">${woPct}%</div></div></div><div class="habit-ring-label">Workouts</div><div class="habit-ring-sub">${woCount} sessions</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(medPct,'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🧘</div><div class="habit-ring-pct" style="color:var(--purple)">${medPct}%</div></div></div><div class="habit-ring-label">Meditation</div><div class="habit-ring-sub">${medCount} days</div></div>
       <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(foodPct,'#00e5a0',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">🍽️</div><div class="habit-ring-pct" style="color:var(--green)">${foodPct}%</div></div></div><div class="habit-ring-label">Food Plates</div><div class="habit-ring-sub">${foodTotal} plates</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgWater)/TARGETS.water*100)),'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💧</div><div class="habit-ring-pct" style="color:var(--blue)">${avgWater}L</div></div></div><div class="habit-ring-label">Avg Water</div><div class="habit-ring-sub">Target ${TARGETS.water}L</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(avgSleep)/TARGETS.sleep*100)),'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">😴</div><div class="habit-ring-pct" style="color:var(--purple)">${avgSleep}h</div></div></div><div class="habit-ring-label">Avg Sleep</div><div class="habit-ring-sub">Target ${TARGETS.sleep}h</div></div>
-      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round((lastEnergy!=='—'?nv(lastEnergy):0)/10*100)),'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">⚡</div><div class="habit-ring-pct" style="color:var(--yellow)">${lastEnergy}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Latest entry</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(lastWater)/TARGETS.water*100)),'#4d9fff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">💧</div><div class="habit-ring-pct" style="color:var(--blue)">${lastWater}L</div></div></div><div class="habit-ring-label">Water</div><div class="habit-ring-sub">Target ${TARGETS.water}L</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(Math.min(100,Math.round(nv(lastSleep)/TARGETS.sleep*100)),'#b06cff',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">😴</div><div class="habit-ring-pct" style="color:var(--purple)">${lastSleep}h</div></div></div><div class="habit-ring-label">Sleep</div><div class="habit-ring-sub">Target ${TARGETS.sleep}h</div></div>
+      <div class="habit-ring-item"><div class="habit-ring-wrap">${svgRing(lastEnergy!==null?Math.min(100,Math.round(lastEnergy*10)):0,'#ffd166',100,9)}<div class="habit-ring-center"><div class="habit-ring-emoji">&#x26A1;</div><div class="habit-ring-pct" style="color:var(--yellow)">${lastEnergy!==null?lastEnergy:'—'}</div></div></div><div class="habit-ring-label">Energy Level</div><div class="habit-ring-sub">Latest entry</div></div>
     </div>
   </div>
 
