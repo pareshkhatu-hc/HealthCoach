@@ -120,6 +120,22 @@ select#clientSelect:focus{border-color:var(--green)}
 .streak-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1;margin-bottom:4px}
 .streak-name{font-size:12px;color:var(--muted)}
 .badges-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.date-range-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:12px}
+.date-range-bar label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;white-space:nowrap}
+.date-input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;outline:none;cursor:pointer}
+.date-input:focus{border-color:var(--green)}
+.range-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:7px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.range-btn:hover,.range-btn.active{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.streak-week-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.streak-week-row:last-child{border-bottom:none}
+.streak-week-label{font-size:12px;color:var(--muted);width:100px;flex-shrink:0}
+.streak-pips{display:flex;gap:6px;flex:1}
+.pip{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.pip.pass{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,229,160,.3)}
+.pip.fail{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(255,112,67,.2)}
+.streak-week-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.streak-week-badge.on{background:var(--green-dim);color:var(--green)}
+.streak-week-badge.off{background:var(--orange-dim);color:var(--orange)}
 .badge-item{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;transition:all .2s}
 .badge-item.earned{border-color:rgba(0,229,160,.3);background:var(--green-dim);color:var(--green)}
 .badge-item.locked{opacity:.35}
@@ -339,8 +355,9 @@ function loadClient(name){
   const lastSleep=String(nv(lastRec[COL.sleep]));
   const _er=getVal(lastRec,COL.energy); const lastEnergy=(_er!==undefined&&_er!==null&&String(_er).trim()!=='')?nv(_er):null;
   console.log('[VitalCoach DEBUG] lastRec keys:', Object.keys(lastRec), '| _er:', _er, '| lastEnergy:', lastEnergy);
-  let streak=0;
-  for(let i=rows.length-1;i>=0;i--){if(nv(rows[i][COL.workout])>0&&nv(rows[i][COL.meditation])>0)streak++;else break;}
+  // ── Streak: store rows on window so date-range filter can access ──
+  window._vcRows = rows;
+  window._vcName = name;
   const wellness=calcWellness(rows);
   const leanMass=(nv(last[COL.weight])*(1-nv(last[COL.fat])/100)).toFixed(1);
   const notedRows=rows.filter(r=>r[COL.notes]&&String(r[COL.notes]).trim()!='').slice(-5).reverse();
@@ -396,15 +413,10 @@ function loadClient(name){
   </div>
 
   <div class="section-header anim anim-4"><span class="section-title">Streaks &amp; Achievements</span><div class="section-line"></div></div>
-  <div class="streak-panel anim anim-4">
-    <div class="streak-grid">
-      <div class="streak-item"><span class="streak-emoji">🔥</span><div class="streak-num" style="color:var(--orange)">${streak}</div><div class="streak-name">Day Streak</div></div>
-      <div class="streak-item"><span class="streak-emoji">💪</span><div class="streak-num" style="color:var(--blue)">${rows.reduce((s,r)=>s+nv(r[COL.workout]),0)}</div><div class="streak-name">Total Workouts</div></div>
-      <div class="streak-item"><span class="streak-emoji">🧘</span><div class="streak-num" style="color:var(--purple)">${rows.reduce((s,r)=>s+nv(r[COL.meditation]),0)}</div><div class="streak-name">Meditations</div></div>
-      <div class="streak-item"><span class="streak-emoji">🍽️</span><div class="streak-num" style="color:var(--green)">${rows.reduce((s,r)=>s+nv(r[COL.food]),0)}</div><div class="streak-name">Plates Shared</div></div>
-    </div>
-    <div style="margin-top:20px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Badges Earned</div>
-    <div class="badges-row">${badges.map(b=>'<div class="badge-item '+(b.earned?'earned':'locked')+'"><span>'+b.emoji+'</span>'+b.name+'</div>').join('')}</div></div>
+  <div id="streakSection" class="anim anim-4"></div>
+  <div class="streak-panel anim anim-4" style="border-top:none;border-radius:0 0 var(--card-r) var(--card-r);margin-top:0">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:10px">Badges Earned</div>
+    <div class="badges-row">${badges.map(b=>'<div class="badge-item '+(b.earned?'earned':'locked')+'"><span>'+b.emoji+'</span>'+b.name+'</div>').join('')}</div>
   </div>
 
   <div class="section-header anim anim-5"><span class="section-title">Body Composition</span><div class="section-line"></div></div>
@@ -437,6 +449,8 @@ function loadClient(name){
     </table></div>
   </div>`;
 
+  // render streak section with default last 4 weeks
+  renderStreak();
   requestAnimationFrame(()=>{
     charts.weight=new Chart(document.getElementById('weightChart'),{type:'line',data:{labels,datasets:[{data:weights,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#00e5a0',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('kg')});
     charts.fat=new Chart(document.getElementById('fatChart'),{type:'line',data:{labels,datasets:[{data:fats,borderColor:'#ff7043',backgroundColor:'rgba(255,112,67,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#ff7043',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('%')});
@@ -446,6 +460,153 @@ function loadClient(name){
 
   });
 }
+// ═══════════════════════════════════════════════
+// STREAK RENDERER — reactive, date-range aware
+// ═══════════════════════════════════════════════
+function renderStreak(fromDate, toDate) {
+  const el = document.getElementById('streakSection');
+  if (!el || !window._vcRows) return;
+
+  const rows = window._vcRows;
+
+  // Default: last 4 weeks from latest record date
+  const latestDate = parseDate(rows[rows.length-1][COL.date]);
+  const defaultFrom = new Date(latestDate);
+  defaultFrom.setDate(defaultFrom.getDate() - 27); // 4 weeks back
+
+  const fd = fromDate ? new Date(fromDate) : defaultFrom;
+  const td = toDate   ? new Date(toDate)   : latestDate;
+
+  // Filter rows to selected date range
+  const filtered = rows.filter(r => {
+    const d = parseDate(r[COL.date]);
+    return d >= fd && d <= td;
+  });
+
+  // Group filtered rows by week (Mon–Sun)
+  const wkMap = {};
+  filtered.forEach(r => {
+    const d = parseDate(r[COL.date]);
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay()+6)%7)); // Monday
+    const key = mon.toISOString().split('T')[0];
+    if (!wkMap[key]) wkMap[key] = [];
+    wkMap[key].push(r);
+  });
+  const weeks = Object.entries(wkMap).sort((a,b) => a[0].localeCompare(b[0]));
+
+  // Evaluate each week against thresholds
+  // Workout  >= 70% of days in that week
+  // Meditation >= 60% of days
+  // Food plates >= 80% of 14 = 11.2
+  const evaluated = weeks.map(([weekStart, wrows]) => {
+    const days = wrows.length;
+    const wo   = wrows.reduce((s,r) => s+nv(getVal(r,COL.workout)),   0);
+    const med  = wrows.reduce((s,r) => s+nv(getVal(r,COL.meditation)), 0);
+    const food = wrows.reduce((s,r) => s+nv(getVal(r,COL.food)),       0);
+    const woThresh   = days * 0.7;
+    const medThresh  = days * 0.6;
+    const foodThresh = 14  * 0.8; // 11.2
+    const woPass   = wo   >= woThresh;
+    const medPass  = med  >= medThresh;
+    const foodPass = food >= foodThresh;
+    const allPass  = woPass && medPass && foodPass;
+    // Week label: Mon dd Mon – Sun dd Mon
+    const monD = new Date(weekStart);
+    const sunD = new Date(monD); sunD.setDate(monD.getDate() + 6);
+    const label = monD.toLocaleDateString('en-IN',{day:'numeric',month:'short'})
+                + ' – '
+                + sunD.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    return { label, wo, med, food, days, woThresh, medThresh, foodThresh, woPass, medPass, foodPass, allPass };
+  });
+
+  // Count consecutive streak weeks from MOST RECENT backwards
+  let streakWeeks = 0;
+  for (let i = evaluated.length-1; i >= 0; i--) {
+    if (evaluated[i].allPass) streakWeeks++;
+    else break;
+  }
+
+  // Format date inputs default values
+  const fmtInput = d => d.toISOString().split('T')[0];
+  const fromVal  = fmtInput(fd);
+  const toVal    = fmtInput(td);
+
+  // Emoji fire for consecutive streak count
+  const fireEmoji = streakWeeks >= 4 ? '🔥🔥' : streakWeeks >= 2 ? '🔥' : '⚡';
+
+  el.innerHTML = `
+  <div class="streak-panel" style="border-radius:var(--card-r) var(--card-r) 0 0;border-bottom:none">
+
+    <!-- Date Range Bar -->
+    <div class="date-range-bar">
+      <label>Date Range</label>
+      <input type="date" id="srFrom" class="date-input" value="${fromVal}"
+        onchange="renderStreak(this.value, document.getElementById('srTo').value)">
+      <span style="color:var(--muted);font-size:12px">to</span>
+      <input type="date" id="srTo" class="date-input" value="${toVal}"
+        onchange="renderStreak(document.getElementById('srFrom').value, this.value)">
+      <button class="range-btn${!fromDate && !toDate?' active':''}"
+        onclick="renderStreak()">Last 4 Weeks</button>
+      <div style="flex:1"></div>
+      <div style="font-size:12px;color:var(--muted)">${filtered.length} records • ${weeks.length} weeks</div>
+    </div>
+
+    <!-- Streak Score Card -->
+    <div class="streak-grid" style="margin-bottom:20px">
+      <div class="streak-item">
+        <span class="streak-emoji">${fireEmoji}</span>
+        <div class="streak-num" style="color:var(--orange)">${streakWeeks}</div>
+        <div class="streak-name">Streak Weeks</div>
+      </div>
+      <div class="streak-item">
+        <span class="streak-emoji">💪</span>
+        <div class="streak-num" style="color:var(--blue)">${evaluated.filter(w=>w.woPass).length}/${weeks.length}</div>
+        <div class="streak-name">Workout Weeks</div>
+      </div>
+      <div class="streak-item">
+        <span class="streak-emoji">🧘</span>
+        <div class="streak-num" style="color:var(--purple)">${evaluated.filter(w=>w.medPass).length}/${weeks.length}</div>
+        <div class="streak-name">Meditation Weeks</div>
+      </div>
+      <div class="streak-item">
+        <span class="streak-emoji">🍽️</span>
+        <div class="streak-num" style="color:var(--green)">${evaluated.filter(w=>w.foodPass).length}/${weeks.length}</div>
+        <div class="streak-name">Food Weeks</div>
+      </div>
+    </div>
+
+    <!-- Threshold legend -->
+    <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted)">Thresholds:</span>
+      <span style="font-size:11px;color:var(--blue)">💪 Workout ≥70% of days</span>
+      <span style="font-size:11px;color:var(--purple)">🧘 Meditation ≥60% of days</span>
+      <span style="font-size:11px;color:var(--green)">🍽️ Food ≥80% of 14 plates</span>
+    </div>
+
+    <!-- Week-by-week breakdown -->
+    <div style="display:flex;flex-direction:column">
+      ${evaluated.slice().reverse().map(w => `
+      <div class="streak-week-row">
+        <div class="streak-week-label">${w.label}</div>
+        <div class="streak-pips">
+          <div class="pip ${w.woPass?'pass':'fail'}" title="Workout: ${w.wo} sessions (need ≥${w.woThresh.toFixed(1)})">
+            💪${w.wo}
+          </div>
+          <div class="pip ${w.medPass?'pass':'fail'}" title="Meditation: ${w.med} sessions (need ≥${w.medThresh.toFixed(1)})">
+            🧘${w.med}
+          </div>
+          <div class="pip ${w.foodPass?'pass':'fail'}" title="Food: ${w.food} plates (need ≥${w.foodThresh.toFixed(1)})">
+            🍽️${w.food}
+          </div>
+        </div>
+        <span class="streak-week-badge ${w.allPass?'on':'off'}">${w.allPass?'🔥 Streak':'✗ Missed'}</span>
+      </div>`).join('')}
+    </div>
+
+  </div>`;
+}
+
 </script>
 </body>
 </html>
