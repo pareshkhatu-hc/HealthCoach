@@ -444,8 +444,9 @@ function renderDashboard(rows) {
     renderHistory(rows, 1)
   ].join('');
   document.getElementById('content').innerHTML = html + '<footer>#getfitwithpareshsampada</footer>';
-  drawCharts(rows);
   window._vcRows = rows;
+  drawCharts(rows);
+  updateStreaks(rows);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -728,36 +729,9 @@ function renderHistory(rows, page) {
 function goPage(p) {
   const rows = window._vcRows;
   if (!rows) return;
-  const el = document.getElementById('content');
-  // replace just the history section
-  const tmp = document.createElement('div');
-  tmp.innerHTML = renderHistory(rows, p);
-  const historyNew = tmp.querySelector('div');
-  // find old section title + table section
-  const sections = el.querySelectorAll('.section-title');
-  sections.forEach(s => {
-    if (s.textContent.includes('Complete Measurement History')) {
-      const parent = s.closest('div') || s.parentElement;
-      parent.innerHTML = historyNew.innerHTML;
-    }
-  });
-  // Re-render whole history (simpler)
-  const allSections = document.getElementById('content').innerHTML;
-  // Actually just re-render all history cleanly
-  const newHistEl = el.querySelector('.section-title');
-  // Simple approach: re-render the last section
-  renderDashboardHistoryOnly(rows, p);
-}
-
-function renderDashboardHistoryOnly(rows, page) {
-  // Find and replace history div
-  const content = document.getElementById('content');
-  const allDivs = content.children;
-  // The history section is always last before footer
-  // Re-render entire content (simpler and safe)
   const saved = {
-    from: document.getElementById('streakFrom')?.value,
-    to:   document.getElementById('streakTo')?.value
+    from: document.getElementById('streakFrom') ? document.getElementById('streakFrom').value : null,
+    to:   document.getElementById('streakTo')   ? document.getElementById('streakTo').value   : null
   };
   const html = [
     renderOverview(rows),
@@ -766,9 +740,9 @@ function renderDashboardHistoryOnly(rows, page) {
     renderHabitChart(rows),
     renderStreaks(rows),
     renderNotes(rows),
-    renderHistory(rows, page)
+    renderHistory(rows, p)
   ].join('');
-  content.innerHTML = html + '<footer>#getfitwithpareshsampada</footer>';
+  document.getElementById('content').innerHTML = html + '<footer>#getfitwithpareshsampada</footer>';
   drawCharts(rows);
   if (saved.from) document.getElementById('streakFrom').value = saved.from;
   if (saved.to)   document.getElementById('streakTo').value   = saved.to;
@@ -874,7 +848,6 @@ function drawCharts(rows) {
   }
 
   // Run streaks after charts
-  updateStreaks(rows);
 }
 
 // ═══════════════════════════════════════════════════════
