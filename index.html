@@ -184,7 +184,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
 <div id="passwordScreen">
   <div class="login-box">
     <div class="login-logo">PS</div>
-    <div class="login-title">Paresh-Sampada</div>
+    <div class="login-title">PareshSampada</div>
     <div class="login-sub">Your professional health coaching dashboard.<br>Sign in to continue.</div>
     <input class="login-input" type="password" id="passwordInput" placeholder="Enter password" onkeydown="if(event.key==='Enter'){event.preventDefault();checkPassword();}">
     <button class="login-btn" id="loginBtn" onclick="checkPassword()">🔐 Access Dashboard</button>
@@ -211,7 +211,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
     <header class="topbar">
       <div class="topbar-title">Paresh<span>Sampada</span></div>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
-      <button class="topbar-btn" onclick="fetchData(true)">🔄 Sync</button>
+      <button class="topbar-btn" onclick="currentClientName=null;fetchData(true)">🔄 Sync</button>
       <div class="client-selector-wrap">
         <select id="clientSelect" onchange="loadClient(this.value)"><option value="">— Select Client —</option></select>
         <span class="selector-arrow">▼</span>
@@ -229,7 +229,7 @@ tr:hover td{background:rgba(255,255,255,.015)}
   </div>
 </div>
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbyPVVqNme0ybqxX1cBR3KijQKsUWxgknn6-oRamMH80SwpiHRcq012Wg5ZtG6MXcJaN/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbwf1muxSk9nqo61kc6nTO36nNNg_IYwsBKQoR29Zb0GnS-p3PPExmkNoDpNfFeviRt7/exec';
 const PASSWORD='vitalcoach2024';
 const COL={name:'Client Name',date:'Date',weight:'Weight',fat:'Fat%',visceral:'Visceral Fat',workout:'Workout Done',meditation:'Meditation Done',food:'Food Plates Shared',water:'Water (L)',sleep:'Sleep (hrs)',energy:'Energy Level',notes:'Coach Notes'};
 // Robust value getter — handles column name case/spacing mismatches from Google Sheets
@@ -243,7 +243,7 @@ function getVal(obj, colName) {
   return key !== undefined ? obj[key] : undefined;
 }
 const TARGETS={workout:5,meditation:7,food:5,water:2.5,sleep:7};
-let allData=[],charts={};
+let allData=[],charts={},currentClientName=null;
 
 function checkPassword(){
   try{
@@ -280,20 +280,35 @@ function logout(){
   document.getElementById('loginError').style.display='none';
   destroyCharts();
 }
+// ── fetchData: loads client list only (fast) ──
 async function fetchData(showAlert=false){
   const L=document.getElementById('loadingScreen');L.style.display='flex';
   try{
-    const res=await fetch(API_URL);const json=await res.json();
-    if(json.error)throw new Error(json.error);
-    allData=json.data||[];
-    const sel=document.getElementById('clientSelect');const prev=sel.value;
+    const res=await fetch(API_URL+'?action=clients');
+    const json=await res.json();
+    if(!json.success)throw new Error(json.error||'Unknown error');
+    const clients=json.clients||[];
+    const sel=document.getElementById('clientSelect');
+    const prev=sel.value;
     sel.innerHTML='<option value="">— Select Client —</option>';
-    const clients=[...new Set(allData.map(r=>r[COL.name]).filter(Boolean))];
     clients.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
-    if(prev&&clients.includes(prev)){sel.value=prev;loadClient(prev);}
-    if(showAlert)alert('✅ Synced!\n'+json.total_records+' records • '+json.total_clients+' clients\n'+json.last_updated);
+    if(prev&&clients.includes(prev)){sel.value=prev;await loadClient(prev);}
+    if(showAlert)alert('✅ Client list refreshed\n'+clients.length+' clients loaded');
   }catch(err){
     document.getElementById('content').innerHTML='<div class="error-banner">⚠️ '+err.message+'<br><small>Check Apps Script deployment and Sheet ID.</small></div><div class="empty-state"><div class="big">⚠️</div><p>Could not connect to Google Sheets.<br>Click 🔄 Sync to retry.</p></div>';
+  }finally{L.style.display='none';}
+}
+
+// ── fetchClientData: loads ONE client's rows on demand ──
+async function fetchClientData(name){
+  const L=document.getElementById('loadingScreen');L.style.display='flex';
+  try{
+    const url=API_URL+'?action=client&name='+encodeURIComponent(name);
+    const res=await fetch(url);
+    const json=await res.json();
+    if(!json.success)throw new Error(json.error||'No data returned');
+    allData=json.data||[];
+    currentClientName=name;
   }finally{L.style.display='none';}
 }
 function parseDate(s){
@@ -335,10 +350,14 @@ function groupByWeek(rows){
   return Object.entries(wks).sort((a,b)=>a[0].localeCompare(b[0]));
 }
 
-function loadClient(name){
+async function loadClient(name){
   destroyCharts();
   const content=document.getElementById('content');
   if(!name){content.innerHTML='<div class="empty-state"><div class="big">📈</div><p><strong style="color:var(--text);font-size:20px;">Select a client above</strong><br><br>All your client data in one beautiful view.</p></div>';return;}
+  // Fetch this client's data fresh from sheet (only their rows)
+  if(currentClientName!==name){
+    await fetchClientData(name);
+  }
   const rows=allData.filter(r=>r[COL.name]===name).sort((a,b)=>parseDate(a[COL.date])-parseDate(b[COL.date]));
   if(!rows.length){content.innerHTML='<div class="empty-state"><div class="big">🔍</div><p>No records found for <strong>'+name+'</strong>.</p></div>';return;}
   const first=rows[0],last=rows[rows.length-1];
@@ -442,18 +461,15 @@ function loadClient(name){
 
   <div class="section-header anim anim-6"><span class="section-title">Session Log</span><div class="section-line"></div></div>
   <div class="table-card anim anim-6">
-    <div class="table-head"><div><div class="chart-title">Complete Measurement History</div><div class="chart-subtitle" style="margin-top:4px">${name} • All ${rows.length} sessions</div></div><span class="chart-badge green">${rows.length} records</span></div>
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th><th>Workout</th><th>Meditation</th><th>Food Plates</th><th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>
-      <tbody>${[...rows].reverse().map((row,i,arr)=>{
-        const prev=arr[i+1];const wD=prev?(nv(row[COL.weight])-nv(prev[COL.weight])).toFixed(1):null;const wG=wD!==null&&parseFloat(wD)<=0;
-        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td><td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+((()=>{const _e=getVal(row,COL.energy);return (_e!==undefined&&_e!==null&&String(_e).trim()!=='')?'<span style="color:var(--yellow);font-weight:600">'+_e+'</span>':'—';})())+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
-      }).join('')}</tbody>
-    </table></div>
+    <div class="table-head"><div><div class="chart-title">Complete Measurement History</div><div class="chart-subtitle" style="margin-top:4px">${name} • ${rows.length} sessions</div></div><span class="chart-badge green">${rows.length} records</span></div>
+    <div id="historyTableWrap"></div>
   </div>`;
 
   // render streak section with default last 4 weeks
   renderStreak();
+  // render paginated history table
+  window._vcRows=rows;
+  renderHistory(rows, 1);
   requestAnimationFrame(()=>{
     charts.weight=new Chart(document.getElementById('weightChart'),{type:'line',data:{labels,datasets:[{data:weights,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#00e5a0',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('kg')});
     charts.fat=new Chart(document.getElementById('fatChart'),{type:'line',data:{labels,datasets:[{data:fats,borderColor:'#ff7043',backgroundColor:'rgba(255,112,67,0.07)',fill:true,tension:0.4,pointBackgroundColor:'#ff7043',pointRadius:4,pointHoverRadius:7,borderWidth:2.5}]},options:cOpts('%')});
@@ -608,6 +624,80 @@ function renderStreak(fromDate, toDate) {
     </div>
 
   </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// PAGINATED MEASUREMENT HISTORY
+// ═══════════════════════════════════════════════
+function renderHistory(rows, page) {
+  const wrap = document.getElementById('historyTableWrap');
+  if (!wrap) return;
+  const PAGE_SIZE = 10;
+  const reversed  = [...rows].reverse();
+  const total     = reversed.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const p         = Math.max(1, Math.min(page, totalPages));
+  const start     = (p-1) * PAGE_SIZE;
+  const pageRows  = reversed.slice(start, start + PAGE_SIZE);
+
+  // Build row HTML
+  const rowsHtml = pageRows.map((row, i) => {
+    const origIdx = start + i;
+    const prev    = reversed[origIdx + 1];
+    const wD      = prev ? (nv(row[COL.weight]) - nv(prev[COL.weight])).toFixed(1) : null;
+    const wG      = wD !== null && parseFloat(wD) <= 0;
+    const _e      = getVal(row, COL.energy);
+    const eTd     = (_e !== undefined && _e !== null && String(_e).trim() !== '')
+      ? '<span style="color:var(--yellow);font-weight:600">'+_e+'</span>' : '—';
+    const wTd = (()=>{
+    if(wD===null) return '<span style="color:var(--muted)">—</span>';
+    const bg = wG ? 'var(--green-dim)' : 'var(--orange-dim)';
+    const cl = wG ? 'var(--green)'     : 'var(--orange)';
+    const sign = parseFloat(wD)>0 ? '+' : '';
+    return '<span class="trend-pill" style="background:'+bg+';color:'+cl+';">'+sign+wD+'kg</span>';
+  })()
+    return '<tr>'
+      +'<td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td>'
+      +'<td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td>'
+      +'<td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td>'
+      +'<td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td>'
+      +'<td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td>'
+      +'<td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td>'
+      +'<td style="text-align:center">'+(row[COL.food]||'—')+'</td>'
+      +'<td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td>'
+      +'<td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td>'
+      +'<td>'+eTd+'</td>'
+      +'<td>'+wTd+'</td>'
+      +'</tr>';
+  }).join('');
+
+  // Build pagination controls
+  let paginHtml = '';
+  if (totalPages > 1) {
+    const btn = (label, pg, disabled, active) =>
+      '<button onclick="renderHistory(window._vcRows,'+pg+')" '
+      +(disabled?'disabled ':'')
+      +'style="background:'+(active?'var(--green)':'var(--surface2)')+';color:'+(active?'#0d0f14':'var(--text)')+';border:1px solid '+(active?'var(--green)':'var(--border)')+';padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:'+(disabled?'default':'pointer')+';margin:0 3px;font-family:Inter,sans-serif">'
+      +label+'</button>';
+
+    paginHtml = '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:8px">'
+      +'<span style="font-size:12px;color:var(--muted)">Showing '+(start+1)+'–'+Math.min(start+PAGE_SIZE,total)+' of '+total+' records</span>'
+      +'<div style="display:flex;align-items:center;gap:4px">';
+    paginHtml += btn('‹ Prev', p-1, p===1, false);
+    for (let pg=1; pg<=totalPages; pg++) {
+      paginHtml += btn(pg, pg, false, pg===p);
+    }
+    paginHtml += btn('Next ›', p+1, p===totalPages, false);
+    paginHtml += '</div></div>';
+  }
+
+  wrap.innerHTML =
+    '<div style="overflow-x:auto"><table>'
+    +'<thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th>'
+    +'<th>Workout</th><th>Meditation</th><th>Food Plates</th>'
+    +'<th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>'
+    +'<tbody>'+rowsHtml+'</tbody></table></div>'
+    + paginHtml;
 }
 
 </script>
