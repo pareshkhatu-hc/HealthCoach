@@ -318,8 +318,8 @@ function loadClient(name){
   const vDrop=(nv(first[COL.visceral])-nv(last[COL.visceral])).toFixed(2);
   const weeks=Math.max(1,Math.round((parseDate(last[COL.date])-parseDate(first[COL.date]))/(7*864e5)));
   const last7=rows.slice(-7);
-  const woCount=last7.reduce((s,r)=>s+nv(r[COL.workout]),0);
-  const medCount=last7.reduce((s,r)=>s+nv(r[COL.meditation]),0);
+  const woCount=last7.length?nv(last7[last7.length-1][COL.workout]):0;
+  const medCount=last7.length?nv(last7[last7.length-1][COL.meditation]):0;
   const foodTotal=last7.reduce((s,r)=>s+nv(r[COL.food]),0);
   const woPct=Math.round(woCount/7*100);
   const medPct=Math.round(medCount/7*100);
@@ -420,7 +420,7 @@ function loadClient(name){
       <thead><tr><th>Date</th><th>Weight</th><th>Fat%</th><th>Visceral</th><th>Workout</th><th>Meditation</th><th>Food Plates</th><th>Water</th><th>Sleep</th><th>Energy</th><th>Wt Δ</th></tr></thead>
       <tbody>${[...rows].reverse().map((row,i,arr)=>{
         const prev=arr[i+1];const wD=prev?(nv(row[COL.weight])-nv(prev[COL.weight])).toFixed(1):null;const wG=wD!==null&&parseFloat(wD)<=0;
-        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td><td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+(row[COL.energy]?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
+        return '<tr><td style="font-weight:500;white-space:nowrap">'+fmt(row[COL.date])+'</td><td style="font-family:Syne,sans-serif;font-weight:700">'+(row[COL.weight]||'—')+'</td><td style="color:var(--orange);font-weight:600">'+(row[COL.fat]?row[COL.fat]+'%':'—')+'</td><td style="color:var(--purple);font-weight:600">'+(row[COL.visceral]||'—')+'</td><td style="text-align:center;font-weight:600;color:var(--blue)">'+nv(row[COL.workout])+'</td><td style="text-align:center;font-weight:600;color:var(--purple)">'+nv(row[COL.meditation])+'</td><td style="text-align:center">'+(row[COL.food]||'—')+'</td><td style="color:var(--blue)">'+(row[COL.water]?row[COL.water]+'L':'—')+'</td><td style="color:var(--purple)">'+(row[COL.sleep]?row[COL.sleep]+'h':'—')+'</td><td>'+((row[COL.energy]!==undefined&&String(row[COL.energy]).trim()!=='')?'<span style="color:var(--yellow);font-weight:600">'+row[COL.energy]+'</span>':'—')+'</td><td>'+(wD!==null?'<span class="trend-pill" style="background:'+(wG?'var(--green-dim)':'var(--orange-dim)')+';color:'+(wG?'var(--green)':'var(--orange)')+';">'+(parseFloat(wD)>0?'+':'')+wD+'kg</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>';
       }).join('')}</tbody>
     </table></div>
   </div>`;
