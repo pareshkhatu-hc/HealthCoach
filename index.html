@@ -53,6 +53,12 @@ select#clientSelect:focus{border-color:var(--green)}
 .topbar-btn.danger:hover{border-color:var(--orange);color:var(--orange)}
 .live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);background:var(--green-dim);padding:5px 10px;border-radius:20px;border:1px solid rgba(0,229,160,.2)}
 .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes slideInLeft{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+.client-link-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;gap:8px}
+.client-link-name{font-size:13px;font-weight:600;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.copy-link-btn{background:var(--green-dim);border:1px solid rgba(0,229,160,.3);color:var(--green);padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s}
+.copy-link-btn:hover{background:var(--green);color:#0d0f14}
+.copy-link-btn.copied{background:var(--green);color:#0d0f14}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 .content{padding:24px 28px;flex:1}
 .section-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;margin-top:8px}
@@ -193,30 +199,41 @@ tr:hover td{background:rgba(255,255,255,.015)}
 </div>
 <div id="loadingScreen">
   <div class="spinner"></div>
-  <div class="loading-text">Connecting to Google Sheets...</div>
+  <div class="loading-text" id="loadingText">Fetching client data…</div>
 </div>
 <div id="app" style="display:none">
-  <nav class="sidebar">
-    <div class="logo-mark">PS</div>
-    <div class="nav-icon active">📊</div>
-    <div class="nav-icon">👥</div>
-    <div class="nav-icon">🎯</div>
-    <div class="nav-icon">🏋️</div>
-    <div class="nav-icon">🥗</div>
-    <div class="nav-icon">📋</div>
+  <nav class="sidebar" id="sidebarNav">
+    <div class="logo-mark" id="navLogo">PS</div>
+    <div class="nav-icon active" id="navDash">📊</div>
+    <div class="nav-icon" id="navClients">👥</div>
+    <div class="nav-icon" id="navGoals">🎯</div>
+    <div class="nav-icon" id="navWorkout">🏋️</div>
+    <div class="nav-icon" id="navFood">🥗</div>
+    <div class="nav-icon" title="Report" id="navReport">📋</div>
     <div style="flex:1"></div>
-    <div class="nav-icon">⚙️</div>
+    <div class="nav-icon" title="Settings" id="navSettings" onclick="toggleSettings()">⚙️</div>
   </nav>
+
+  <!-- Settings Panel -->
+  <div id="settingsPanel" style="display:none;position:fixed;top:0;left:72px;bottom:0;width:340px;background:var(--surface);border-right:1px solid var(--border);z-index:45;padding:28px 24px;overflow-y:auto;animation:slideInLeft .2s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800">⚙️ Settings</span>
+      <button onclick="toggleSettings()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:14px">Client Share Links</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Share these links with clients. They can view their own dashboard without a password.</div>
+    <div id="clientLinksList"><div style="color:var(--muted);font-size:13px">Loading clients…</div></div>
+  </div>
   <div class="main">
     <header class="topbar">
-      <div class="topbar-title">Paresh<span>Sampada</span></div>
+      <div class="topbar-title" id="topbarTitle">Paresh<span>Sampada</span></div>
       <div class="live-badge"><div class="live-dot"></div>Live</div>
-      <button class="topbar-btn" onclick="currentClientName=null;fetchData(true)">🔄 Sync</button>
-      <div class="client-selector-wrap">
+      <button class="topbar-btn" id="syncBtn" onclick="currentClientName=null;fetchData(true)">🔄 Sync</button>
+      <div class="client-selector-wrap" id="clientSelectorWrap">
         <select id="clientSelect" onchange="loadClient(this.value)"><option value="">— Select Client —</option></select>
         <span class="selector-arrow">▼</span>
       </div>
-      <button class="topbar-btn danger" onclick="logout()">🚪 Logout</button>
+      <button class="topbar-btn danger" id="logoutBtn" onclick="logout()">🚪 Logout</button>
     </header>
     <main class="content" id="content">
       <div class="empty-state"><div class="big">📈</div>
@@ -231,6 +248,95 @@ tr:hover td{background:rgba(255,255,255,.015)}
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbz094KgAk5Ix-Vrh1AbfVIGvWkXHbuSpcOc4f3Q3dnG4bCWLBVKrLkWoh4IJVsEcoAa/exec';
 const PASSWORD='PS2026';
+// ══════════════════════════════════════════════════
+// CLIENT URL MODE — ?client=Name bypasses login
+// ══════════════════════════════════════════════════
+const URL_PARAMS   = new URLSearchParams(window.location.search);
+const CLIENT_PARAM = URL_PARAMS.get('client'); // null if no param
+
+function initApp() {
+  if (CLIENT_PARAM) {
+    // ── CLIENT MODE ──
+    // Skip login screen entirely
+    document.getElementById('passwordScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    // Hide all nav except Report + Logo
+    ['navDash','navClients','navGoals','navWorkout','navFood','navSettings'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    // Hide topbar controls client doesn't need
+    ['syncBtn','clientSelectorWrap','logoutBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    // Set topbar title to client name: first word white, rest green
+    setClientTitle(CLIENT_PARAM);
+    // Load client data directly
+    fetchClientData(CLIENT_PARAM).then(() => {
+      loadClient(CLIENT_PARAM);
+    }).catch(err => {
+      document.getElementById('content').innerHTML =
+        '<div class="empty-state"><div class="big">⚠️</div><p>Could not load data for <strong>'
+        + CLIENT_PARAM + '</strong>.<br>Please contact your coach.</p></div>';
+    });
+  } else {
+    // ── COACH MODE — normal login flow ──
+    fetchData();
+  }
+}
+
+function setClientTitle(name) {
+  const parts  = name.trim().split(' ');
+  const first  = parts[0];
+  const rest   = parts.slice(1).join(' ');
+  const titleEl = document.getElementById('topbarTitle');
+  if (titleEl) {
+    titleEl.innerHTML = '<span style="color:var(--text)">' + first + '</span>'
+      + (rest ? '<span style="color:var(--green)"> ' + rest + '</span>' : '');
+  }
+}
+
+// ── Settings panel toggle ──
+let settingsOpen = false;
+function toggleSettings() {
+  settingsOpen = !settingsOpen;
+  const panel = document.getElementById('settingsPanel');
+  panel.style.display = settingsOpen ? 'block' : 'none';
+  if (settingsOpen) loadClientLinks();
+  document.getElementById('navSettings').classList.toggle('active', settingsOpen);
+}
+
+async function loadClientLinks() {
+  const list = document.getElementById('clientLinksList');
+  list.innerHTML = '<div style="color:var(--muted);font-size:13px">Loading…</div>';
+  try {
+    const res  = await fetch(API_URL + '?action=clients');
+    const json = await res.json();
+    const base = window.location.href.split('?')[0];
+    const clients = json.clients || [];
+    if (!clients.length) { list.innerHTML = '<div style="color:var(--muted)">No clients found.</div>'; return; }
+    list.innerHTML = clients.map((name, i) => {
+      const url = base + '?client=' + encodeURIComponent(name);
+      window['_cl' + i] = url;
+      return '<div class="client-link-row">'
+        + '<span class="client-link-name">👤 ' + name + '</span>'
+        + '<button class="copy-link-btn" onclick="copyLink(this,window[\'_cl' + i + '\'])">📋 Copy Link</button>'
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--orange);font-size:12px">Error loading clients.</div>';
+  }
+}
+
+function copyLink(btn, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
 const COL={name:'Client Name',date:'Date',weight:'Weight',fat:'Fat%',visceral:'Visceral Fat',workout:'Workout Done',meditation:'Meditation Done',food:'Food Plates Shared',water:'Water (L)',sleep:'Sleep (hrs)',energy:'Energy Level',notes:'Coach Notes'};
 // Robust value getter — handles column name case/spacing mismatches from Google Sheets
 function getVal(obj, colName) {
@@ -282,7 +388,7 @@ function logout(){
 }
 // ── fetchData: loads client list only (fast) ──
 async function fetchData(showAlert=false){
-  const L=document.getElementById('loadingScreen');L.style.display='flex';
+  const L=document.getElementById('loadingScreen');const lt=document.getElementById('loadingText');if(lt)lt.textContent='Loading client list…';L.style.display='flex';
   try{
     const res=await fetch(API_URL+'?action=clients');
     const json=await res.json();
@@ -301,7 +407,7 @@ async function fetchData(showAlert=false){
 
 // ── fetchClientData: loads ONE client's rows on demand ──
 async function fetchClientData(name){
-  const L=document.getElementById('loadingScreen');L.style.display='flex';
+  const L=document.getElementById('loadingScreen');const lt=document.getElementById('loadingText');if(lt)lt.textContent='Fetching client data…';L.style.display='flex';
   try{
     const url=API_URL+'?action=client&name='+encodeURIComponent(name);
     const res=await fetch(url);
@@ -698,6 +804,8 @@ function renderHistory(rows, page) {
     + paginHtml;
 }
 
+// Boot
+initApp();
 </script>
 </body>
 </html>
