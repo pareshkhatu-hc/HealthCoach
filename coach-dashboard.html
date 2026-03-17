@@ -760,7 +760,7 @@ function renderPipeline(d, leads, clients) {
   const months   = getLast6Months();
   const leadsByM = months.map(m => d.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
   destroyChart('leadTrendChart');
-  charts.leadTrend = new Chart(document.getElementById('leadTrendChart'),{
+  charts['leadTrendChart'] = new Chart(document.getElementById('leadTrendChart'),{
     type:'bar',
     data:{labels:months.map(m=>m.label),datasets:[{data:leadsByM,backgroundColor:'rgba(124,58,237,0.7)',borderColor:'#7c3aed',borderWidth:1.5,borderRadius:5}]},
     options:barOpts('leads')
@@ -769,7 +769,7 @@ function renderPipeline(d, leads, clients) {
   const pByM = months.map(m=>d.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)&&r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length);
   const sByM = months.map(m=>d.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)&&r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length);
   destroyChart('leadToTrendChart');
-  charts.leadToTrend = new Chart(document.getElementById('leadToTrendChart'),{
+  charts['leadToTrendChart'] = new Chart(document.getElementById('leadToTrendChart'),{
     type:'bar',
     data:{labels:months.map(m=>m.label),datasets:[
       {label:'Paresh',  data:pByM,backgroundColor:'rgba(37,99,235,0.7)', borderRadius:4},
@@ -789,7 +789,7 @@ function renderPipeline(d, leads, clients) {
     else valueBuckets['>40k']++;
   });
   destroyChart('valueChart');
-  charts.value = new Chart(document.getElementById('valueChart'),{
+  charts['valueChart'] = new Chart(document.getElementById('valueChart'),{
     type:'bar',
     data:{labels:Object.keys(valueBuckets),datasets:[{data:Object.values(valueBuckets),backgroundColor:['rgba(124,58,237,0.7)','rgba(37,99,235,0.7)','rgba(13,148,136,0.7)','rgba(5,150,105,0.7)','rgba(217,119,6,0.7)'],borderRadius:6}]},
     options:barOpts('clients')
@@ -950,7 +950,7 @@ function renderAnalytics(d, leads, clients) {
   const leadsM   = months.map(m=>d.filter(r=>r.status==='Lead'&&r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
   const clientsM = months.map(m=>d.filter(r=>r.status==='Client'&&r.startDate&&r.startDate.endsWith(m.suffix)).length);
   destroyChart('leadsVsClientsChart');
-  charts.lvc = new Chart(document.getElementById('leadsVsClientsChart'),{
+  charts['leadsVsClientsChart'] = new Chart(document.getElementById('leadsVsClientsChart'),{
     type:'bar',
     data:{labels:months.map(m=>m.label),datasets:[
       {label:'Leads',   data:leadsM,   backgroundColor:'rgba(124,58,237,0.7)',borderRadius:4},
@@ -962,7 +962,7 @@ function renderAnalytics(d, leads, clients) {
   // Stage over time
   const stageColors = {'In Progress':'rgba(37,99,235,0.7)','Completed':'rgba(5,150,105,0.7)','Lost':'rgba(220,38,38,0.7)','Did not finish':'rgba(217,119,6,0.7)'};
   destroyChart('stageOverTimeChart');
-  charts.sot = new Chart(document.getElementById('stageOverTimeChart'),{
+  charts['stageOverTimeChart'] = new Chart(document.getElementById('stageOverTimeChart'),{
     type:'bar',
     data:{labels:months.map(m=>m.label),datasets:Object.entries(stageColors).map(([stage,color])=>({
       label:stage,
