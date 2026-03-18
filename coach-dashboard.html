@@ -583,26 +583,52 @@ function inDateRange(dateStr, from, to) {
   return true;
 }
 
-// Two strict filtered sets:
-//   LEADS_FILTERED   = status=Lead,   date window on leadDate only
-//   CLIENTS_FILTERED = status=Client, date window on startDate only
+// Four separate conditions — each uses its own date column:
+//  1. status=Lead   + stage=Not Started  → Stage1 Date
+//  2. status=Lead   + stage=Lost         → Stage1 Date
+//  3. status=Client + stage=Did not finish → Stage1 Date
+//  4. status=Client + stage=Completed    → Stage2 Date
+//
+// LEADS_FILTERED   = conditions 1 + 2  (Lead records filtered by stage1Date)
+// CLIENTS_FILTERED = conditions 3 + 4  (Client records filtered by stage1Date or stage2Date)
 function applyFilters() {
-  const from = document.getElementById('dateFrom').value;
-  const to   = document.getElementById('dateTo').value;
+  const from     = document.getElementById('dateFrom').value;
+  const to       = document.getElementById('dateTo').value;
   const noFilter = !from && !to;
 
-  // Leads — ALL records with a leadDate in range, no status filter
-  LEADS_FILTERED = ALL_DATA.filter(r => {
-    if (noFilter) return !!r.leadDate;
-    return inDateRange(r.leadDate, from, to);
+  const status = r => (r.status||'').trim().toLowerCase();
+  const stage  = r => (r.stage||'').trim().toLowerCase();
+
+  // Condition 1: status=Lead + stage=Not Started → Stage1 Date
+  const cond1 = ALL_DATA.filter(r => {
+    if (status(r) !== 'lead' || stage(r) !== 'not started') return false;
+    if (noFilter) return true;
+    return inDateRange(r.stage1Date, from, to);
   });
 
-  // Clients — status=Client AND startDate in range
-  CLIENTS_FILTERED = ALL_DATA.filter(r => {
-    if (r.status !== 'Client') return false;
+  // Condition 2: status=Lead + stage=Lost → Stage1 Date
+  const cond2 = ALL_DATA.filter(r => {
+    if (status(r) !== 'lead' || stage(r) !== 'lost') return false;
     if (noFilter) return true;
-    return inDateRange(r.startDate, from, to);
+    return inDateRange(r.stage1Date, from, to);
   });
+
+  // Condition 3: status=Client + stage=Did not finish → Stage1 Date
+  const cond3 = ALL_DATA.filter(r => {
+    if (status(r) !== 'client' || stage(r) !== 'did not finish') return false;
+    if (noFilter) return true;
+    return inDateRange(r.stage1Date, from, to);
+  });
+
+  // Condition 4: status=Client + stage=Completed → Stage2 Date
+  const cond4 = ALL_DATA.filter(r => {
+    if (status(r) !== 'client' || stage(r) !== 'completed') return false;
+    if (noFilter) return true;
+    return inDateRange(r.stage2Date, from, to);
+  });
+
+  LEADS_FILTERED   = [...cond1, ...cond2];
+  CLIENTS_FILTERED = [...cond3, ...cond4];
 }
 
 async function syncData() {
@@ -867,10 +893,12 @@ function buildBoard(leads, clients) {
   document.getElementById('clientBoard').innerHTML = clientCols.map(col=>buildCol(col)).join('');
 
   // Lead columns
+  // People view: leads section shows only status=Lead records within LEADS_FILTERED
+  const leadsOnly = leads.filter(r => (r.status||'').trim() === 'Lead');
   const leadCols = [
-    { label:'New Lead',           color:'#7c3aed', items: leads.filter(r=>!r.stage||r.stage.trim()===''),             pillClass:'sp-lead' },
-    { label:'Lost',               color:'#dc2626', items: leads.filter(r=>_stg(r.stage)==='lost'),                    pillClass:'sp-lost' },
-    { label:'Not Started (Lead)', color:'#d97706', items: leads.filter(r=>_stg(r.stage)==='not started'),             pillClass:'sp-ns'   },
+    { label:'New Lead',           color:'#7c3aed', items: leadsOnly.filter(r=>!r.stage||r.stage.trim()===''),         pillClass:'sp-lead' },
+    { label:'Lost',               color:'#dc2626', items: leadsOnly.filter(r=>_stg(r.stage)==='lost'),                pillClass:'sp-lost' },
+    { label:'Not Started (Lead)', color:'#d97706', items: leadsOnly.filter(r=>_stg(r.stage)==='not started'),         pillClass:'sp-ns'   },
   ];
   document.getElementById('leadBoard').innerHTML = leadCols.map(col=>buildCol(col)).join('');
 }
@@ -897,13 +925,13 @@ function buildPCard(r, pillClass, color) {
     : 'av-purple';
   const label    = r.stage || r.status || '';
   const _s  = (r.stage||'').trim().toLowerCase();
-  const _st = (r.status||'').trim();
+  const _st = (r.status||'').trim().toLowerCase();
   let dateInfo = '';
   // status=Lead + stage=Not Started or Lost → Stage1 Date
-  if (_st==='Lead' && (_s==='not started' || _s==='lost')) {
+  if (_st==='lead' && (_s==='not started' || _s==='lost')) {
     dateInfo = r.stage1Date && r.stage1Date.trim()!=='' ? 'Stage1: '+r.stage1Date : 'Stage1: —';
   // status=Client + stage=Completed or Did not finish → Stage2 Date
-  } else if (_st==='Client' && (_s==='completed' || _s==='did not finish')) {
+  } else if (_st==='client' && (_s==='completed' || _s==='did not finish')) {
     dateInfo = r.stage2Date && r.stage2Date.trim()!=='' ? 'Stage2: '+r.stage2Date : 'Stage2: —';
   }
   return `
@@ -931,13 +959,15 @@ function showMore(colLabel) {
 
 function buildList(leads, clients) {
   const _st = s => (s||'').trim().toLowerCase();
+  const leadsOnly = leads.filter(r => (r.status||'').trim() === 'Lead');
   const groups = [
-    { title:'Clients — In Progress',    color:'#2563eb', items:clients.filter(r=>_st(r.stage)==='in progress'),    cols:['firstName','city','startDate','value','leadTo','stage'] },
-    { title:'Clients — Completed',      color:'#059669', items:clients.filter(r=>_st(r.stage)==='completed'),      cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
-    { title:'Clients — Did Not Finish', color:'#d97706', items:clients.filter(r=>_st(r.stage)==='did not finish'),  cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
-    { title:'Clients — Not Started',    color:'#7c3aed', items:clients.filter(r=>_st(r.stage)==='not started'),    cols:['firstName','city','startDate','value','leadTo','stage'] },
-    { title:'Leads — New',              color:'#7c3aad', items:leads.filter(r=>(!r.stage||r.stage.trim()==='')),   cols:['firstName','city','leadDate','platform','leadTo','source'] },
-    { title:'Leads — Lost',             color:'#dc2626', items:leads.filter(r=>_st(r.stage)==='lost'),             cols:['firstName','city','leadDate','platform','leadTo','stage1Date'] },
+    { title:'Clients — In Progress',    color:'#2563eb', items:clients.filter(r=>_st(r.stage)==='in progress'),      cols:['firstName','city','startDate','value','leadTo','stage'] },
+    { title:'Clients — Completed',      color:'#059669', items:clients.filter(r=>_st(r.stage)==='completed'),        cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
+    { title:'Clients — Did Not Finish', color:'#d97706', items:clients.filter(r=>_st(r.stage)==='did not finish'),   cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
+    { title:'Clients — Not Started',    color:'#7c3aed', items:clients.filter(r=>_st(r.stage)==='not started'),      cols:['firstName','city','startDate','value','leadTo','stage'] },
+    { title:'Leads — New',              color:'#7c3aad', items:leadsOnly.filter(r=>(!r.stage||r.stage.trim()==='')), cols:['firstName','city','leadDate','platform','leadTo','source'] },
+    { title:'Leads — Lost',             color:'#dc2626', items:leadsOnly.filter(r=>_st(r.stage)==='lost'),           cols:['firstName','city','leadDate','platform','leadTo','stage1Date'] },
+    { title:'Leads — Not Started',      color:'#d97706', items:leadsOnly.filter(r=>_st(r.stage)==='not started'),    cols:['firstName','city','leadDate','platform','leadTo','stage1Date'] },
   ].filter(g=>g.items.length>0);
 
   const hdrs = {firstName:'Name',city:'City',leadDate:'Lead Date',consultDate:'Consult Date',startDate:'Start Date',stage1Date:'Stage1 Date',stage2Date:'Stage2 Date',value:'Value',platform:'Platform',source:'Source',leadTo:'Lead To',stage:'Stage'};
