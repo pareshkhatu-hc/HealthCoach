@@ -458,7 +458,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 // ── PASTE YOUR APPS SCRIPT WEB APP URL BELOW ──────────────────────
 // After deploying Code.gs, copy the Web App URL and paste it here.
 // It looks like: https://script.google.com/macros/s/AKfy.../exec
-const API_URL = 'https://script.google.com/macros/s/AKfycbxsiGQv5qI7eVpsEfFpQlGSb_701fUX1MaxKxygMsA9SWnMAncDS7vl_7wAkdi544Pq4A/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxpU-dw6V2S3LN0U0M7Y8HSRp5OLqh5O9VMZZbCmf6yS-s6TjlsoBnn0HZ9o2vGmnP1Mg/exec';
 let SESSION_TOKEN = null;
 let ALL_DATA      = [];   // full dataset from sheet
 let FILTERED      = [];   // after date filter
@@ -535,12 +535,9 @@ function logout() {
 async function loadData() {
   showLoading('Loading data…');
   try {
-    const from = document.getElementById('dateFrom').value;
-    const to   = document.getElementById('dateTo').value;
-    const url  = API_URL
-      + '?action=data&token=' + encodeURIComponent(SESSION_TOKEN)
-      + '&from=' + from
-      + '&to='   + to;
+    // Fetch ALL data — date filtering is done client-side so each metric
+    // can filter by the correct date field (leadDate / consultDate / startDate)
+    const url = API_URL + '?action=data&token=' + encodeURIComponent(SESSION_TOKEN);
     const res  = await fetch(url);
     const data = await res.json();
     if (!data.success) {
@@ -551,7 +548,7 @@ async function loadData() {
       return;
     }
     ALL_DATA = data.data || [];
-    FILTERED = ALL_DATA;
+    applyClientFilter();
     hideError();
     updateSyncLabel(ALL_DATA.length);
     renderAll();
@@ -562,14 +559,46 @@ async function loadData() {
   }
 }
 
+// Parse DD/MM/YYYY → Date (used for client-side date filtering)
+function parseDateStr(s) {
+  if (!s) return null;
+  const p = s.split('/');
+  if (p.length !== 3) return null;
+  const d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+  return isNaN(d) ? null : d;
+}
+
+// Returns true if a DD/MM/YYYY date string falls within [from, to] (ISO strings)
+function inDateRange(dateStr, from, to) {
+  if (!dateStr) return false;
+  const d = parseDateStr(dateStr);
+  if (!d) return false;
+  if (from) { const f = new Date(from); if (d < f) return false; }
+  if (to)   { const t = new Date(to + 'T23:59:59'); if (d > t) return false; }
+  return true;
+}
+
+// Filter ALL_DATA by leadDate into FILTERED (used for lead/client pipeline counts)
+function applyClientFilter() {
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  if (!from && !to) { FILTERED = ALL_DATA; return; }
+  FILTERED = ALL_DATA.filter(r => {
+    if (!r.leadDate) return true; // rows without leadDate are always included
+    return inDateRange(r.leadDate, from, to);
+  });
+}
+
 async function syncData() {
   if (!SESSION_TOKEN) return;
   document.getElementById('syncLabel').textContent = 'Syncing…';
   await loadData();
 }
 
+// Date range changed — re-filter client-side, no server fetch needed
 function applyDateFilter() {
-  loadData();
+  applyClientFilter();
+  renderAll();
 }
 
 function setRange(el, r) {
@@ -591,7 +620,8 @@ function setRange(el, r) {
     document.getElementById('dateFrom').value = '2020-01-01';
     document.getElementById('dateTo').value   = fmt(now);
   }
-  loadData();
+  applyClientFilter();
+  renderAll();
 }
 
 // ══════════════════════════════════════════════════════
@@ -611,17 +641,20 @@ function renderAll() {
 // OVERVIEW
 // ══════════════════════════════════════════════════════
 function renderOverview(d, leads, clients) {
-  const consulted   = d.filter(r => r.consultDate && r.consultDate !== '');
-  const started     = d.filter(r => r.startDate   && r.startDate   !== '');
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  // Consultations/starts filtered by their OWN date field across ALL data
+  const consulted = ALL_DATA.filter(r => r.consultDate && inDateRange(r.consultDate, from, to));
+  const started   = ALL_DATA.filter(r => r.startDate   && inDateRange(r.startDate, from, to));
   const totalValue  = clients.reduce((s,r) => s + parseFloat(r.value||0), 0);
 
   // Pipeline KPIs
   const pipeline = [
     { label:'Total in Period', val: d.length,        accent:'#7c3aed', sub:'Leads + clients combined' },
     { label:'Total Leads',     val: leads.length,    accent:'#2563eb', sub:'Status = Lead' },
-    { label:'Consultations',   val: consulted.length,accent:'#0d9488', sub:'Consultation date filled' },
-    { label:'Program Started', val: started.length,  accent:'#059669', sub:'Program start date filled' },
-    { label:'Conversion Rate', val: d.length ? Math.round(started.length/d.length*100)+'%' : '0%', accent:'#d97706', sub:'Started ÷ total' },
+    { label:'Consultations',   val: consulted.length,accent:'#0d9488', sub:'Consultations in period' },
+    { label:'Program Started', val: started.length,  accent:'#059669', sub:'Programs started in period' },
+    { label:'Conversion Rate', val: leads.length ? Math.round(clients.length/leads.length*100)+'%' : '0%', accent:'#d97706', sub:'Clients ÷ leads' },
   ];
   document.getElementById('kpi-pipeline').innerHTML = pipeline.map(k=>kpiCard(k)).join('');
 
@@ -717,12 +750,14 @@ function renderOverview(d, leads, clients) {
 // PIPELINE
 // ══════════════════════════════════════════════════════
 function renderPipeline(d, leads, clients) {
-  const consulted = d.filter(r=>r.consultDate&&r.consultDate!=='');
-  const started   = d.filter(r=>r.startDate&&r.startDate!=='');
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  const consulted = ALL_DATA.filter(r=>r.consultDate&&inDateRange(r.consultDate,from,to));
+  const started   = ALL_DATA.filter(r=>r.startDate&&inDateRange(r.startDate,from,to));
   const convKpis  = [
-    { label:'Lead → Consult %',  val: pct(consulted.length,d.length)+'%', accent:'#0d9488', sub:consulted.length+' consultations done' },
-    { label:'Consult → Start %', val: consulted.length?pct(started.length,consulted.length)+'%':'—', accent:'#059669', sub:started.length+' programs started' },
-    { label:'Overall Conv. %',   val: d.length?pct(clients.length,d.length)+'%':'—', accent:'#7c3aed', sub:clients.length+' total clients' },
+    { label:'Lead → Consult %',  val: leads.length?pct(consulted.length,leads.length)+'%':'0%', accent:'#0d9488', sub:consulted.length+' consultations done' },
+    { label:'Consult → Start %', val: consulted.length?pct(started.length,consulted.length)+'%':'0%', accent:'#059669', sub:started.length+' programs started' },
+    { label:'Overall Conv. %',   val: leads.length?pct(clients.length,leads.length)+'%':'0%', accent:'#7c3aed', sub:clients.length+' total clients' },
     { label:'Lost Leads',        val: d.filter(r=>r.stage==='Lost').length, accent:'#dc2626', sub:'Stage = Lost' },
   ];
   document.getElementById('kpi-conv').innerHTML = convKpis.map(k=>kpiCard(k)).join('');
@@ -948,7 +983,7 @@ function renderAnalytics(d, leads, clients) {
 
   const months = getLast6Months();
   const leadsM   = months.map(m=>d.filter(r=>r.status==='Lead'&&r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
-  const clientsM = months.map(m=>d.filter(r=>r.status==='Client'&&r.startDate&&r.startDate.endsWith(m.suffix)).length);
+  const clientsM = months.map(m=>ALL_DATA.filter(r=>r.status==='Client'&&(r.startDate||r.leadDate)&&(r.startDate||r.leadDate).endsWith(m.suffix)).length);
   destroyChart('leadsVsClientsChart');
   charts['leadsVsClientsChart'] = new Chart(document.getElementById('leadsVsClientsChart'),{
     type:'bar',
