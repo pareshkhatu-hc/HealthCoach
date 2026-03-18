@@ -580,21 +580,25 @@ function inDateRange(dateStr, from, to) {
   return true;
 }
 
-// Produce two filtered sets from ALL_DATA:
-//  LEADS_FILTERED   — status=Lead, date filtered by leadDate
-//  CLIENTS_FILTERED — status=Client, date filtered by startDate
+// Two strict filtered sets:
+//   LEADS_FILTERED   = status=Lead,   date window on leadDate only
+//   CLIENTS_FILTERED = status=Client, date window on startDate only
 function applyFilters() {
   const from = document.getElementById('dateFrom').value;
   const to   = document.getElementById('dateTo').value;
+  const noFilter = !from && !to;
+
+  // Leads — ALL records with a leadDate in range, no status filter
   LEADS_FILTERED = ALL_DATA.filter(r => {
-    if (r.status !== 'Lead') return false;
-    if (!from && !to) return true;
-    return r.leadDate ? inDateRange(r.leadDate, from, to) : true;
+    if (noFilter) return !!r.leadDate;
+    return inDateRange(r.leadDate, from, to);
   });
+
+  // Clients — status=Client AND startDate in range
   CLIENTS_FILTERED = ALL_DATA.filter(r => {
     if (r.status !== 'Client') return false;
-    if (!from && !to) return true;
-    return r.startDate ? inDateRange(r.startDate, from, to) : true;
+    if (noFilter) return true;
+    return inDateRange(r.startDate, from, to);
   });
 }
 
