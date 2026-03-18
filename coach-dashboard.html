@@ -734,9 +734,9 @@ function renderOverview(leads, clients) {
     { name:'Lost',           color:'#dc2626' },
     { name:'Did not finish', color:'#d97706' },
   ];
-  const stageMax = Math.max(1, ...stages.map(s => clients.filter(r=>r.stage===s.name).length));
+  const stageMax = Math.max(1, ...stages.map(s => clients.filter(r=>(r.stage||'').trim().toLowerCase()===s.name.toLowerCase()).length));
   document.getElementById('stageBars').innerHTML = stages.map(s => {
-    const n = clients.filter(r=>r.stage===s.name).length;
+    const n = clients.filter(r=>(r.stage||'').trim().toLowerCase()===s.name.toLowerCase()).length;
     return `<div class="srow">
       <div class="sdot" style="background:${s.color}"></div>
       <div class="sname">${s.name}</div>
