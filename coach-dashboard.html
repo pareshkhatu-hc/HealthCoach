@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -641,20 +642,19 @@ function renderAll() {
 // OVERVIEW
 // ══════════════════════════════════════════════════════
 function renderOverview(d, leads, clients) {
-  const from = document.getElementById('dateFrom').value;
-  const to   = document.getElementById('dateTo').value;
-  // Consultations/starts filtered by their OWN date field across ALL data
-  const consulted = ALL_DATA.filter(r => r.consultDate && inDateRange(r.consultDate, from, to));
-  const started   = ALL_DATA.filter(r => r.startDate   && inDateRange(r.startDate, from, to));
-  const totalValue  = clients.reduce((s,r) => s + parseFloat(r.value||0), 0);
+  // From the filtered set (d), count rows that have consultDate / startDate filled
+  const consulted  = d.filter(r => r.consultDate && r.consultDate.trim() !== '');
+  const started    = d.filter(r => r.startDate   && r.startDate.trim()   !== '');
+  const totalValue = clients.reduce((s,r) => s + parseFloat(r.value||0), 0);
+  const convRate   = leads.length ? Math.round(clients.length / leads.length * 100) : 0;
 
   // Pipeline KPIs
   const pipeline = [
-    { label:'Total in Period', val: d.length,        accent:'#7c3aed', sub:'Leads + clients combined' },
-    { label:'Total Leads',     val: leads.length,    accent:'#2563eb', sub:'Status = Lead' },
-    { label:'Consultations',   val: consulted.length,accent:'#0d9488', sub:'Consultations in period' },
-    { label:'Program Started', val: started.length,  accent:'#059669', sub:'Programs started in period' },
-    { label:'Conversion Rate', val: leads.length ? Math.round(clients.length/leads.length*100)+'%' : '0%', accent:'#d97706', sub:'Clients ÷ leads' },
+    { label:'Total in Period', val: d.length,          accent:'#7c3aed', sub:'All records in this period' },
+    { label:'Total Leads',     val: leads.length,      accent:'#2563eb', sub:'Status = Lead' },
+    { label:'Consultations',   val: consulted.length,  accent:'#0d9488', sub:'Consult date filled' },
+    { label:'Program Started', val: started.length,    accent:'#059669', sub:'Start date filled' },
+    { label:'Conversion Rate', val: convRate + '%',    accent:'#d97706', sub:'Clients ÷ leads' },
   ];
   document.getElementById('kpi-pipeline').innerHTML = pipeline.map(k=>kpiCard(k)).join('');
 
@@ -750,14 +750,13 @@ function renderOverview(d, leads, clients) {
 // PIPELINE
 // ══════════════════════════════════════════════════════
 function renderPipeline(d, leads, clients) {
-  const from = document.getElementById('dateFrom').value;
-  const to   = document.getElementById('dateTo').value;
-  const consulted = ALL_DATA.filter(r=>r.consultDate&&inDateRange(r.consultDate,from,to));
-  const started   = ALL_DATA.filter(r=>r.startDate&&inDateRange(r.startDate,from,to));
+  // From filtered set (d), count rows with consultDate / startDate filled
+  const consulted = d.filter(r=>r.consultDate&&r.consultDate.trim()!=='');
+  const started   = d.filter(r=>r.startDate&&r.startDate.trim()!=='');
   const convKpis  = [
-    { label:'Lead → Consult %',  val: leads.length?pct(consulted.length,leads.length)+'%':'0%', accent:'#0d9488', sub:consulted.length+' consultations done' },
-    { label:'Consult → Start %', val: consulted.length?pct(started.length,consulted.length)+'%':'0%', accent:'#059669', sub:started.length+' programs started' },
-    { label:'Overall Conv. %',   val: leads.length?pct(clients.length,leads.length)+'%':'0%', accent:'#7c3aed', sub:clients.length+' total clients' },
+    { label:'Lead → Consult %',  val: leads.length ? pct(consulted.length,leads.length)+'%' : '0%', accent:'#0d9488', sub:consulted.length+' consultations done' },
+    { label:'Consult → Start %', val: consulted.length ? pct(started.length,consulted.length)+'%' : '0%', accent:'#059669', sub:started.length+' programs started' },
+    { label:'Overall Conv. %',   val: leads.length ? pct(clients.length,leads.length)+'%' : '0%', accent:'#7c3aed', sub:clients.length+' total clients' },
     { label:'Lost Leads',        val: d.filter(r=>r.stage==='Lost').length, accent:'#dc2626', sub:'Stage = Lost' },
   ];
   document.getElementById('kpi-conv').innerHTML = convKpis.map(k=>kpiCard(k)).join('');
