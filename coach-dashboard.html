@@ -1,4 +1,3 @@
-<!-- https://script.google.com/macros/s/AKfycbzz-JIw-4AVH1P_SB2SFVH4oEU2Qi0ZFFos3EaSok2meToDPIb8qjR2153zEY0vQHWK7A/exec -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -283,6 +282,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   <div class="chip" onclick="setRange(this,'year')">This Year</div>
   <div class="chip" onclick="setRange(this,'all')">All Time</div>
   <button class="topbar-btn" onclick="syncData()">🔄 Sync</button>
+  <button class="topbar-btn" onclick="runDebug()" style="border-color:var(--amber);color:var(--amber)">🔍 Debug</button>
 </header>
 
 <div class="content">
@@ -459,7 +459,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 // ── PASTE YOUR APPS SCRIPT WEB APP URL BELOW ──────────────────────
 // After deploying Code.gs, copy the Web App URL and paste it here.
 // It looks like: https://script.google.com/macros/s/AKfy.../exec
-const API_URL = 'https://script.google.com/macros/s/AKfycbzz-JIw-4AVH1P_SB2SFVH4oEU2Qi0ZFFos3EaSok2meToDPIb8qjR2153zEY0vQHWK7A/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyyYt-8Zj_9k2XD5AewHqQXbMlicguXOLrBtP5pl7FDzjSYLHWJ0YL7VZUJc2wua5QZDA/exec';
 let SESSION_TOKEN     = null;
 let ALL_DATA          = [];   // full dataset from sheet
 let LEADS_FILTERED    = [];   // status=Lead filtered by leadDate
@@ -1164,10 +1164,53 @@ function updateSyncLabel(n) {
   document.getElementById('syncLabel').textContent = n+' records';
 }
 
+// ── DEBUG ──
+async function runDebug() {
+  if (!SESSION_TOKEN) { alert('Please log in first'); return; }
+  const modal = document.getElementById('debugModal');
+  const box   = document.getElementById('debugContent');
+  box.textContent = 'Loading…';
+  modal.style.display = 'flex';
+  try {
+    const res  = await fetch(API_URL + '?action=debug&token=' + encodeURIComponent(SESSION_TOKEN));
+    const data = await res.json();
+    if (!data.success) { box.textContent = 'Error: ' + data.error; return; }
+
+    let out = '';
+    out += '── SHEET HEADERS (' + data.headers.length + ' columns) ──\n';
+    data.headers.forEach((h,i) => out += '  ['+i+'] '+h+'\n');
+
+    out += '\n── COLUMN MAP (field → column index) ──\n';
+    Object.entries(data.colMap).forEach(([f,i]) => out += '  '+f.padEnd(18)+' → col '+i+' ("'+data.headers[i]+'")\n');
+
+    out += '\n── stage1Date resolved → col ' + data.stage1Idx + (data.stage1Idx!==undefined?' ("'+data.headers[data.stage1Idx]+'")':' ← NOT FOUND ⚠️') + '\n';
+    out += '── stage2Date resolved → col ' + data.stage2Idx + (data.stage2Idx!==undefined?' ("'+data.headers[data.stage2Idx]+'")':' ← NOT FOUND ⚠️') + '\n';
+
+    out += '\n── SAMPLE ROWS (first 5) ──\n';
+    data.sample.forEach((r,i) => {
+      out += '\nRow '+(i+1)+': '+r.firstName+' | stage='+r.stage+' | stage1Date='+JSON.stringify(r.stage1Date)+' | stage2Date='+JSON.stringify(r.stage2Date)+'\n';
+    });
+
+    box.textContent = out;
+  } catch(e) {
+    box.textContent = 'Fetch error: ' + e.message;
+  }
+}
+
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', initApp);
 </script>
 
+<!-- DEBUG MODAL -->
+<div id="debugModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:700px;width:95%;max-height:80vh;overflow-y:auto;font-family:monospace;font-size:11px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">🔍 Debug — Column Mapping</span>
+      <button onclick="document.getElementById('debugModal').style.display='none'" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Close</button>
+    </div>
+    <div id="debugContent" style="color:var(--text);line-height:1.8;white-space:pre-wrap"></div>
+  </div>
+</div>
 </div><!-- end app -->
 </body>
 </html>
