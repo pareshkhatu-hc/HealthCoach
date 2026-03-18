@@ -1,4 +1,4 @@
-//const API_URL = 'https://script.google.com/macros/s/AKfycbw4DC-KlyVAZtQECZm_lYbU8WQCz-sHTkjyTHDw0UNN6EVRz4sc-eoE-pkBvv04pnFqRw/exec';
+<!-- const API_URL = 'https://script.google.com/macros/s/AKfycbw4DC-KlyVAZtQECZm_lYbU8WQCz-sHTkjyTHDw0UNN6EVRz4sc-eoE-pkBvv04pnFqRw/exec'; -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -670,10 +670,10 @@ function renderOverview(leads, clients) {
   document.getElementById('kpi-pipeline').innerHTML = pipeline.map(k=>kpiCard(k)).join('');
 
   // Client KPIs
-  const inProg  = clients.filter(r => r.stage === 'In Progress').length;
-  const done    = clients.filter(r => r.stage === 'Completed').length;
-  const lost    = clients.filter(r => r.stage === 'Lost').length;
-  const dnf     = clients.filter(r => r.stage === 'Did not finish').length;
+  const inProg  = clients.filter(r => (r.stage||'').trim().toLowerCase()==='in progress').length;
+  const done    = clients.filter(r => (r.stage||'').trim().toLowerCase()==='completed').length;
+  const lost    = clients.filter(r => (r.stage||'').trim().toLowerCase()==='lost').length;
+  const dnf     = clients.filter(r => (r.stage||'').trim().toLowerCase()==='did not finish').length;
   const clientKpis = [
     { label:'Total Clients',  val: clients.length,     accent:'#059669', sub:'Status = Client' },
     { label:'In Progress',    val: inProg,             accent:'#2563eb', sub:'Active on program' },
@@ -768,7 +768,7 @@ function renderPipeline(leads, clients) {
     { label:'Lead → Consult %',  val: leads.length ? pct(consulted.length,leads.length)+'%' : '0%', accent:'#0d9488', sub:consulted.length+' consultations done' },
     { label:'Consult → Start %', val: consulted.length ? pct(started.length,consulted.length)+'%' : '0%', accent:'#059669', sub:started.length+' programs started' },
     { label:'Overall Conv. %',   val: leads.length ? pct(clients.length,leads.length)+'%' : '0%', accent:'#7c3aed', sub:clients.length+' total clients' },
-    { label:'Lost Leads',        val: leads.filter(r=>r.stage==='Lost').length, accent:'#dc2626', sub:'Stage = Lost' },
+    { label:'Lost Leads',        val: leads.filter(r=>(r.stage||'').trim().toLowerCase()==='lost').length, accent:'#dc2626', sub:'Stage = Lost' },
   ];
   document.getElementById('kpi-conv').innerHTML = convKpis.map(k=>kpiCard(k)).join('');
 
@@ -854,19 +854,20 @@ function renderPeople(leads, clients) {
 function buildBoard(leads, clients) {
 
   // Client columns
+  const _stg = s => (s||'').trim().toLowerCase();
   const clientCols = [
-    { label:'In Progress',    color:'#2563eb', items: clients.filter(r=>r.stage==='In Progress'),    pillClass:'sp-prog' },
-    { label:'Completed',      color:'#059669', items: clients.filter(r=>r.stage==='Completed'),      pillClass:'sp-done' },
-    { label:'Did Not Finish', color:'#d97706', items: clients.filter(r=>r.stage==='Did not finish'),  pillClass:'sp-dnf'  },
-    { label:'Not Started',    color:'#7c3aed', items: clients.filter(r=>r.stage==='Not Started'),    pillClass:'sp-ns'   },
+    { label:'In Progress',    color:'#2563eb', items: clients.filter(r=>_stg(r.stage)==='in progress'),    pillClass:'sp-prog' },
+    { label:'Completed',      color:'#059669', items: clients.filter(r=>_stg(r.stage)==='completed'),      pillClass:'sp-done' },
+    { label:'Did Not Finish', color:'#d97706', items: clients.filter(r=>_stg(r.stage)==='did not finish'),  pillClass:'sp-dnf'  },
+    { label:'Not Started',    color:'#7c3aed', items: clients.filter(r=>_stg(r.stage)==='not started'),    pillClass:'sp-ns'   },
   ];
   document.getElementById('clientBoard').innerHTML = clientCols.map(col=>buildCol(col)).join('');
 
   // Lead columns
   const leadCols = [
-    { label:'New Lead', color:'#7c3aed', items: leads.filter(r=>!r.stage||r.stage===''), pillClass:'sp-lead' },
-    { label:'Lost',     color:'#dc2626', items: leads.filter(r=>r.stage==='Lost'),       pillClass:'sp-lost' },
-    { label:'Not Started (Lead)', color:'#d97706', items: leads.filter(r=>r.stage==='Not Started'), pillClass:'sp-ns' },
+    { label:'New Lead',           color:'#7c3aed', items: leads.filter(r=>!r.stage||r.stage.trim()===''),             pillClass:'sp-lead' },
+    { label:'Lost',               color:'#dc2626', items: leads.filter(r=>_stg(r.stage)==='lost'),                    pillClass:'sp-lost' },
+    { label:'Not Started (Lead)', color:'#d97706', items: leads.filter(r=>_stg(r.stage)==='not started'),             pillClass:'sp-ns'   },
   ];
   document.getElementById('leadBoard').innerHTML = leadCols.map(col=>buildCol(col)).join('');
 }
@@ -892,11 +893,13 @@ function buildPCard(r, pillClass, color) {
     ? (r.stage==='Completed'?'av-green':r.stage==='Lost'?'av-red':'av-blue')
     : 'av-purple';
   const label    = r.stage || r.status || '';
-  const stageDate = (r.stage==='Lost'||r.stage==='Not Started') && r.stage1Date
-    ? 'Stage1: '+r.stage1Date
-    : (r.stage==='Completed'||r.stage==='Did not finish') && r.stage2Date
-      ? 'Stage2: '+r.stage2Date
-      : null;
+  const _s = (r.stage||'').trim().toLowerCase();
+  let stageDate = null;
+  if ((_s==='lost' || _s==='not started') && r.stage1Date && r.stage1Date.trim()!=='') {
+    stageDate = 'Stage1: ' + r.stage1Date;
+  } else if ((_s==='completed' || _s==='did not finish') && r.stage2Date && r.stage2Date.trim()!=='') {
+    stageDate = 'Stage2: ' + r.stage2Date;
+  }
   const dateInfo = stageDate
     || (r.startDate ? 'Started '+r.startDate : r.consultDate ? 'Consult '+r.consultDate : 'Lead '+r.leadDate);
   return `
@@ -923,13 +926,14 @@ function showMore(colLabel) {
 }
 
 function buildList(leads, clients) {
+  const _st = s => (s||'').trim().toLowerCase();
   const groups = [
-    { title:'Clients — In Progress',    color:'#2563eb', items:clients.filter(r=>r.stage==='In Progress'),    cols:['firstName','city','startDate','value','leadTo','stage'] },
-    { title:'Clients — Completed',      color:'#059669', items:clients.filter(r=>r.stage==='Completed'),      cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
-    { title:'Clients — Did Not Finish', color:'#d97706', items:clients.filter(r=>r.stage==='Did not finish'),  cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
-    { title:'Clients — Not Started',    color:'#7c3aed', items:clients.filter(r=>r.stage==='Not Started'),    cols:['firstName','city','startDate','value','leadTo','stage1Date'] },
-    { title:'Leads — New',              color:'#7c3aed', items:leads.filter(r=>(!r.stage||r.stage==='')),     cols:['firstName','city','leadDate','platform','leadTo','source'] },
-    { title:'Leads — Lost',             color:'#dc2626', items:leads.filter(r=>r.stage==='Lost'),             cols:['firstName','city','leadDate','platform','leadTo','stage1Date'] },
+    { title:'Clients — In Progress',    color:'#2563eb', items:clients.filter(r=>_st(r.stage)==='in progress'),    cols:['firstName','city','startDate','value','leadTo','stage'] },
+    { title:'Clients — Completed',      color:'#059669', items:clients.filter(r=>_st(r.stage)==='completed'),      cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
+    { title:'Clients — Did Not Finish', color:'#d97706', items:clients.filter(r=>_st(r.stage)==='did not finish'),  cols:['firstName','city','startDate','value','leadTo','stage2Date'] },
+    { title:'Clients — Not Started',    color:'#7c3aed', items:clients.filter(r=>_st(r.stage)==='not started'),    cols:['firstName','city','startDate','value','leadTo','stage1Date'] },
+    { title:'Leads — New',              color:'#7c3aad', items:leads.filter(r=>(!r.stage||r.stage.trim()==='')),   cols:['firstName','city','leadDate','platform','leadTo','source'] },
+    { title:'Leads — Lost',             color:'#dc2626', items:leads.filter(r=>_st(r.stage)==='lost'),             cols:['firstName','city','leadDate','platform','leadTo','stage1Date'] },
   ].filter(g=>g.items.length>0);
 
   const hdrs = {firstName:'Name',city:'City',leadDate:'Lead Date',consultDate:'Consult Date',startDate:'Start Date',stage1Date:'Stage1 Date',stage2Date:'Stage2 Date',value:'Value',platform:'Platform',source:'Source',leadTo:'Lead To',stage:'Stage'};
@@ -987,13 +991,13 @@ function setPplView(v) {
 function renderAnalytics(leads, clients) {
   const totalV   = clients.reduce((s,r)=>s+parseFloat(r.value||0),0);
   const avgV     = clients.length ? Math.round(totalV/clients.length) : 0;
-  const dropOff  = clients.length ? pct(clients.filter(r=>r.stage==='Lost'||r.stage==='Did not finish').length, clients.length) : 0;
+  const dropOff  = clients.length ? pct(clients.filter(r=>{const s=(r.stage||'').trim().toLowerCase();return s==='lost'||s==='did not finish';}).length, clients.length) : 0;
 
   document.getElementById('kpi-analytics').innerHTML = [
     { label:'Avg Program Value', val:'₹'+fmtNum(avgV),         accent:'#7c3aed', sub:'Across all clients' },
     { label:'Total Program Value',val:'₹'+fmtNum(totalV),      accent:'#059669', sub:'Sum of all program values' },
     { label:'Drop-off Rate',     val:dropOff+'%',              accent:'#dc2626', sub:'Lost + Did not finish' },
-    { label:'Completion Rate',   val:pct(clients.filter(r=>r.stage==='Completed').length,clients.length)+'%', accent:'#0d9488', sub:'Clients who completed' },
+    { label:'Completion Rate',   val:pct(clients.filter(r=>(r.stage||'').trim().toLowerCase()==='completed').length,clients.length)+'%', accent:'#0d9488', sub:'Clients who completed' },
   ].map(k=>kpiCard(k)).join('');
 
   const months = getLast6Months();
