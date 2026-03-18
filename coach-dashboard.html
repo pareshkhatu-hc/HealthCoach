@@ -1,4 +1,4 @@
-
+//const API_URL = 'https://script.google.com/macros/s/AKfycbxpU-dw6V2S3LN0U0M7Y8HSRp5OLqh5O9VMZZbCmf6yS-s6TjlsoBnn0HZ9o2vGmnP1Mg/exec';
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -293,7 +293,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
      ══════════════════════════════════════ -->
 <div class="page active" id="page-overview">
   <div class="slabel anim d1"><span>Lead Pipeline</span></div>
-  <div class="kpi-grid g5 anim d1" id="kpi-pipeline"></div>
+  <div class="kpi-grid g4 anim d1" id="kpi-pipeline"></div>
 
   <div class="slabel anim d2"><span>Clients</span></div>
   <div class="kpi-grid g4 anim d2" id="kpi-clients"></div>
@@ -460,10 +460,11 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 // After deploying Code.gs, copy the Web App URL and paste it here.
 // It looks like: https://script.google.com/macros/s/AKfy.../exec
 const API_URL = 'https://script.google.com/macros/s/AKfycbxpU-dw6V2S3LN0U0M7Y8HSRp5OLqh5O9VMZZbCmf6yS-s6TjlsoBnn0HZ9o2vGmnP1Mg/exec';
-let SESSION_TOKEN = null;
-let ALL_DATA      = [];   // full dataset from sheet
-let FILTERED      = [];   // after date filter
-let charts        = {};
+let SESSION_TOKEN     = null;
+let ALL_DATA          = [];   // full dataset from sheet
+let LEADS_FILTERED    = [];   // status=Lead filtered by leadDate
+let CLIENTS_FILTERED  = [];   // status=Client filtered by startDate
+let charts            = {};
 
 // ══════════════════════════════════════════════════════
 // AUTH
@@ -549,7 +550,7 @@ async function loadData() {
       return;
     }
     ALL_DATA = data.data || [];
-    applyClientFilter();
+    applyFilters();
     hideError();
     updateSyncLabel(ALL_DATA.length);
     renderAll();
@@ -579,14 +580,21 @@ function inDateRange(dateStr, from, to) {
   return true;
 }
 
-// Filter ALL_DATA by leadDate into FILTERED (used for lead/client pipeline counts)
-function applyClientFilter() {
+// Produce two filtered sets from ALL_DATA:
+//  LEADS_FILTERED   — status=Lead, date filtered by leadDate
+//  CLIENTS_FILTERED — status=Client, date filtered by startDate
+function applyFilters() {
   const from = document.getElementById('dateFrom').value;
   const to   = document.getElementById('dateTo').value;
-  if (!from && !to) { FILTERED = ALL_DATA; return; }
-  FILTERED = ALL_DATA.filter(r => {
-    if (!r.leadDate) return true; // rows without leadDate are always included
-    return inDateRange(r.leadDate, from, to);
+  LEADS_FILTERED = ALL_DATA.filter(r => {
+    if (r.status !== 'Lead') return false;
+    if (!from && !to) return true;
+    return r.leadDate ? inDateRange(r.leadDate, from, to) : true;
+  });
+  CLIENTS_FILTERED = ALL_DATA.filter(r => {
+    if (r.status !== 'Client') return false;
+    if (!from && !to) return true;
+    return r.startDate ? inDateRange(r.startDate, from, to) : true;
   });
 }
 
@@ -598,7 +606,7 @@ async function syncData() {
 
 // Date range changed — re-filter client-side, no server fetch needed
 function applyDateFilter() {
-  applyClientFilter();
+  applyFilters();
   renderAll();
 }
 
@@ -621,7 +629,7 @@ function setRange(el, r) {
     document.getElementById('dateFrom').value = '2020-01-01';
     document.getElementById('dateTo').value   = fmt(now);
   }
-  applyClientFilter();
+  applyFilters();
   renderAll();
 }
 
@@ -629,31 +637,30 @@ function setRange(el, r) {
 // RENDER ALL
 // ══════════════════════════════════════════════════════
 function renderAll() {
-  const d = FILTERED;
-  const leads   = d.filter(r => r.status === 'Lead');
-  const clients = d.filter(r => r.status === 'Client');
-  renderOverview(d, leads, clients);
-  renderPipeline(d, leads, clients);
-  renderPeople(d);
-  renderAnalytics(d, leads, clients);
+  const leads   = LEADS_FILTERED;
+  const clients = CLIENTS_FILTERED;
+  renderOverview(leads, clients);
+  renderPipeline(leads, clients);
+  renderPeople(leads, clients);
+  renderAnalytics(leads, clients);
 }
 
 // ══════════════════════════════════════════════════════
 // OVERVIEW
 // ══════════════════════════════════════════════════════
-function renderOverview(d, leads, clients) {
-  // From the filtered set (d), count rows that have consultDate / startDate filled
-  const consulted  = d.filter(r => r.consultDate && r.consultDate.trim() !== '');
-  const started    = d.filter(r => r.startDate   && r.startDate.trim()   !== '');
+function renderOverview(leads, clients) {
+  // Consultations: leads that have a consultDate filled
+  const consulted  = leads.filter(r => r.consultDate && r.consultDate.trim() !== '');
+  // Program Started: clients (already filtered by startDate) with startDate filled
+  const started    = clients.filter(r => r.startDate && r.startDate.trim() !== '');
   const totalValue = clients.reduce((s,r) => s + parseFloat(r.value||0), 0);
   const convRate   = leads.length ? Math.round(clients.length / leads.length * 100) : 0;
 
-  // Pipeline KPIs
+  // Pipeline KPIs (4 cards — no "Total in Period")
   const pipeline = [
-    { label:'Total in Period', val: d.length,          accent:'#7c3aed', sub:'All records in this period' },
-    { label:'Total Leads',     val: leads.length,      accent:'#2563eb', sub:'Status = Lead' },
-    { label:'Consultations',   val: consulted.length,  accent:'#0d9488', sub:'Consult date filled' },
-    { label:'Program Started', val: started.length,    accent:'#059669', sub:'Start date filled' },
+    { label:'Total Leads',     val: leads.length,      accent:'#2563eb', sub:'By lead date in period' },
+    { label:'Consultations',   val: consulted.length,  accent:'#0d9488', sub:'Leads with consult date' },
+    { label:'Program Started', val: started.length,    accent:'#059669', sub:'Clients by start date' },
     { label:'Conversion Rate', val: convRate + '%',    accent:'#d97706', sub:'Clients ÷ leads' },
   ];
   document.getElementById('kpi-pipeline').innerHTML = pipeline.map(k=>kpiCard(k)).join('');
@@ -671,13 +678,12 @@ function renderOverview(d, leads, clients) {
   ];
   document.getElementById('kpi-clients').innerHTML = clientKpis.map(k=>kpiCard(k)).join('');
 
-  // Funnel
+  // Funnel — based on leads as the top of the funnel
   const funnelSteps = [
-    { label:'Total in period',    n: d.length,          pct: 100,                                  color:'#7c3aed' },
-    { label:'Leads',              n: leads.length,      pct: pct(leads.length, d.length),           color:'#2563eb' },
-    { label:'Consultation done',  n: consulted.length,  pct: pct(consulted.length, d.length),       color:'#0d9488' },
-    { label:'Program started',    n: started.length,    pct: pct(started.length, d.length),         color:'#059669' },
-    { label:'Clients enrolled',   n: clients.length,    pct: pct(clients.length, d.length),         color:'#d97706' },
+    { label:'Leads',              n: leads.length,      pct: 100,                                     color:'#2563eb' },
+    { label:'Consultation done',  n: consulted.length,  pct: pct(consulted.length, leads.length),      color:'#0d9488' },
+    { label:'Program started',    n: started.length,    pct: pct(started.length,   leads.length),      color:'#059669' },
+    { label:'Clients enrolled',   n: clients.length,    pct: pct(clients.length,   leads.length),      color:'#d97706' },
   ];
   document.getElementById('funnelChart').innerHTML = funnelSteps.map(f=>`
     <div class="frow">
@@ -695,15 +701,15 @@ function renderOverview(d, leads, clients) {
     { name:'Lost',           color:'#dc2626' },
     { name:'Did not finish', color:'#d97706' },
   ];
-  const stageMax = Math.max(1, ...stages.map(s => d.filter(r=>r.stage===s.name).length));
+  const stageMax = Math.max(1, ...stages.map(s => clients.filter(r=>r.stage===s.name).length));
   document.getElementById('stageBars').innerHTML = stages.map(s => {
-    const n = d.filter(r=>r.stage===s.name).length;
+    const n = clients.filter(r=>r.stage===s.name).length;
     return `<div class="srow">
       <div class="sdot" style="background:${s.color}"></div>
       <div class="sname">${s.name}</div>
       <div class="strack"><div class="sfill" style="width:${pct(n,stageMax)}%;background:${s.color}"></div></div>
       <div class="scount">${n}</div>
-      <div class="spct">${pct(n,d.length)}%</div>
+      <div class="spct">${pct(n,clients.length)}%</div>
     </div>`;
   }).join('');
   document.getElementById('stageMetrics').innerHTML = `
@@ -711,9 +717,9 @@ function renderOverview(d, leads, clients) {
     <div class="mrow"><span class="mname">Drop-off rate</span><span class="mval" style="color:var(--amber)">${pct(lost+dnf, clients.length)}%</span></div>
     <div class="mrow"><span class="mname">Avg program value</span><span class="mval">₹${clients.length ? fmtNum(Math.round(totalValue/clients.length)) : 0}</span></div>`;
 
-  // Lead To split
-  const toParesh  = d.filter(r => r.leadTo && r.leadTo.toLowerCase().includes('paresh')).length;
-  const toSampada = d.filter(r => r.leadTo && r.leadTo.toLowerCase().includes('sampada')).length;
+  // Lead To split — based on leads filtered by leadDate
+  const toParesh  = leads.filter(r => r.leadTo && r.leadTo.toLowerCase().includes('paresh')).length;
+  const toSampada = leads.filter(r => r.leadTo && r.leadTo.toLowerCase().includes('sampada')).length;
   const toTotal   = toParesh + toSampada || 1;
   document.getElementById('leadToSplit').innerHTML = `
     <div class="split-card">
@@ -729,14 +735,14 @@ function renderOverview(d, leads, clients) {
       <div class="split-bar"><div class="split-fill" style="width:${pct(toSampada,toTotal)}%;background:var(--purple)"></div></div>
     </div>`;
 
-  const pConv = d.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('paresh')&&r.status==='Client').length;
-  const sConv = d.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('sampada')&&r.status==='Client').length;
+  const pConv = clients.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length;
+  const sConv = clients.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length;
   document.getElementById('leadToMetrics').innerHTML = `
     <div class="mrow"><span class="mname">Paresh conversion</span><span class="mval">${pConv} clients (${toParesh?pct(pConv,toParesh):0}%)</span></div>
     <div class="mrow"><span class="mname">Sampada conversion</span><span class="mval">${sConv} clients (${toSampada?pct(sConv,toSampada):0}%)</span></div>`;
 
-  // City bars
-  const cities = countBy(d, 'city');
+  // City bars — based on leads by leadDate
+  const cities = countBy(leads, 'city');
   const cityMax = Math.max(1,...Object.values(cities));
   document.getElementById('cityBars').innerHTML = topN(cities,7).map(([city,n])=>`
     <div class="hrow">
@@ -749,20 +755,21 @@ function renderOverview(d, leads, clients) {
 // ══════════════════════════════════════════════════════
 // PIPELINE
 // ══════════════════════════════════════════════════════
-function renderPipeline(d, leads, clients) {
-  // From filtered set (d), count rows with consultDate / startDate filled
-  const consulted = d.filter(r=>r.consultDate&&r.consultDate.trim()!=='');
-  const started   = d.filter(r=>r.startDate&&r.startDate.trim()!=='');
+function renderPipeline(leads, clients) {
+  // Consultations: leads with consultDate filled
+  const consulted = leads.filter(r=>r.consultDate&&r.consultDate.trim()!=='');
+  // Started: clients (filtered by startDate) with startDate filled
+  const started   = clients.filter(r=>r.startDate&&r.startDate.trim()!=='');
   const convKpis  = [
     { label:'Lead → Consult %',  val: leads.length ? pct(consulted.length,leads.length)+'%' : '0%', accent:'#0d9488', sub:consulted.length+' consultations done' },
     { label:'Consult → Start %', val: consulted.length ? pct(started.length,consulted.length)+'%' : '0%', accent:'#059669', sub:started.length+' programs started' },
     { label:'Overall Conv. %',   val: leads.length ? pct(clients.length,leads.length)+'%' : '0%', accent:'#7c3aed', sub:clients.length+' total clients' },
-    { label:'Lost Leads',        val: d.filter(r=>r.stage==='Lost').length, accent:'#dc2626', sub:'Stage = Lost' },
+    { label:'Lost Leads',        val: leads.filter(r=>r.stage==='Lost').length, accent:'#dc2626', sub:'Stage = Lost' },
   ];
   document.getElementById('kpi-conv').innerHTML = convKpis.map(k=>kpiCard(k)).join('');
 
-  // Platform bars
-  const platforms = countBy(d,'platform');
+  // Platform bars — leads by leadDate
+  const platforms = countBy(leads,'platform');
   const platMax   = Math.max(1,...Object.values(platforms));
   const platColors= ['#7c3aed','#2563eb','#059669','#d97706','#ea580c','#0d9488'];
   document.getElementById('platformBars').innerHTML = topN(platforms,8).map(([p,n],i)=>`
@@ -772,8 +779,8 @@ function renderPipeline(d, leads, clients) {
       <div class="hval">${n}</div>
     </div>`).join('');
 
-  // Source bars
-  const sources  = countBy(d,'source');
+  // Source bars — leads by leadDate
+  const sources  = countBy(leads,'source');
   const srcMax   = Math.max(1,...Object.values(sources));
   document.getElementById('sourceBars').innerHTML = topN(sources,8).map(([s,n],i)=>`
     <div class="hrow">
@@ -782,17 +789,17 @@ function renderPipeline(d, leads, clients) {
       <div class="hval">${n}</div>
     </div>`).join('') || '<div style="font-size:11px;color:var(--muted)">No source data</div>';
 
-  // Speed metrics
-  const speeds = calcSpeeds(d);
+  // Speed metrics — from leads
+  const speeds = calcSpeeds(leads);
   document.getElementById('speedMetrics').innerHTML = `
     <div class="mrow"><span class="mname">Lead → Consultation</span><span class="mval">${speeds.leadToConsult} days avg</span></div>
     <div class="mrow"><span class="mname">Consult → Program Start</span><span class="mval">${speeds.consultToStart} days avg</span></div>
     <div class="mrow"><span class="mname">Lead → Program Start</span><span class="mval">${speeds.leadToStart} days avg</span></div>
-    <div class="mrow"><span class="mname">Consult show-up rate</span><span class="mval" style="color:var(--green)">${pct(consulted.length, d.filter(r=>r.consultDate!=='').length+leads.length)}%</span></div>`;
+    <div class="mrow"><span class="mname">Consult show-up rate</span><span class="mval" style="color:var(--green)">${pct(consulted.length, leads.length)}%</span></div>`;
 
   // Monthly trend charts
   const months   = getLast6Months();
-  const leadsByM = months.map(m => d.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
+  const leadsByM = months.map(m => leads.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
   destroyChart('leadTrendChart');
   charts['leadTrendChart'] = new Chart(document.getElementById('leadTrendChart'),{
     type:'bar',
@@ -800,8 +807,8 @@ function renderPipeline(d, leads, clients) {
     options:barOpts('leads')
   });
 
-  const pByM = months.map(m=>d.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)&&r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length);
-  const sByM = months.map(m=>d.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)&&r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length);
+  const pByM = months.map(m=>leads.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)&&r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length);
+  const sByM = months.map(m=>leads.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)&&r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length);
   destroyChart('leadToTrendChart');
   charts['leadToTrendChart'] = new Chart(document.getElementById('leadToTrendChart'),{
     type:'bar',
@@ -833,15 +840,14 @@ function renderPipeline(d, leads, clients) {
 // ══════════════════════════════════════════════════════
 // PEOPLE
 // ══════════════════════════════════════════════════════
-function renderPeople(d) {
+function renderPeople(leads, clients) {
+  const d = [...leads, ...clients];
   window._pplData = d;
-  buildBoard(d);
-  buildList(d);
+  buildBoard(leads, clients);
+  buildList(leads, clients);
 }
 
-function buildBoard(d) {
-  const clients = d.filter(r=>r.status==='Client');
-  const leads   = d.filter(r=>r.status==='Lead');
+function buildBoard(leads, clients) {
 
   // Client columns
   const clientCols = [
@@ -906,14 +912,14 @@ function showMore(colLabel) {
   setPplView('list');
 }
 
-function buildList(d) {
+function buildList(leads, clients) {
   const groups = [
-    { title:'Clients — In Progress',    color:'#2563eb', items:d.filter(r=>r.status==='Client'&&r.stage==='In Progress'),    cols:['firstName','city','startDate','value','leadTo','stage'] },
-    { title:'Clients — Completed',      color:'#059669', items:d.filter(r=>r.status==='Client'&&r.stage==='Completed'),      cols:['firstName','city','startDate','value','leadTo','stage'] },
-    { title:'Clients — Did Not Finish', color:'#d97706', items:d.filter(r=>r.status==='Client'&&r.stage==='Did not finish'),  cols:['firstName','city','startDate','value','leadTo','stage'] },
-    { title:'Clients — Not Started',    color:'#7c3aed', items:d.filter(r=>r.status==='Client'&&r.stage==='Not Started'),    cols:['firstName','city','consultDate','value','leadTo','stage'] },
-    { title:'Leads — New',              color:'#7c3aed', items:d.filter(r=>r.status==='Lead'&&(!r.stage||r.stage==='')),     cols:['firstName','city','leadDate','platform','leadTo','source'] },
-    { title:'Leads — Lost',             color:'#dc2626', items:d.filter(r=>r.status==='Lead'&&r.stage==='Lost'),             cols:['firstName','city','leadDate','platform','leadTo','consultDate'] },
+    { title:'Clients — In Progress',    color:'#2563eb', items:clients.filter(r=>r.stage==='In Progress'),    cols:['firstName','city','startDate','value','leadTo','stage'] },
+    { title:'Clients — Completed',      color:'#059669', items:clients.filter(r=>r.stage==='Completed'),      cols:['firstName','city','startDate','value','leadTo','stage'] },
+    { title:'Clients — Did Not Finish', color:'#d97706', items:clients.filter(r=>r.stage==='Did not finish'),  cols:['firstName','city','startDate','value','leadTo','stage'] },
+    { title:'Clients — Not Started',    color:'#7c3aed', items:clients.filter(r=>r.stage==='Not Started'),    cols:['firstName','city','consultDate','value','leadTo','stage'] },
+    { title:'Leads — New',              color:'#7c3aed', items:leads.filter(r=>(!r.stage||r.stage==='')),     cols:['firstName','city','leadDate','platform','leadTo','source'] },
+    { title:'Leads — Lost',             color:'#dc2626', items:leads.filter(r=>r.stage==='Lost'),             cols:['firstName','city','leadDate','platform','leadTo','consultDate'] },
   ].filter(g=>g.items.length>0);
 
   const hdrs = {firstName:'Name',city:'City',leadDate:'Lead Date',consultDate:'Consult Date',startDate:'Start Date',value:'Value',platform:'Platform',source:'Source',leadTo:'Lead To',stage:'Stage'};
@@ -968,7 +974,7 @@ function setPplView(v) {
 // ══════════════════════════════════════════════════════
 // ANALYTICS
 // ══════════════════════════════════════════════════════
-function renderAnalytics(d, leads, clients) {
+function renderAnalytics(leads, clients) {
   const totalV   = clients.reduce((s,r)=>s+parseFloat(r.value||0),0);
   const avgV     = clients.length ? Math.round(totalV/clients.length) : 0;
   const dropOff  = clients.length ? pct(clients.filter(r=>r.stage==='Lost'||r.stage==='Did not finish').length, clients.length) : 0;
@@ -981,8 +987,9 @@ function renderAnalytics(d, leads, clients) {
   ].map(k=>kpiCard(k)).join('');
 
   const months = getLast6Months();
-  const leadsM   = months.map(m=>d.filter(r=>r.status==='Lead'&&r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
-  const clientsM = months.map(m=>ALL_DATA.filter(r=>r.status==='Client'&&(r.startDate||r.leadDate)&&(r.startDate||r.leadDate).endsWith(m.suffix)).length);
+  // Leads by leadDate month, clients by startDate month
+  const leadsM   = months.map(m=>leads.filter(r=>r.leadDate&&r.leadDate.endsWith(m.suffix)).length);
+  const clientsM = months.map(m=>clients.filter(r=>r.startDate&&r.startDate.endsWith(m.suffix)).length);
   destroyChart('leadsVsClientsChart');
   charts['leadsVsClientsChart'] = new Chart(document.getElementById('leadsVsClientsChart'),{
     type:'bar',
@@ -1000,48 +1007,50 @@ function renderAnalytics(d, leads, clients) {
     type:'bar',
     data:{labels:months.map(m=>m.label),datasets:Object.entries(stageColors).map(([stage,color])=>({
       label:stage,
-      data:months.map(m=>d.filter(r=>r.stage===stage&&(r.startDate||r.leadDate||'').endsWith(m.suffix)).length),
+      data:months.map(m=>clients.filter(r=>r.stage===stage&&r.startDate&&r.startDate.endsWith(m.suffix)).length),
       backgroundColor:color,borderRadius:3
     }))},
     options:{...barOpts('clients'),plugins:{...barOpts('clients').plugins,legend:{display:true,labels:{color:'#6b7280',font:{family:'DM Sans',size:10},boxWidth:9,boxHeight:9}}}}
   });
 
-  // City × stage
-  const topCities = topN(countBy(d,'city'),5).map(([c])=>c);
+  // City × stage — leads for totals, clients for client count
+  const allForCity = [...leads, ...clients];
+  const topCities = topN(countBy(allForCity,'city'),5).map(([c])=>c);
   const cityStageBarsEl = document.getElementById('cityStageBars');
   cityStageBarsEl.innerHTML = topCities.map(city=>{
-    const n = d.filter(r=>r.city===city).length;
-    const cl= d.filter(r=>r.city===city&&r.status==='Client').length;
+    const n = leads.filter(r=>r.city===city).length;
+    const cl= clients.filter(r=>r.city===city).length;
+    const cityMax2 = Math.max(1,...topCities.map(c=>leads.filter(r=>r.city===c).length));
     return `<div class="hrow">
       <div class="hlabel">${city}</div>
-      <div class="htrack"><div class="hfill" style="width:${pct(n,Math.max(1,...topCities.map(c=>d.filter(r=>r.city===c).length)))}%;background:var(--blue)"><span>${n}</span></div></div>
+      <div class="htrack"><div class="hfill" style="width:${pct(n,cityMax2)}%;background:var(--blue)"><span>${n}</span></div></div>
       <div class="hval">${cl} clients</div>
     </div>`;
   }).join('');
 
-  // Platform conversion
+  // Platform conversion — leads for platform totals, clients for conversion count
   const platConv = document.getElementById('platformConvBars');
-  const platforms = topN(countBy(d,'platform'),6).map(([p])=>p);
-  const platConvMax = Math.max(1, ...platforms.map(p=>{
-    const tot = d.filter(r=>r.platform===p).length||1;
-    return pct(d.filter(r=>r.platform===p&&r.status==='Client').length, tot);
+  const platKeys = topN(countBy(leads,'platform'),6).map(([p])=>p);
+  const platConvMax = Math.max(1, ...platKeys.map(p=>{
+    const tot = leads.filter(r=>r.platform===p).length||1;
+    return pct(clients.filter(r=>r.platform===p).length, tot);
   }));
-  platConv.innerHTML = platforms.map(p=>{
-    const tot  = d.filter(r=>r.platform===p).length||1;
-    const conv = pct(d.filter(r=>r.platform===p&&r.status==='Client').length, tot);
+  platConv.innerHTML = platKeys.map(p=>{
+    const tot  = leads.filter(r=>r.platform===p).length||1;
+    const conv = pct(clients.filter(r=>r.platform===p).length, tot);
     return `<div class="hrow">
       <div class="hlabel">${p||'Unknown'}</div>
       <div class="htrack"><div class="hfill" style="width:${pct(conv,platConvMax)}%;background:var(--teal)"><span>${conv}%</span></div></div>
-      <div class="hval">${d.filter(r=>r.platform===p&&r.status==='Client').length}/${tot}</div>
+      <div class="hval">${clients.filter(r=>r.platform===p).length}/${tot}</div>
     </div>`;
   }).join('') || '<div style="font-size:11px;color:var(--muted)">No platform data</div>';
 
   // Lead To conversion rate
   const ltConv = document.getElementById('leadToConvBars');
-  const toP = d.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length||1;
-  const toS = d.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length||1;
-  const pConvRate = pct(d.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('paresh')&&r.status==='Client').length, toP);
-  const sConvRate = pct(d.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('sampada')&&r.status==='Client').length, toS);
+  const toP = leads.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length||1;
+  const toS = leads.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length||1;
+  const pConvRate = pct(clients.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('paresh')).length, toP);
+  const sConvRate = pct(clients.filter(r=>r.leadTo&&r.leadTo.toLowerCase().includes('sampada')).length, toS);
   ltConv.innerHTML = `
     <div class="hrow"><div class="hlabel">Paresh</div><div class="htrack"><div class="hfill" style="width:${pConvRate}%;background:var(--blue)"><span>${pConvRate}%</span></div></div><div class="hval">${toP} leads</div></div>
     <div class="hrow"><div class="hlabel">Sampada</div><div class="htrack"><div class="hfill" style="width:${sConvRate}%;background:var(--purple)"><span>${sConvRate}%</span></div></div><div class="hval">${toS} leads</div></div>
