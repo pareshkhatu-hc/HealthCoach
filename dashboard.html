@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthCoach Pro · Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:      #07090f;
+  --bg1:     #0c0f1c;
+  --bg2:     #111827;
+  --bg3:     #192035;
+  --border:  #1e2d42;
+  --teal:    #00d4b4;
+  --teal2:   #00a890;
+  --coral:   #ff5c7a;
+  --blue:    #4d8ef8;
+  --amber:   #fbbf24;
+  --purple:  #a78bfa;
+  --green:   #34d399;
+  --orange:  #fb923c;
+  --text:    #e2e8f5;
+  --text2:   #7d93af;
+  --text3:   #3a5068;
+  --sidebar: 230px;
+  --topbar:  64px;
+  --r:       12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;line-height:1.5;overflow:hidden;}
+
+/* ── SETUP ── */
+#setup{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 40% at 50% -5%,rgba(0,212,180,.10) 0%,transparent 70%), var(--bg);
+}
+.setup-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:22px;
+  padding:44px 48px;width:500px;max-width:92vw;
+  box-shadow:0 24px 64px rgba(0,0,0,.6);
+}
+.setup-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,212,180,.1);border:1px solid rgba(0,212,180,.25);
+  border-radius:100px;padding:6px 14px;margin-bottom:28px;
+  font-size:12px;font-weight:600;color:var(--teal);letter-spacing:.5px;
+}
+.setup-card h2{font-size:28px;font-weight:800;margin-bottom:6px;}
+.setup-card>p{color:var(--text2);font-size:14px;margin-bottom:28px;line-height:1.6;}
+.form-lbl{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:8px;}
+.form-inp{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:13px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:12.5px;
+  outline:none;transition:border-color .2s;
+}
+.form-inp:focus{border-color:var(--teal);}
+.form-inp::placeholder{color:var(--text3);}
+.setup-btn{
+  width:100%;margin-top:20px;background:linear-gradient(135deg,var(--teal),var(--teal2));
+  color:#000;border:none;border-radius:10px;padding:14px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
+  transition:opacity .2s,transform .1s;
+}
+.setup-btn:hover{opacity:.92;}
+.setup-btn:active{transform:scale(.99);}
+.setup-note{
+  margin-top:20px;padding:14px 16px;background:rgba(77,142,248,.07);
+  border:1px solid rgba(77,142,248,.18);border-radius:10px;
+  font-size:12.5px;color:var(--blue);line-height:1.7;
+}
+.setup-note b{color:#8bb8ff;}
+#err-msg{color:var(--coral);font-size:13px;margin-top:12px;display:none;padding:10px 14px;background:rgba(255,92,122,.07);border-radius:8px;}
+
+/* ── LOADING ── */
+#loading{
+  position:fixed;inset:0;background:var(--bg);
+  display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;
+}
+.spin{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .75s linear infinite;}
+#loading p{margin-top:14px;color:var(--text2);font-size:13.5px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── APP LAYOUT ── */
+#app{display:none;height:100vh;overflow:hidden;}
+.layout{display:flex;height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;background:var(--bg1);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sb-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 18px 20px;border-bottom:1px solid var(--border);
+}
+.sb-logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.sb-brand-name{font-size:14px;font-weight:700;}
+.sb-brand-sub{font-size:11px;color:var(--text2);}
+.sb-nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.sb-sec-label{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--text3);padding:0 8px;margin:8px 0 4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;
+  cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text2);
+  transition:all .15s;margin-bottom:1px;
+}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(0,212,180,.11);color:var(--teal);}
+.nav-icon{font-size:15px;flex-shrink:0;}
+.sb-footer{padding:14px;border-top:1px solid var(--border);}
+.reload-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  background:none;border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:13px;
+  cursor:pointer;transition:all .15s;
+}
+.reload-btn:hover{border-color:var(--teal);color:var(--teal);}
+.data-meta{font-size:11px;color:var(--text3);text-align:center;margin-top:7px;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:var(--topbar);background:var(--bg1);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;gap:14px;flex-shrink:0;
+}
+.page-ttl{font-size:17px;font-weight:700;white-space:nowrap;}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-group{
+  display:flex;background:var(--bg2);border:1px solid var(--border);
+  border-radius:9px;padding:3px;gap:2px;
+}
+.fb{
+  padding:5px 13px;border-radius:6px;border:none;background:none;
+  color:var(--text2);font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:500;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.fb:hover{color:var(--text);}
+.fb.active{background:var(--teal);color:#000;font-weight:700;}
+.custom-dates{display:flex;align-items:center;gap:6px;}
+.custom-dates input{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:5px 9px;color:var(--text);font-family:'Outfit',sans-serif;font-size:12.5px;
+  outline:none;transition:border-color .2s;
+}
+.custom-dates input:focus{border-color:var(--teal);}
+.date-sep{color:var(--text3);font-size:12px;}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:20px 22px;}
+.content::-webkit-scrollbar{width:5px;}
+.content::-webkit-scrollbar-track{background:transparent;}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── PAGE ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ── SECTION ── */
+.sec{margin-bottom:22px;}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.sec-ttl{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2);white-space:nowrap;}
+.sec-line{flex:1;height:1px;background:var(--border);}
+
+/* ── CARD GRIDS ── */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+
+/* ── METRIC CARD ── */
+.mc{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s;
+}
+.mc:hover{border-color:var(--text3);}
+.mc::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--mc-acc,var(--teal));border-radius:2px 2px 0 0;
+}
+.mc.coral{--mc-acc:var(--coral);}
+.mc.blue{--mc-acc:var(--blue);}
+.mc.amber{--mc-acc:var(--amber);}
+.mc.purple{--mc-acc:var(--purple);}
+.mc.green{--mc-acc:var(--green);}
+.mc.orange{--mc-acc:var(--orange);}
+.mc-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:10px;}
+.mc-val{font-size:28px;font-weight:900;line-height:1;color:var(--text);margin-bottom:4px;letter-spacing:-1px;}
+.mc-sub{font-size:11.5px;color:var(--text2);}
+
+/* ── CHART CARD ── */
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;}
+.cc-ttl{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.cc-sub{font-size:12px;color:var(--text2);margin-bottom:14px;}
+.ch-wrap{position:relative;width:100%;}
+
+/* ── SPEED CARDS ── */
+.speed-g{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.sc-lbl{font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:500;line-height:1.4;}
+.sc-val{font-size:24px;font-weight:800;color:var(--teal);letter-spacing:-0.5px;}
+.sc-unit{font-size:11.5px;color:var(--text2);margin-left:3px;font-weight:400;}
+
+/* ── LEAD TO TABLE ── */
+.lt-table{width:100%;border-collapse:collapse;}
+.lt-table th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);}
+.lt-table td{padding:11px 12px;font-size:13.5px;border-bottom:1px solid rgba(30,45,66,.4);}
+.lt-table tr:last-child td{border-bottom:none;}
+.lt-table tr:hover td{background:rgba(255,255,255,.02);}
+.conv-b{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;}
+.b-hi{background:rgba(52,211,153,.13);color:var(--green);}
+.b-md{background:rgba(251,191,36,.13);color:var(--amber);}
+.b-lo{background:rgba(255,92,122,.13);color:var(--coral);}
+
+/* ── PROGRESS BAR ── */
+.prog-bar-wrap{margin-top:5px;}
+.prog-bar-bg{background:var(--bg3);border-radius:4px;height:6px;overflow:hidden;}
+.prog-bar-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1280px){.g4{grid-template-columns:repeat(2,1fr);}.speed-g{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:960px){.g2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SETUP ═══════ -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-badge">💪 HealthCoach Pro Analytics</div>
+    <h2>Connect Your Data</h2>
+    <p>Paste your Google Apps Script Web App URL below to load live client data from your Google Sheet.</p>
+    <label class="form-lbl">Apps Script Web App URL</label>
+    <input class="form-inp" id="api-url" type="text"
+      placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+      onkeydown="if(event.key==='Enter')initDashboard()">
+    <button class="setup-btn" onclick="initDashboard()">Load Dashboard →</button>
+    <div id="err-msg"></div>
+    <div class="setup-note">
+      <b>How to deploy Code.gs:</b><br>
+      1. Open Apps Script → Click <em>Deploy → New deployment</em><br>
+      2. Type: <em>Web App</em> · Execute as: <em>Me</em> · Access: <em>Anyone</em><br>
+      3. Click Deploy → Copy the Web App URL → paste above
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ LOADING ═══════ -->
+<div id="loading"><div class="spin"></div><p id="load-msg">Loading client data…</p></div>
+
+<!-- ═══════ APP ═══════ -->
+<div id="app">
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">💪</div>
+      <div>
+        <div class="sb-brand-name">HealthCoach Pro</div>
+        <div class="sb-brand-sub">Analytics</div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-sec-label">Dashboard</div>
+      <div class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">📊</span>Overview</div>
+      <div class="nav-item" onclick="showPage('pipeline',this)"><span class="nav-icon">🔀</span>Pipeline</div>
+      <div class="nav-item" onclick="showPage('deep',this)"><span class="nav-icon">🔬</span>Deep Analytics</div>
+    </div>
+    <div class="sb-footer">
+      <button class="reload-btn" onclick="reloadData()">↻ &nbsp;Refresh Data</button>
+      <div class="data-meta" id="data-meta">—</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="page-ttl" id="page-ttl">Overview</div>
+      <div class="topbar-right">
+        <div class="filter-group">
+          <button class="fb active" onclick="setPeriod('current',this)">This Month</button>
+          <button class="fb" onclick="setPeriod('1m',this)">1M</button>
+          <button class="fb" onclick="setPeriod('2m',this)">2M</button>
+          <button class="fb" onclick="setPeriod('3m',this)">3M</button>
+          <button class="fb" onclick="setPeriod('6m',this)">6M</button>
+          <button class="fb" onclick="setPeriod('all',this)">All</button>
+        </div>
+        <div class="custom-dates">
+          <input type="date" id="dt-from" onchange="setCustomRange()">
+          <span class="date-sep">→</span>
+          <input type="date" id="dt-to" onchange="setCustomRange()">
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ══════════ OVERVIEW PAGE ══════════ -->
+      <div id="pg-overview" class="page active">
+
+        <!-- Lead Pipeline -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Lead Pipeline</span><div class="sec-line"></div></div>
+          <div class="g4">
+            <div class="mc">
+              <div class="mc-lbl">Total Leads</div>
+              <div class="mc-val" id="o-leads">—</div>
+              <div class="mc-sub">All leads in period</div>
+            </div>
+            <div class="mc blue">
+              <div class="mc-lbl">Consultations Done</div>
+              <div class="mc-val" id="o-consults">—</div>
+              <div class="mc-sub">With consult date</div>
+            </div>
+            <div class="mc amber">
+              <div class="mc-lbl">Program Started</div>
+              <div class="mc-val" id="o-started">—</div>
+              <div class="mc-sub">With program start</div>
+            </div>
+            <div class="mc green">
+              <div class="mc-lbl">Conversion Rate</div>
+              <div class="mc-val" id="o-convrate">—</div>
+              <div class="mc-sub">Leads → Clients %</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Client Overview -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Client Overview</span><div class="sec-line"></div></div>
+          <div class="g4">
+            <div class="mc">
+              <div class="mc-lbl">Total Clients</div>
+              <div class="mc-val" id="o-clients">—</div>
+              <div class="mc-sub">Status = Client</div>
+            </div>
+            <div class="mc amber">
+              <div class="mc-lbl">In Progress</div>
+              <div class="mc-val" id="o-inprog">—</div>
+              <div class="mc-sub">Active transformation</div>
+            </div>
+            <div class="mc green">
+              <div class="mc-lbl">Completed</div>
+              <div class="mc-val" id="o-done">—</div>
+              <div class="mc-sub">Finished program</div>
+            </div>
+            <div class="mc purple">
+              <div class="mc-lbl">Program Value</div>
+              <div class="mc-val" id="o-value">—</div>
+              <div class="mc-sub">Sum for clients</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnel + Transformation -->
+        <div class="g2">
+          <div class="cc">
+            <div class="cc-ttl">Conversion Funnel</div>
+            <div class="cc-sub">Lead → Consultation → Program Start</div>
+            <div class="ch-wrap" style="height:160px"><canvas id="ch-funnel"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-ttl">Transformation Pipeline</div>
+            <div class="cc-sub">Clients by current stage (stage-specific dates)</div>
+            <div class="ch-wrap" style="height:200px"><canvas id="ch-transform"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Lead To Team -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Lead To — Team Split</span><div class="sec-line"></div></div>
+          <div class="cc" style="margin-bottom:14px;">
+            <div class="cc-ttl">Lead Distribution &amp; Conversion by Team Member</div>
+            <div class="cc-sub">Lead count and conversion rate per person</div>
+            <table class="lt-table" id="lt-table"></table>
+          </div>
+        </div>
+
+        <!-- Leads by City -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Leads by City</span><div class="sec-line"></div></div>
+          <div class="cc">
+            <div class="cc-ttl">Top Cities This Period</div>
+            <div class="cc-sub">Geographic distribution of leads</div>
+            <div class="ch-wrap" style="height:300px"><canvas id="ch-cities"></canvas></div>
+          </div>
+        </div>
+      </div><!-- /overview -->
+
+      <!-- ══════════ PIPELINE PAGE ══════════ -->
+      <div id="pg-pipeline" class="page">
+
+        <!-- Pipeline Cards -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Pipeline Metrics</span><div class="sec-line"></div></div>
+          <div class="g4">
+            <div class="mc blue">
+              <div class="mc-lbl">Lead → Consult %</div>
+              <div class="mc-val" id="p-lc">—</div>
+              <div class="mc-sub">Consultation rate</div>
+            </div>
+            <div class="mc amber">
+              <div class="mc-lbl">Consult → Start %</div>
+              <div class="mc-val" id="p-cs">—</div>
+              <div class="mc-sub">Program start rate</div>
+            </div>
+            <div class="mc green">
+              <div class="mc-lbl">Overall Conv. %</div>
+              <div class="mc-val" id="p-oc">—</div>
+              <div class="mc-sub">Lead → Client</div>
+            </div>
+            <div class="mc coral">
+              <div class="mc-lbl">Lost Leads</div>
+              <div class="mc-val" id="p-lost">—</div>
+              <div class="mc-sub">Stage = Lost</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Platform + Source -->
+        <div class="g2">
+          <div class="cc">
+            <div class="cc-ttl">Platform Breakdown</div>
+            <div class="cc-sub">Leads by source platform</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-platform"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-ttl">Lead Source</div>
+            <div class="cc-sub">Where leads are coming from</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-source"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Speed Metrics -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Speed Metrics</span><div class="sec-line"></div></div>
+          <div class="speed-g">
+            <div class="sc">
+              <div class="sc-lbl">Lead → Consultation</div>
+              <div><span class="sc-val" id="sp-lc">—</span><span class="sc-unit">days avg</span></div>
+            </div>
+            <div class="sc">
+              <div class="sc-lbl">Consult → Program Start</div>
+              <div><span class="sc-val" id="sp-cs">—</span><span class="sc-unit">days avg</span></div>
+            </div>
+            <div class="sc">
+              <div class="sc-lbl">Lead → Program Start</div>
+              <div><span class="sc-val" id="sp-ls">—</span><span class="sc-unit">days avg</span></div>
+            </div>
+            <div class="sc">
+              <div class="sc-lbl">Consult Show-up Rate</div>
+              <div><span class="sc-val" id="sp-su">—</span><span class="sc-unit">%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Trend + Lead To Monthly -->
+        <div class="g2">
+          <div class="cc">
+            <div class="cc-ttl">Monthly Lead Trend</div>
+            <div class="cc-sub">New leads per month (all time)</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-trend"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-ttl">Lead To — Monthly Split</div>
+            <div class="cc-sub">Team member leads over time</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-ltmonthly"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Program Value Dist + Revenue -->
+        <div class="g2">
+          <div class="cc">
+            <div class="cc-ttl">Program Value Distribution</div>
+            <div class="cc-sub">Client program pricing breakdown</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-pvdist"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-ttl">Monthly Revenue</div>
+            <div class="cc-sub">Revenue from clients who started this period</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-revenue"></canvas></div>
+          </div>
+        </div>
+
+      </div><!-- /pipeline -->
+
+      <!-- ══════════ DEEP ANALYTICS PAGE ══════════ -->
+      <div id="pg-deep" class="page">
+
+        <!-- Deep Cards -->
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-ttl">Key Analytics</span><div class="sec-line"></div></div>
+          <div class="g4">
+            <div class="mc purple">
+              <div class="mc-lbl">Avg Program Value</div>
+              <div class="mc-val" id="d-avg">—</div>
+              <div class="mc-sub">Per client</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">Total Program Value</div>
+              <div class="mc-val" id="d-total">—</div>
+              <div class="mc-sub">Sum all clients</div>
+            </div>
+            <div class="mc coral">
+              <div class="mc-lbl">Drop-off Rate</div>
+              <div class="mc-val" id="d-drop">—</div>
+              <div class="mc-sub">Did not finish</div>
+            </div>
+            <div class="mc green">
+              <div class="mc-lbl">Completion Rate</div>
+              <div class="mc-val" id="d-comp">—</div>
+              <div class="mc-sub">Finished program</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leads vs Clients + Stage Over Time -->
+        <div class="g2">
+          <div class="cc">
+            <div class="cc-ttl">Leads vs Clients — Monthly</div>
+            <div class="cc-sub">New leads and conversions side by side</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-lvc"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-ttl">Transformation Stage Over Time</div>
+            <div class="cc-sub">Stage distribution per month (stage-specific dates)</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-stagetime"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Platform Conv + Lead To Conv -->
+        <div class="g2">
+          <div class="cc">
+            <div class="cc-ttl">Platform Conversion Rate</div>
+            <div class="cc-sub">Leads that became clients by platform</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-platconv"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="cc-ttl">Lead To — Conversion Rate</div>
+            <div class="cc-sub">Team member conversion performance</div>
+            <div class="ch-wrap" style="height:220px"><canvas id="ch-ltconv"></canvas></div>
+          </div>
+        </div>
+
+      </div><!-- /deep -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /app -->
+
+<script>
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+let ALL = [];
+let SCRIPT_URL = '';
+let PERIOD = 'current';
+let DR = { start: null, end: null };
+let CHARTS = {};
+
+const C = {
+  teal:   '#00d4b4', coral:  '#ff5c7a', blue:   '#4d8ef8',
+  amber:  '#fbbf24', purple: '#a78bfa', green:  '#34d399',
+  orange: '#fb923c', pink:   '#f472b6',
+};
+const PCOLORS = [C.teal, C.coral, C.blue, C.amber, C.purple, C.green, C.orange, C.pink];
+
+// ════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════
+function parseDate(v) {
+  if (!v || v === '') return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  const s = String(v).trim();
+  if (!s) return null;
+  const m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m1) return new Date(+m1[1], +m1[2]-1, +m1[3]);
+  const m2 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m2) return new Date(+m2[3], +m2[1]-1, +m2[2]);
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function parseMoney(v) {
+  if (typeof v === 'number') return v;
+  if (!v) return 0;
+  return parseFloat(String(v).replace(/[₹,\s]/g, '')) || 0;
+}
+
+function fmtMoney(n) {
+  if (!n || isNaN(n)) return '₹0';
+  if (n >= 1e7) return '₹' + (n/1e7).toFixed(1) + 'Cr';
+  if (n >= 1e5) return '₹' + (n/1e5).toFixed(1) + 'L';
+  if (n >= 1000) return '₹' + (n/1000).toFixed(1) + 'K';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function fmtN(n) { return (n ?? 0).toLocaleString('en-IN'); }
+
+function daysBetween(a, b) {
+  const da = parseDate(a), db = parseDate(b);
+  if (!da || !db) return null;
+  return Math.round(Math.abs(db - da) / 86400000);
+}
+
+function avg(arr) {
+  const valid = arr.filter(x => x !== null && !isNaN(x));
+  return valid.length ? Math.round(valid.reduce((s,x) => s+x, 0) / valid.length) : null;
+}
+
+function getPeriodDates(period) {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  let start;
+  switch(period) {
+    case 'current': start = new Date(now.getFullYear(), now.getMonth(), 1); break;
+    case '1m': start = new Date(now); start.setMonth(start.getMonth()-1); break;
+    case '2m': start = new Date(now); start.setMonth(start.getMonth()-2); break;
+    case '3m': start = new Date(now); start.setMonth(start.getMonth()-3); break;
+    case '6m': start = new Date(now); start.setMonth(start.getMonth()-6); break;
+    default:   start = new Date(2000, 0, 1);
+  }
+  return { start, end };
+}
+
+function inRange(dateVal, start, end) {
+  const d = parseDate(dateVal);
+  if (!d) return false;
+  return d >= start && d <= end;
+}
+
+function filterLeadDate(data, s, e) {
+  return data.filter(r => inRange(r['Lead Date'], s, e));
+}
+
+function monthKey(v) {
+  const d = parseDate(v);
+  if (!d) return null;
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function monthLabel(k) {
+  if (!k) return '';
+  const [y, m] = k.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1] + ' ' + y.slice(2);
+}
+
+function allMonthsFor(data, col) {
+  const s = new Set();
+  data.forEach(r => { const k = monthKey(r[col]); if (k) s.add(k); });
+  return [...s].sort();
+}
+
+function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; }
+
+// ════════════════════════════════════════════════════════
+// CHART HELPERS
+// ════════════════════════════════════════════════════════
+function destroyChart(id) { if (CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; } }
+
+function baseOpts(type) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 350 },
+    plugins: {
+      legend: { labels: { color: '#7d93af', font: { family: 'Outfit', size: 11 }, boxWidth: 11, padding: 14 } },
+      tooltip: {
+        backgroundColor: '#192035', titleColor: '#e2e8f5', bodyColor: '#7d93af',
+        borderColor: '#1e2d42', borderWidth: 1,
+        titleFont: { family:'Outfit', weight:'700' }, bodyFont: { family:'Outfit' },
+        padding: 10, cornerRadius: 8, displayColors: true,
+      }
+    },
+    scales: (type === 'bar') ? {
+      x: { grid:{ color:'rgba(30,45,66,.4)', drawBorder:false }, ticks:{ color:'#7d93af', font:{ family:'Outfit', size:11 } } },
+      y: { grid:{ color:'rgba(30,45,66,.4)', drawBorder:false }, ticks:{ color:'#7d93af', font:{ family:'Outfit', size:11 } }, beginAtZero:true }
+    } : {}
+  };
+}
+
+function mkHBar(id, labels, data, colors, pct=false) {
+  destroyChart(id);
+  const cv = document.getElementById(id); if (!cv) return;
+  const bg = labels.map((_,i) => (colors[i%colors.length])+'bb');
+  const bc = labels.map((_,i) => colors[i%colors.length]);
+  const o = baseOpts('bar');
+  o.indexAxis = 'y';
+  o.plugins.legend.display = false;
+  o.scales.x.beginAtZero = true;
+  if (pct) { o.scales.x.max = 100; o.scales.x.ticks.callback = v => v + '%'; }
+  o.plugins.tooltip.callbacks = { label: ctx => ' ' + ctx.parsed.x + (pct ? '%' : '') };
+  CHARTS[id] = new Chart(cv.getContext('2d'), {
+    type:'bar', data:{ labels, datasets:[{ data, backgroundColor:bg, borderColor:bc, borderWidth:1, borderRadius:4 }] }, options:o
+  });
+}
+
+function mkVBar(id, labels, datasets, extraOpts={}) {
+  destroyChart(id);
+  const cv = document.getElementById(id); if (!cv) return;
+  const o = Object.assign(true, {}, baseOpts('bar'));
+  // Deep merge extraOpts
+  deepMerge(o, extraOpts);
+  const ds = datasets.map(d => ({ ...d, borderRadius:4, borderWidth: d.borderWidth??1 }));
+  CHARTS[id] = new Chart(cv.getContext('2d'), { type:'bar', data:{ labels, datasets:ds }, options:o });
+}
+
+function deepMerge(t, s) {
+  for (const k of Object.keys(s||{})) {
+    if (s[k] && typeof s[k]==='object' && !Array.isArray(s[k])) { t[k]=t[k]||{}; deepMerge(t[k],s[k]); }
+    else t[k]=s[k];
+  }
+  return t;
+}
+
+// ════════════════════════════════════════════════════════
+// DATA FETCH
+// ════════════════════════════════════════════════════════
+async function fetchData(url) {
+  const res = await fetch(url, { redirect: 'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' — check deployment settings');
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json.data || [];
+}
+
+async function initDashboard() {
+  const url = (document.getElementById('api-url').value || '').trim();
+  const err = document.getElementById('err-msg');
+  err.style.display = 'none';
+  if (!url.includes('script.google.com')) {
+    err.textContent = '⚠ Please enter a valid Google Apps Script URL'; err.style.display='block'; return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem('hc_url', url);
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('loading').style.display = 'flex';
+  try {
+    ALL = await fetchData(url);
+    document.getElementById('data-meta').textContent = fmtN(ALL.length) + ' records';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    DR = getPeriodDates('current');
+    renderActive();
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('setup').style.display = 'flex';
+    err.textContent = '⚠ ' + e.message; err.style.display = 'block';
+  }
+}
+
+async function reloadData() {
+  if (!SCRIPT_URL) return;
+  document.getElementById('load-msg').textContent = 'Refreshing data…';
+  document.getElementById('loading').style.display = 'flex';
+  try {
+    ALL = await fetchData(SCRIPT_URL);
+    document.getElementById('data-meta').textContent = fmtN(ALL.length) + ' records • just now';
+    renderActive();
+  } catch(e) { alert('Reload error: ' + e.message); }
+  finally { document.getElementById('loading').style.display = 'none'; }
+}
+
+// ════════════════════════════════════════════════════════
+// NAVIGATION & FILTERS
+// ════════════════════════════════════════════════════════
+const PAGE_TITLES = { overview:'Overview', pipeline:'Pipeline', deep:'Deep Analytics' };
+
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('pg-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-ttl').textContent = PAGE_TITLES[page];
+  renderActive();
+}
+
+function setPeriod(p, btn) {
+  PERIOD = p; DR = getPeriodDates(p);
+  document.querySelectorAll('.fb').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dt-from').value = '';
+  document.getElementById('dt-to').value = '';
+  renderActive();
+}
+
+function setCustomRange() {
+  const f = document.getElementById('dt-from').value;
+  const t = document.getElementById('dt-to').value;
+  if (f && t) {
+    PERIOD = 'custom';
+    DR = { start: new Date(f), end: new Date(t+'T23:59:59') };
+    document.querySelectorAll('.fb').forEach(b => b.classList.remove('active'));
+    renderActive();
+  }
+}
+
+function renderActive() {
+  const pg = document.querySelector('.page.active');
+  if (!pg) return;
+  const id = pg.id.replace('pg-','');
+  const fd = filterLeadDate(ALL, DR.start, DR.end);
+  if (id === 'overview')  renderOverview(fd);
+  if (id === 'pipeline')  renderPipeline(fd);
+  if (id === 'deep')      renderDeep(fd);
+}
+
+// ════════════════════════════════════════════════════════
+// OVERVIEW
+// ════════════════════════════════════════════════════════
+function renderOverview(fd) {
+  const { start:s, end:e } = DR;
+
+  const total    = fd.length;
+  const clients  = fd.filter(r => r['Status'] === 'Client');
+  const nClients = clients.length;
+  const consults = fd.filter(r => r['Consultation Date']).length;
+  const started  = fd.filter(r => r['Program Start']).length;
+  const convRate = total > 0 ? ((nClients/total)*100).toFixed(1) : '0.0';
+  const inProg   = fd.filter(r => r['Transformation Stage'] === 'In progress').length;
+  const completed= fd.filter(r => r['Transformation Stage'] === 'Completed').length;
+  const pValue   = clients.reduce((acc, r) => acc + parseMoney(r['Program Value']), 0);
+
+  setText('o-leads',    fmtN(total));
+  setText('o-consults', fmtN(consults));
+  setText('o-started',  fmtN(started));
+  setText('o-convrate', convRate + '%');
+  setText('o-clients',  fmtN(nClients));
+  setText('o-inprog',   fmtN(inProg));
+  setText('o-done',     fmtN(completed));
+  setText('o-value',    fmtMoney(pValue));
+
+  // Conversion Funnel
+  mkHBar('ch-funnel',
+    ['Total Leads', 'Consultations', 'Program Started'],
+    [total, consults, started],
+    [C.teal, C.blue, C.amber]
+  );
+
+  // Transformation Pipeline — stage-specific date filtering on ALL data
+  const stageData = [
+    ALL.filter(r => r['Transformation Stage']==='Not started'   && inRange(r['Stage1 Date'],  s, e)).length,
+    ALL.filter(r => r['Transformation Stage']==='Lost'          && inRange(r['Stage1 Date'],  s, e)).length,
+    ALL.filter(r => r['Transformation Stage']==='In progress'   && inRange(r['Program Start'], s, e)).length,
+    ALL.filter(r => r['Transformation Stage']==='Did not finish' && inRange(r['Stage2 Date'], s, e)).length,
+    ALL.filter(r => r['Transformation Stage']==='Completed'     && inRange(r['Stage2 Date'],  s, e)).length,
+  ];
+  mkHBar('ch-transform',
+    ['Not Started','Lost','In Progress','Did Not Finish','Completed'],
+    stageData,
+    [C.blue, C.coral, C.amber, C.orange, C.green]
+  );
+
+  // Lead To Table
+  const ltMap = {};
+  fd.forEach(r => {
+    const p = (r['Lead To'] || 'Unknown').trim();
+    if (!ltMap[p]) ltMap[p] = { leads:0, clients:0 };
+    ltMap[p].leads++;
+    if (r['Status'] === 'Client') ltMap[p].clients++;
+  });
+  const ltRows = Object.entries(ltMap).sort((a,b)=>b[1].leads-a[1].leads);
+  const tbl = document.getElementById('lt-table');
+  let html = `<thead><tr><th>Team Member</th><th>Leads</th><th>Clients</th><th>Conversion %</th></tr></thead><tbody>`;
+  ltRows.forEach(([name, d]) => {
+    const cv = d.leads > 0 ? ((d.clients/d.leads)*100).toFixed(1) : '0.0';
+    const pct = d.leads > 0 ? (d.clients/d.leads)*100 : 0;
+    const cls = pct >= 30 ? 'b-hi' : pct >= 15 ? 'b-md' : 'b-lo';
+    html += `<tr>
+      <td><strong>${name}</strong></td>
+      <td>${d.leads}</td>
+      <td>${d.clients}</td>
+      <td>
+        <span class="conv-b ${cls}">${cv}%</span>
+        <div class="prog-bar-wrap">
+          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${Math.min(pct,100)}%;background:${pct>=30?C.green:pct>=15?C.amber:C.coral}"></div></div>
+        </div>
+      </td>
+    </tr>`;
+  });
+  tbl.innerHTML = html + '</tbody>';
+
+  // Leads by City
+  const cityMap = {};
+  fd.forEach(r => { const c = (r['City']||'').trim(); if (c) cityMap[c] = (cityMap[c]||0)+1; });
+  const cities = Object.entries(cityMap).sort((a,b)=>b[1]-a[1]).slice(0,14);
+  mkHBar('ch-cities', cities.map(c=>c[0]), cities.map(c=>c[1]),
+    cities.map((_,i)=>i<3?C.teal:i<6?C.blue:C.purple));
+}
+
+// ════════════════════════════════════════════════════════
+// PIPELINE
+// ════════════════════════════════════════════════════════
+function renderPipeline(fd) {
+  const total   = fd.length;
+  const nC      = fd.filter(r=>r['Status']==='Client').length;
+  const consults= fd.filter(r=>r['Consultation Date']).length;
+  const started = fd.filter(r=>r['Program Start']).length;
+  const lost    = fd.filter(r=>r['Transformation Stage']==='Lost').length;
+
+  setText('p-lc',   total>0 ? ((consults/total)*100).toFixed(1)+'%' : '0%');
+  setText('p-cs',   consults>0 ? ((started/consults)*100).toFixed(1)+'%' : '0%');
+  setText('p-oc',   total>0 ? ((nC/total)*100).toFixed(1)+'%' : '0%');
+  setText('p-lost', fmtN(lost));
+
+  // Platform
+  const platMap = {};
+  fd.forEach(r => { const p = r['Lead Platform']||'Unknown'; platMap[p]=(platMap[p]||0)+1; });
+  const plat = Object.entries(platMap).sort((a,b)=>b[1]-a[1]);
+  mkHBar('ch-platform', plat.map(e=>e[0]), plat.map(e=>e[1]), PCOLORS);
+
+  // Lead Source
+  const srcMap = {};
+  fd.forEach(r => { const s=(r['Lead Source']||'').trim()||'Direct/Unknown'; srcMap[s]=(srcMap[s]||0)+1; });
+  const src = Object.entries(srcMap).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  mkHBar('ch-source', src.map(e=>e[0]), src.map(e=>e[1]), [C.purple,C.blue,C.teal,C.amber,C.coral,C.green,C.orange,C.pink]);
+
+  // Speed Metrics
+  const lcDays=[], csDays=[], lsDays=[];
+  fd.forEach(r => {
+    if (r['Lead Date'] && r['Consultation Date']) lcDays.push(daysBetween(r['Lead Date'], r['Consultation Date']));
+    if (r['Consultation Date'] && r['Program Start']) csDays.push(daysBetween(r['Consultation Date'], r['Program Start']));
+    if (r['Lead Date'] && r['Program Start']) lsDays.push(daysBetween(r['Lead Date'], r['Program Start']));
+  });
+  setText('sp-lc', avg(lcDays) ?? '—');
+  setText('sp-cs', avg(csDays) ?? '—');
+  setText('sp-ls', avg(lsDays) ?? '—');
+  setText('sp-su', total>0 ? ((consults/total)*100).toFixed(1) : '0.0');
+
+  // Monthly Lead Trend — ALL time
+  const mMap = {};
+  ALL.forEach(r => { const k=monthKey(r['Lead Date']); if(k) mMap[k]=(mMap[k]||0)+1; });
+  const months = Object.keys(mMap).sort();
+  mkVBar('ch-trend', months.map(monthLabel), [{
+    label:'Leads', data:months.map(m=>mMap[m]||0),
+    backgroundColor:C.teal+'99', borderColor:C.teal, borderWidth:1,
+  }], { plugins:{ legend:{ display:false } } });
+
+  // Lead To Monthly Split — ALL time
+  const persons = [...new Set(ALL.map(r=>(r['Lead To']||'Unknown').trim()))].filter(Boolean).sort();
+  const allM = allMonthsFor(ALL, 'Lead Date');
+  const ltDs = persons.map((p,i) => {
+    const pm={};
+    ALL.filter(r=>(r['Lead To']||'Unknown').trim()===p).forEach(r=>{const k=monthKey(r['Lead Date']);if(k)pm[k]=(pm[k]||0)+1;});
+    return { label:p, data:allM.map(m=>pm[m]||0), backgroundColor:(PCOLORS[i%PCOLORS.length])+'99', borderColor:PCOLORS[i%PCOLORS.length], borderWidth:1 };
+  });
+  mkVBar('ch-ltmonthly', allM.map(monthLabel), ltDs);
+
+  // Program Value Distribution
+  const vals = fd.filter(r=>r['Status']==='Client').map(r=>parseMoney(r['Program Value'])).filter(v=>v>0);
+  const buckets = {'Under 10K':0,'10K–25K':0,'25K–50K':0,'50K–1L':0,'Above 1L':0};
+  vals.forEach(v=>{
+    if(v<10000) buckets['Under 10K']++;
+    else if(v<25000) buckets['10K–25K']++;
+    else if(v<50000) buckets['25K–50K']++;
+    else if(v<100000) buckets['50K–1L']++;
+    else buckets['Above 1L']++;
+  });
+  mkVBar('ch-pvdist', Object.keys(buckets), [{
+    label:'Clients', data:Object.values(buckets),
+    backgroundColor:C.purple+'99', borderColor:C.purple, borderWidth:1,
+  }], { plugins:{ legend:{ display:false } } });
+
+  // Monthly Revenue
+  const revMap={};
+  fd.filter(r=>r['Program Start']&&r['Status']==='Client').forEach(r=>{
+    const k=monthKey(r['Program Start']); if(k) revMap[k]=(revMap[k]||0)+parseMoney(r['Program Value']);
+  });
+  const revM=Object.keys(revMap).sort();
+  mkVBar('ch-revenue', revM.map(monthLabel), [{
+    label:'Revenue', data:revM.map(m=>revMap[m]||0),
+    backgroundColor:C.amber+'99', borderColor:C.amber, borderWidth:1,
+  }], {
+    plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label: ctx=>' '+fmtMoney(ctx.parsed.y) }}},
+    scales:{ y:{ ticks:{ callback: v=>fmtMoney(v) }}}
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// DEEP ANALYTICS
+// ════════════════════════════════════════════════════════
+function renderDeep(fd) {
+  const clients = fd.filter(r=>r['Status']==='Client');
+  const totalVal = clients.reduce((s,r)=>s+parseMoney(r['Program Value']),0);
+  const avgVal   = clients.length>0 ? totalVal/clients.length : 0;
+  const dnf      = fd.filter(r=>r['Transformation Stage']==='Did not finish').length;
+  const comp     = fd.filter(r=>r['Transformation Stage']==='Completed').length;
+  const dropoff  = clients.length>0 ? ((dnf/clients.length)*100).toFixed(1) : '0.0';
+  const compRate = clients.length>0 ? ((comp/clients.length)*100).toFixed(1) : '0.0';
+
+  setText('d-avg',   fmtMoney(avgVal));
+  setText('d-total', fmtMoney(totalVal));
+  setText('d-drop',  dropoff+'%');
+  setText('d-comp',  compRate+'%');
+
+  // Leads vs Clients Monthly — ALL time
+  const allM = allMonthsFor(ALL, 'Lead Date');
+  const lMap={}, cMap={};
+  ALL.forEach(r=>{ const k=monthKey(r['Lead Date']); if(k){ lMap[k]=(lMap[k]||0)+1; if(r['Status']==='Client') cMap[k]=(cMap[k]||0)+1; }});
+  mkVBar('ch-lvc', allM.map(monthLabel), [
+    { label:'Leads',   data:allM.map(m=>lMap[m]||0), backgroundColor:C.blue+'99',  borderColor:C.blue,  borderWidth:1 },
+    { label:'Clients', data:allM.map(m=>cMap[m]||0), backgroundColor:C.teal+'99',  borderColor:C.teal,  borderWidth:1 },
+  ]);
+
+  // Transformation Stage Over Time — ALL time, stage-specific dates
+  const stageCfg = [
+    { label:'Not Started',    stage:'Not started',    col:'Stage1 Date',  color:C.blue   },
+    { label:'Lost',           stage:'Lost',           col:'Stage1 Date',  color:C.coral  },
+    { label:'In Progress',    stage:'In progress',    col:'Program Start', color:C.amber },
+    { label:'Did Not Finish', stage:'Did not finish', col:'Stage2 Date',  color:C.orange },
+    { label:'Completed',      stage:'Completed',      col:'Stage2 Date',  color:C.green  },
+  ];
+  const stMonthSet = new Set();
+  ALL.forEach(r=>{
+    const sc = stageCfg.find(x=>x.stage===r['Transformation Stage']);
+    if(sc){ const k=monthKey(r[sc.col]); if(k) stMonthSet.add(k); }
+  });
+  const stMonths = [...stMonthSet].sort();
+  const stDs = stageCfg.map(sc=>{
+    const m={};
+    ALL.filter(r=>r['Transformation Stage']===sc.stage).forEach(r=>{const k=monthKey(r[sc.col]);if(k)m[k]=(m[k]||0)+1;});
+    return { label:sc.label, data:stMonths.map(m2=>m[m2]||0), backgroundColor:sc.color+'99', borderColor:sc.color, borderWidth:1 };
+  });
+  mkVBar('ch-stagetime', stMonths.map(monthLabel), stDs);
+
+  // Platform Conversion Rate — ALL time
+  const pcMap={};
+  ALL.forEach(r=>{ const p=r['Lead Platform']||'Unknown'; if(!pcMap[p])pcMap[p]={l:0,c:0}; pcMap[p].l++; if(r['Status']==='Client')pcMap[p].c++; });
+  const pc=Object.entries(pcMap).sort((a,b)=>b[1].l-a[1].l);
+  mkHBar('ch-platconv', pc.map(e=>e[0]), pc.map(e=>e[1].l>0?+((e[1].c/e[1].l)*100).toFixed(1):0), PCOLORS, true);
+
+  // Lead To Conversion Rate — ALL time
+  const ltcMap={};
+  ALL.forEach(r=>{ const p=(r['Lead To']||'Unknown').trim(); if(!ltcMap[p])ltcMap[p]={l:0,c:0}; ltcMap[p].l++; if(r['Status']==='Client')ltcMap[p].c++; });
+  const ltc=Object.entries(ltcMap).sort((a,b)=>b[1].l-a[1].l);
+  mkHBar('ch-ltconv', ltc.map(e=>e[0]), ltc.map(e=>e[1].l>0?+((e[1].c/e[1].l)*100).toFixed(1):0), PCOLORS, true);
+}
+
+// ════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('hc_url');
+  if (saved) document.getElementById('api-url').value = saved;
+});
+</script>
+</body>
+</html>
