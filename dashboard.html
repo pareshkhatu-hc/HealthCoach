@@ -197,15 +197,25 @@ body{
 ═══════════════════════════════════ */
 .topbar{
   background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 16px;gap:6px;
-  height:var(--topbar);flex-shrink:0;
-  overflow-x:auto;overflow-y:visible;
+  display:flex;flex-direction:column;
+  flex-shrink:0;
   position:sticky;top:0;z-index:40;
-  scrollbar-width:none;
 }
-.topbar::-webkit-scrollbar{display:none;}
+/* Row 1 */
+.topbar-row1{
+  display:flex;align-items:center;padding:0 16px;gap:8px;
+  height:var(--topbar);overflow:hidden;
+}
+/* Row 2 — date + chips */
+.topbar-row2{
+  display:flex;align-items:center;gap:6px;
+  padding:0 16px 8px;
+  overflow-x:auto;scrollbar-width:none;
+  flex-shrink:0;
+}
+.topbar-row2::-webkit-scrollbar{display:none;}
 .topbar-brand{
-  display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:4px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
 }
 .topbar-brand-name{
   font-family:'Syne',sans-serif;font-size:14px;font-weight:800;white-space:nowrap;
@@ -220,7 +230,7 @@ body{
 .date-bar{
   display:flex;align-items:center;gap:6px;
   background:var(--surface2);border:1px solid var(--border);
-  border-radius:10px;padding:5px 10px;
+  border-radius:10px;padding:5px 10px;flex-shrink:0;
 }
 .date-bar label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
 .date-bar input{
@@ -234,7 +244,7 @@ body{
   font-size:11px;padding:6px 12px;border-radius:20px;
   border:1px solid var(--border);background:var(--surface);
   color:var(--muted);cursor:pointer;transition:all .15s;
-  font-weight:500;white-space:nowrap;
+  font-weight:500;white-space:nowrap;flex-shrink:0;
 }
 .chip:hover{border-color:var(--purple);color:var(--purple);}
 .chip.active{background:var(--purple-dim);border-color:var(--purple);color:var(--purple);font-weight:600;}
@@ -245,7 +255,7 @@ body{
   padding:6px 10px;border-radius:10px;
   font-family:'DM Sans',sans-serif;font-size:13px;
   font-weight:500;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;gap:5px;
+  display:flex;align-items:center;gap:5px;flex-shrink:0;
 }
 .tb-icon-btn:hover{border-color:var(--purple);color:var(--purple);}
 .tb-badge{
@@ -617,85 +627,95 @@ body{
 
 /* ── Mobile ── */
 @media(max-width:700px){
+  /* ── layout ── */
   .sidebar{display:none;}
   .mob-nav{display:flex;}
   .main{margin-left:0;}
-
   #app{height:100vh;overflow:hidden;}
   .layout{height:100vh;overflow:hidden;}
-  .content{
-    padding:12px 12px;
-    /* bottom padding for mob nav */
-    padding-bottom:68px;
-  }
 
-  /* topbar compact */
-  .topbar{padding:0 10px;gap:5px;height:50px;}
+  /* ── content - extra bottom pad so last card clears mob-nav ── */
+  .content{padding:10px 10px 90px;}
+
+  /* ── topbar: row1 compact, row2 visible ── */
+  .topbar-row1{height:44px;padding:0 10px;gap:6px;}
+  .topbar-row2{padding:0 10px 8px;gap:5px;}
   .topbar-brand-name{font-size:12px;}
   .page-ttl{font-size:11px;}
-  .date-bar{flex-shrink:0;}
+  .date-bar{padding:4px 8px;}
   .date-bar label{display:none;}
   .date-bar input{width:76px;font-size:10px;}
-  .chip{font-size:10px;padding:4px 8px;flex-shrink:0;}
-  .tb-icon-btn{font-size:11px;padding:4px 7px;flex-shrink:0;}
+  .chip{font-size:10px;padding:4px 9px;}
+  .tb-icon-btn{font-size:11px;padding:4px 8px;}
 
-  /* grids */
-  .g4{grid-template-columns:1fr 1fr;}
+  /* ── grids: KPI cards always 2 per row ── */
+  .g4{grid-template-columns:1fr 1fr !important;}
   .g3{grid-template-columns:1fr;}
   .g2{grid-template-columns:1fr;}
-  .speed-g{grid-template-columns:1fr 1fr;}
+  .speed-g{grid-template-columns:1fr 1fr !important;}
 
-  /* metric cards */
-  .mc{padding:10px 12px;}
-  .mc-icon{width:26px;height:26px;font-size:12px;margin-bottom:8px;}
-  .mc-val{font-size:17px;}
+  /* ── metric cards compact ── */
+  .mc{padding:10px 11px;}
+  .mc-icon{width:24px;height:24px;font-size:12px;margin-bottom:7px;}
+  .mc-val{font-size:16px;}
   .mc-lbl{font-size:8px;}
   .mc-sub{font-size:9px;}
 
-  /* chart cards */
-  .cc{padding:10px 12px;}
+  /* ── chart cards ── */
+  .cc{padding:10px 11px;}
   .cc-ttl{font-size:11px;}
   .cc-sub{font-size:9px;}
   .cc-badge{font-size:9px;padding:2px 6px;}
 
-  /* speed cards */
-  .sc{padding:10px 12px;}
-  .sc-val{font-size:17px;}
+  /* ── speed cards ── */
+  .sc{padding:10px 11px;}
+  .sc-val{font-size:16px;}
   .sc-lbl{font-size:9px;}
 
-  /* table scroll */
-  .lt-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .lt-table{min-width:440px;}
-  .lt-table th{padding:7px 9px;font-size:8px;}
-  .lt-table td{padding:8px 9px;font-size:11px;}
+  /* ── Lead To table: horizontal scroll, no min-width bleed ── */
+  .lt-table-wrap{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    max-width:100%;display:block;
+  }
+  .lt-table{min-width:0;width:100%;}
+  /* hide progress bar and view-all col on mobile */
+  .lt-table .pb-bg{display:none;}
+  .lt-table th:last-child,.lt-table td:last-child{display:none;}
+  .lt-table th{padding:6px 8px;font-size:8px;}
+  .lt-table td{padding:7px 8px;font-size:11px;}
 
-  /* panels full width */
+  /* ── panels full width ── */
   .panel{width:100%;max-width:100%;}
   .panel-hdr{padding:14px 14px 10px;}
   .panel-search{padding:8px 14px;}
   .dr-row{padding:10px 14px;}
   .al-row{padding:10px 14px;}
 
-  /* modal slides up from bottom */
+  /* ── modal slides up from bottom ── */
   .modal{width:100%;max-width:100%;border-radius:18px 18px 0 0;position:fixed;bottom:0;}
   .m-overlay.open{align-items:flex-end;}
   .modal-body{padding:16px 18px;}
   .modal-foot{padding:12px 18px;}
 
-  /* chart height overrides - reduce ~20% on mobile */
-  .ch-wrap[style*="height:300px"]{height:220px!important;}
-  .ch-wrap[style*="height:220px"]{height:170px!important;}
-  .ch-wrap[style*="height:200px"]{height:155px!important;}
+  /* ── city chart extra bottom clearance above mob-nav ── */
+  .city-card{margin-bottom:10px;}
+
+  /* ── chart height overrides on mobile ── */
+  .ch-wrap[style*="height:300px"]{height:200px!important;}
+  .ch-wrap[style*="height:220px"]{height:165px!important;}
+  .ch-wrap[style*="height:200px"]{height:150px!important;}
   .ch-wrap[style*="height:180px"]{height:140px!important;}
-  .ch-wrap[style*="height:160px"]{height:124px!important;}
+  .ch-wrap[style*="height:160px"]{height:120px!important;}
 }
 
 /* ── Very small phones ── */
 @media(max-width:400px){
-  .g4{grid-template-columns:1fr;}
-  .speed-g{grid-template-columns:1fr;}
-  .topbar-brand-name{display:none;}
+  /* keep 2 per row even at 400px */
+  .g4{grid-template-columns:1fr 1fr !important;}
+  .speed-g{grid-template-columns:1fr 1fr !important;}
+  .topbar-brand-name{font-size:11px;}
   .topbar-divider{display:none;}
+  .page-ttl{display:none;}
 }
 </style>
 </head>
@@ -803,32 +823,36 @@ body{
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div class="topbar-brand">
-        <div class="topbar-brand-name">Paresh<span>Sampada</span></div>
-        <div class="topbar-divider"></div>
-        <div class="page-ttl" id="page-ttl">Overview</div>
+      <!-- Row 1: always visible brand + actions -->
+      <div class="topbar-row1">
+        <div class="topbar-brand">
+          <div class="topbar-brand-name">Paresh<span>Sampada</span></div>
+          <div class="topbar-divider"></div>
+          <div class="page-ttl" id="page-ttl">Overview</div>
+        </div>
+        <div class="sync-status"><div class="sync-dot"></div><span id="syncLabel">Live</span></div>
+        <div id="data-meta" style="font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0;"></div>
+        <div style="flex:1;min-width:4px;"></div>
+        <button class="tb-icon-btn" onclick="openAlerts()" title="Follow-up Alerts">
+          🔔 Alerts<span class="tb-badge" id="al-badge" style="display:none">0</span>
+        </button>
+        <button class="tb-icon-btn" onclick="openTgt()" title="Set Targets">🎯 Targets</button>
       </div>
-      <div class="sync-status"><div class="sync-dot"></div><span id="syncLabel">Live</span></div>
-      <div id="data-meta" style="font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0;"></div>
-      <!-- date range picker -->
-      <div class="date-bar">
-        <label>From</label>
-        <input type="date" id="dt-from" onchange="setCustomRange()">
-        <span class="date-sep">→</span>
-        <input type="date" id="dt-to" onchange="setCustomRange()">
+      <!-- Row 2: date + chips (scrollable on mobile) -->
+      <div class="topbar-row2">
+        <div class="date-bar">
+          <label>From</label>
+          <input type="date" id="dt-from" onchange="setCustomRange()">
+          <span class="date-sep">→</span>
+          <input type="date" id="dt-to" onchange="setCustomRange()">
+        </div>
+        <div class="chip active" onclick="setPeriod('current',this)">This Month</div>
+        <div class="chip" onclick="setPeriod('1m',this)">1M</div>
+        <div class="chip" onclick="setPeriod('2m',this)">2M</div>
+        <div class="chip" onclick="setPeriod('3m',this)">3M</div>
+        <div class="chip" onclick="setPeriod('6m',this)">6M</div>
+        <div class="chip" onclick="setPeriod('all',this)">All</div>
       </div>
-      <!-- chip period filters -->
-      <div class="chip active" onclick="setPeriod('current',this)">This Month</div>
-      <div class="chip" onclick="setPeriod('1m',this)">1M</div>
-      <div class="chip" onclick="setPeriod('2m',this)">2M</div>
-      <div class="chip" onclick="setPeriod('3m',this)">3M</div>
-      <div class="chip" onclick="setPeriod('6m',this)">6M</div>
-      <div class="chip" onclick="setPeriod('all',this)">All</div>
-      <!-- action buttons -->
-      <button class="tb-icon-btn" onclick="openAlerts()" title="Follow-up Alerts">
-        🔔 Alerts<span class="tb-badge" id="al-badge" style="display:none">0</span>
-      </button>
-      <button class="tb-icon-btn" onclick="openTgt()" title="Set Targets">🎯 Targets</button>
     </div>
 
     <!-- CONTENT -->
@@ -925,7 +949,7 @@ body{
             </div>
             <div class="lt-table-wrap"><table class="lt-table" id="lt-table"></table></div>
           </div>
-          <div class="cc">
+          <div class="cc city-card">
             <div class="cc-hdr">
               <div class="cc-hdr-left"><div class="cc-ttl">Leads by City</div><div class="cc-sub">Top cities this period</div></div>
               <span class="cc-badge ccb-blue">↑ Click to drill</span>
@@ -1158,7 +1182,7 @@ body{
 // 1. Open Apps Script, paste the new Code.gs, click Deploy → New deployment
 // 2. Type: Web App · Execute as: Me · Access: Anyone
 // 3. Copy the Web App URL and paste it below (replacing the placeholder)
-const API_URL = 'https://script.google.com/macros/s/AKfycbx-Y3QORLbPHppktAWpOqjTRDOyb9MviB01uiAX2KGgTPFGv4tbDpUH537UZs8qqunu7w/exec';
+const API_URL = https://script.google.com/macros/s/AKfycbx-Y3QORLbPHppktAWpOqjTRDOyb9MviB01uiAX2KGgTPFGv4tbDpUH537UZs8qqunu7w/exec';
 
 // ══════════════════════════════════════════
 // STATE
