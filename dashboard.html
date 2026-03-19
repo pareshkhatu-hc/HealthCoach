@@ -569,7 +569,7 @@ body{
    ANIMATIONS
 ═══════════════════════════════════ */
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-.anim{opacity:0;animation:fadeUp .35s ease forwards;}
+.anim{animation:fadeUp .35s ease both;}
 .a1{animation-delay:.04s;}.a2{animation-delay:.08s;}.a3{animation-delay:.12s;}
 .a4{animation-delay:.16s;}.a5{animation-delay:.20s;}.a6{animation-delay:.24s;}
 .a7{animation-delay:.28s;}.a8{animation-delay:.32s;}
@@ -810,10 +810,6 @@ body{
       </div>
       <div class="sync-status"><div class="sync-dot"></div><span id="syncLabel">Live</span></div>
       <div id="data-meta" style="font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0;"></div>
-
-      <!-- spacer pushes date/chips right -->
-      <div style="flex:1;min-width:8px;"></div>
-
       <!-- date range picker -->
       <div class="date-bar">
         <label>From</label>
@@ -821,7 +817,6 @@ body{
         <span class="date-sep">→</span>
         <input type="date" id="dt-to" onchange="setCustomRange()">
       </div>
-
       <!-- chip period filters -->
       <div class="chip active" onclick="setPeriod('current',this)">This Month</div>
       <div class="chip" onclick="setPeriod('1m',this)">1M</div>
@@ -829,7 +824,6 @@ body{
       <div class="chip" onclick="setPeriod('3m',this)">3M</div>
       <div class="chip" onclick="setPeriod('6m',this)">6M</div>
       <div class="chip" onclick="setPeriod('all',this)">All</div>
-
       <!-- action buttons -->
       <button class="tb-icon-btn" onclick="openAlerts()" title="Follow-up Alerts">
         🔔 Alerts<span class="tb-badge" id="al-badge" style="display:none">0</span>
@@ -1136,13 +1130,13 @@ body{
 
 <!-- MOBILE BOTTOM NAV -->
 <nav class="mob-nav" id="mob-nav">
-  <button class="mob-nav-btn active" id="mnb-overview" onclick="showPage('overview',this);syncMobNav('overview')">
+  <button class="mob-nav-btn active" id="mnb-overview" onclick="showPage('overview',null)">
     <span class="mn-icon">📊</span>Overview
   </button>
-  <button class="mob-nav-btn" id="mnb-pipeline" onclick="showPage('pipeline',this);syncMobNav('pipeline')">
+  <button class="mob-nav-btn" id="mnb-pipeline" onclick="showPage('pipeline',null)">
     <span class="mn-icon">🔀</span>Pipeline
   </button>
-  <button class="mob-nav-btn" id="mnb-deep" onclick="showPage('deep',this);syncMobNav('deep')">
+  <button class="mob-nav-btn" id="mnb-deep" onclick="showPage('deep',null)">
     <span class="mn-icon">🔬</span>Analytics
   </button>
   <button class="mob-nav-btn" onclick="openAlerts()" style="position:relative;">
@@ -1164,7 +1158,7 @@ body{
 // 1. Open Apps Script, paste the new Code.gs, click Deploy → New deployment
 // 2. Type: Web App · Execute as: Me · Access: Anyone
 // 3. Copy the Web App URL and paste it below (replacing the placeholder)
-const API_URL = 'https://script.google.com/macros/s/AKfycbzwqbJ6dHOBHQoYAXf0bX9wqv7cVLhRXpM-6zY71fmQKnUkGuTKQdUoSSgynRilfG8j/exec';
+const API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
 
 // ══════════════════════════════════════════
 // STATE
@@ -1542,13 +1536,34 @@ function syncMobNav(pg){
   const mb=document.getElementById('mnb-'+pg);if(mb)mb.classList.add('active');
 }
 function showPage(pg,el){
+  // Hide all pages
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('pg-'+pg).classList.add('active');
+  const target=document.getElementById('pg-'+pg);
+  if(target) target.classList.add('active');
+
+  // Deactivate all sidebar nav buttons
   document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('active'));
-  el.classList.add('active');
+  // Only add active to sidebar nav-btn (not mob-nav-btn)
+  if(el && el.classList.contains('nav-btn')) el.classList.add('active');
+  // Also activate the matching sidebar nav-btn by id
+  const sideBtn=document.getElementById('nb-'+pg);
+  if(sideBtn) sideBtn.classList.add('active');
+
   syncMobNav(pg);
+
   const titles={overview:'Overview',pipeline:'Pipeline',deep:'Deep Analytics'};
   document.getElementById('page-ttl').textContent=titles[pg]||pg;
+
+  // Retrigger .anim animations on newly shown page
+  if(target){
+    target.querySelectorAll('.anim').forEach(el=>{
+      el.style.animation='none';
+      // Force reflow
+      void el.offsetHeight;
+      el.style.animation='';
+    });
+  }
+
   renderActive();
 }
 function setPeriod(p,el){
