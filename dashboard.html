@@ -1182,7 +1182,7 @@ body{
 // 1. Open Apps Script, paste the new Code.gs, click Deploy → New deployment
 // 2. Type: Web App · Execute as: Me · Access: Anyone
 // 3. Copy the Web App URL and paste it below (replacing the placeholder)
-const API_URL = https://script.google.com/macros/s/AKfycbx-Y3QORLbPHppktAWpOqjTRDOyb9MviB01uiAX2KGgTPFGv4tbDpUH537UZs8qqunu7w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbx-Y3QORLbPHppktAWpOqjTRDOyb9MviB01uiAX2KGgTPFGv4tbDpUH537UZs8qqunu7w/exec';
 
 // ══════════════════════════════════════════
 // STATE
@@ -1192,9 +1192,13 @@ let CHARTS={};
 let TGT={leads:0,con:0,sta:0,rev:0};
 let DD_ROWS=[], AL_ROWS=[];
 
-// Register datalabels globally — disabled by default, enabled per-chart
-Chart.register(ChartDataLabels);
-Chart.defaults.plugins.datalabels.display = false;
+// Register datalabels plugin — guarded so a CDN failure doesn't crash the page
+try{
+  if(typeof ChartDataLabels !== 'undefined'){
+    Chart.register(ChartDataLabels);
+    Chart.defaults.plugins.datalabels.display = false;
+  }
+}catch(e){ console.warn('chartjs-plugin-datalabels not loaded:', e.message); }
 const C={
   purple:'#8b5cf6', blue:'#3b82f6', green:'#10b981',
   amber:'#f59e0b',  orange:'#f97316', teal:'#14b8a6',
@@ -1309,16 +1313,18 @@ function mkHLabeled(id,labels,data,colors,pct=false,ffn=null){
   };
   o.layout={padding:{right:10}};
   o.plugins.tooltip.callbacks={label:ctx=>' '+ctx.parsed.x+(pct?'%':'')};
-  // Datalabels anchored at end of each bar
-  o.plugins.datalabels={
-    display:true,
-    anchor:'end',
-    align:'end',
-    formatter:(val)=>pct?val+'%':val,
-    color:'#374151',
-    font:{family:'Syne',size:11,weight:'700'},
-    padding:{left:5},
-  };
+  // Datalabels anchored at end of each bar (only if plugin loaded)
+  if(typeof ChartDataLabels !== 'undefined'){
+    o.plugins.datalabels={
+      display:true,
+      anchor:'end',
+      align:'end',
+      formatter:(val)=>pct?val+'%':val,
+      color:'#374151',
+      font:{family:'Syne',size:11,weight:'700'},
+      padding:{left:5},
+    };
+  }
   if(ffn){
     o.onClick=(_,els)=>{if(!els.length)return;openDD(labels[els[0].index],ffn(labels[els[0].index]));};
     o.onHover=(_,els,ch)=>{ch.canvas.style.cursor=els.length?'pointer':'default';};
