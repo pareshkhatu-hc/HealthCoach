@@ -58,11 +58,11 @@
 }
 
 html{scroll-behavior:smooth}
+html,body{height:100%;overflow:hidden;}
 body{
   background:var(--bg);color:var(--text);
   font-family:'DM Sans',sans-serif;
   font-size:14px;line-height:1.5;
-  min-height:100vh;overflow-x:hidden;
 }
 
 /* ═══════════════════════════════════
@@ -126,8 +126,9 @@ body{
 /* ═══════════════════════════════════
    APP SHELL
 ═══════════════════════════════════ */
-#app{display:none;height:100vh;overflow:hidden;}
-.layout{display:flex;height:100vh;}
+#app{display:none;height:100vh;width:100%;overflow:hidden;}
+#app.visible{display:block;}
+.layout{display:flex;height:100vh;width:100%;overflow:hidden;}
 
 /* ═══════════════════════════════════
    SIDEBAR — narrow icon-only
@@ -178,34 +179,43 @@ body{
 .sb-footer-btn:hover .nav-tt{opacity:1;}
 .sb-footer-btn.nav-danger:hover{background:var(--red-dim);color:var(--red);}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 2s infinite;flex-shrink:0;}
-.sync-status{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap;}
-@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.4;}}
 .sync-status{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.4;}}
 
 .data-meta{
   font-size:9px;color:var(--muted2);text-align:center;
-  padding:8px 4px 0;line-height:1.4;
-}}
+  padding:4px 4px 0;line-height:1.4;
+}
 
 /* ═══════════════════════════════════
    MAIN
 ═══════════════════════════════════ */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 
 /* ═══════════════════════════════════
    TOPBAR
 ═══════════════════════════════════ */
 .topbar{
   background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:8px;
-  min-height:var(--topbar);flex-shrink:0;flex-wrap:wrap;
+  display:flex;align-items:center;padding:0 16px;gap:6px;
+  height:var(--topbar);flex-shrink:0;
+  overflow-x:auto;overflow-y:visible;
   position:sticky;top:0;z-index:40;
+  scrollbar-width:none;
 }
+.topbar::-webkit-scrollbar{display:none;}
+.topbar-brand{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:4px;
+}
+.topbar-brand-name{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:800;white-space:nowrap;
+}
+.topbar-brand-name span{color:var(--purple);}
+.topbar-divider{width:1px;height:16px;background:var(--border);flex-shrink:0;}
 .page-ttl{
-  font-family:'Syne',sans-serif;font-size:16px;font-weight:800;
-  flex:1;white-space:nowrap;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  white-space:nowrap;flex-shrink:0;color:var(--muted);
 }
-.page-ttl span{color:var(--purple);}
 /* date inputs */
 .date-bar{
   display:flex;align-items:center;gap:6px;
@@ -607,95 +617,85 @@ body{
 
 /* ── Mobile ── */
 @media(max-width:700px){
-  /* hide sidebar, show bottom nav */
   .sidebar{display:none;}
   .mob-nav{display:flex;}
   .main{margin-left:0;}
 
-  /* page layout — leave room for bottom nav */
   #app{height:100vh;overflow:hidden;}
-  .layout{height:100vh;}
-  .main{height:100vh;}
-  .content{padding:12px 14px;padding-bottom:70px;}
-
-  /* topbar — compact, chips scroll */
-  .topbar{
-    padding:0 12px;gap:6px;min-height:50px;
-    overflow-x:auto;flex-wrap:nowrap;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
+  .layout{height:100vh;overflow:hidden;}
+  .content{
+    padding:12px 12px;
+    /* bottom padding for mob nav */
+    padding-bottom:68px;
   }
-  .topbar::-webkit-scrollbar{display:none;}
-  .page-ttl{font-size:14px;flex-shrink:0;}
+
+  /* topbar compact */
+  .topbar{padding:0 10px;gap:5px;height:50px;}
+  .topbar-brand-name{font-size:12px;}
+  .page-ttl{font-size:11px;}
   .date-bar{flex-shrink:0;}
   .date-bar label{display:none;}
-  .date-bar input{width:80px;font-size:10px;}
-  .chip{font-size:10px;padding:5px 9px;flex-shrink:0;}
-  .tb-icon-btn{font-size:11px;padding:5px 8px;flex-shrink:0;}
+  .date-bar input{width:76px;font-size:10px;}
+  .chip{font-size:10px;padding:4px 8px;flex-shrink:0;}
+  .tb-icon-btn{font-size:11px;padding:4px 7px;flex-shrink:0;}
 
-  /* cards single column */
+  /* grids */
   .g4{grid-template-columns:1fr 1fr;}
+  .g3{grid-template-columns:1fr;}
   .g2{grid-template-columns:1fr;}
   .speed-g{grid-template-columns:1fr 1fr;}
 
-  /* section label spacing */
-  .sec{margin-bottom:14px;}
-  .sec-hdr{margin-bottom:8px;}
-
-  /* metric card compact */
-  .mc{padding:12px 14px;}
-  .mc-icon{width:28px;height:28px;font-size:13px;margin-bottom:10px;}
-  .mc-val{font-size:18px;}
+  /* metric cards */
+  .mc{padding:10px 12px;}
+  .mc-icon{width:26px;height:26px;font-size:12px;margin-bottom:8px;}
+  .mc-val{font-size:17px;}
   .mc-lbl{font-size:8px;}
   .mc-sub{font-size:9px;}
 
   /* chart cards */
-  .cc{padding:12px 14px;}
-  .cc-ttl{font-size:12px;}
+  .cc{padding:10px 12px;}
+  .cc-ttl{font-size:11px;}
   .cc-sub{font-size:9px;}
-  .cc-badge{font-size:9px;padding:2px 7px;}
+  .cc-badge{font-size:9px;padding:2px 6px;}
 
-  /* speed cards compact */
-  .sc{padding:12px 14px;}
-  .sc-val{font-size:18px;}
+  /* speed cards */
+  .sc{padding:10px 12px;}
+  .sc-val{font-size:17px;}
   .sc-lbl{font-size:9px;}
 
-  /* lead to table — horizontal scroll */
+  /* table scroll */
   .lt-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .lt-table{min-width:480px;}
-  .lt-table th{padding:8px 10px;font-size:8px;}
-  .lt-table td{padding:9px 10px;font-size:11px;}
+  .lt-table{min-width:440px;}
+  .lt-table th{padding:7px 9px;font-size:8px;}
+  .lt-table td{padding:8px 9px;font-size:11px;}
 
   /* panels full width */
   .panel{width:100%;max-width:100%;}
-  .panel-hdr{padding:16px 16px 12px;}
-  .panel-search{padding:10px 16px;}
-  .dr-row{padding:10px 16px;}
-  .al-row{padding:12px 16px;}
+  .panel-hdr{padding:14px 14px 10px;}
+  .panel-search{padding:8px 14px;}
+  .dr-row{padding:10px 14px;}
+  .al-row{padding:10px 14px;}
 
-  /* modal full width */
+  /* modal slides up from bottom */
   .modal{width:100%;max-width:100%;border-radius:18px 18px 0 0;position:fixed;bottom:0;}
   .m-overlay.open{align-items:flex-end;}
-  .modal-body{padding:18px 20px;}
-  .modal-foot{padding:14px 20px;}
+  .modal-body{padding:16px 18px;}
+  .modal-foot{padding:12px 18px;}
 
-  /* setup card */
-  .setup-card{padding:32px 24px;}
-
-  /* chart heights on mobile */
-  .ch-wrap[style*="height:240px"]{height:192px!important;}
-  .ch-wrap[style*="height:176px"]{height:140px!important;}
-  .ch-wrap[style*="height:160px"]{height:128px!important;}
-  .ch-wrap[style*="height:144px"]{height:116px!important;}
-  .ch-wrap[style*="height:128px"]{height:102px!important;}
+  /* chart height overrides - reduce ~20% on mobile */
+  .ch-wrap[style*="height:300px"]{height:220px!important;}
+  .ch-wrap[style*="height:220px"]{height:170px!important;}
+  .ch-wrap[style*="height:200px"]{height:155px!important;}
+  .ch-wrap[style*="height:180px"]{height:140px!important;}
+  .ch-wrap[style*="height:160px"]{height:124px!important;}
 }
 
-/* ── Very small mobile ── */
+/* ── Very small phones ── */
 @media(max-width:400px){
   .g4{grid-template-columns:1fr;}
   .speed-g{grid-template-columns:1fr;}
-  .topbar{gap:4px;}
-  .page-ttl{font-size:13px;}
+  .topbar-brand-name{display:none;}
+  .topbar-divider{display:none;}
 }
 </style>
 </head>
@@ -803,13 +803,16 @@ body{
 
     <!-- TOPBAR -->
     <div class="topbar">
-      <div style="display:flex;align-items:center;gap:14px;flex-shrink:0;">
-        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:800;white-space:nowrap;">Paresh<span style="color:var(--purple)">Sampada</span></div>
-        <div style="width:1px;height:18px;background:var(--border);"></div>
+      <div class="topbar-brand">
+        <div class="topbar-brand-name">Paresh<span>Sampada</span></div>
+        <div class="topbar-divider"></div>
         <div class="page-ttl" id="page-ttl">Overview</div>
       </div>
       <div class="sync-status"><div class="sync-dot"></div><span id="syncLabel">Live</span></div>
-      <div class="sync-status" style="color:var(--muted2);font-size:10px;" id="data-meta"></div>
+      <div id="data-meta" style="font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0;"></div>
+
+      <!-- spacer pushes date/chips right -->
+      <div style="flex:1;min-width:8px;"></div>
 
       <!-- date range picker -->
       <div class="date-bar">
