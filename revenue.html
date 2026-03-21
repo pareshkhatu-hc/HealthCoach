@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PS Revenue · Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0c12;
+  --s1:#111520;
+  --s2:#171c2a;
+  --s3:#1e2538;
+  --b1:#252d45;
+  --b2:#2e3855;
+
+  --gold:#f5a623;
+  --gold2:#e8941a;
+  --gold-dim:rgba(245,166,35,.12);
+  --gold-border:rgba(245,166,35,.25);
+
+  --emerald:#10d9a0;
+  --emerald-dim:rgba(16,217,160,.10);
+  --emerald-border:rgba(16,217,160,.22);
+
+  --sapphire:#4b9eff;
+  --sapphire-dim:rgba(75,158,255,.10);
+  --sapphire-border:rgba(75,158,255,.22);
+
+  --rose:#ff5c87;
+  --rose-dim:rgba(255,92,135,.10);
+  --rose-border:rgba(255,92,135,.22);
+
+  --violet:#9d7cff;
+  --violet-dim:rgba(157,124,255,.10);
+  --violet-border:rgba(157,124,255,.22);
+
+  --text:#eef0f8;
+  --muted:#7a88a8;
+  --muted2:#3d4d6a;
+
+  --nav-w:64px;
+  --topbar-h:58px;
+  --r:14px;
+}
+
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;}
+
+/* ══ SETUP SCREEN ══ */
+#setup{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 30% 60%,rgba(245,166,35,.06) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 60% at 80% 20%,rgba(75,158,255,.05) 0%,transparent 70%);
+}
+.setup-card{
+  background:var(--s1);border:1px solid var(--b1);border-radius:22px;
+  padding:44px 44px;width:480px;max-width:94vw;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+}
+.setup-logo{
+  width:54px;height:54px;border-radius:14px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#1a0e00;
+  margin:0 auto 20px;box-shadow:0 6px 24px rgba(245,166,35,.35);
+}
+.setup-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center;margin-bottom:4px;}
+.setup-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:28px;}
+.setup-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:7px;display:block;}
+.setup-inp{
+  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:10px;
+  padding:12px 15px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
+  outline:none;transition:border-color .2s;
+}
+.setup-inp:focus{border-color:var(--gold);}
+.setup-inp::placeholder{color:var(--muted2);}
+.setup-btn{
+  width:100%;margin-top:18px;background:var(--gold);
+  color:#1a0e00;border:none;border-radius:10px;padding:13px;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(245,166,35,.3);
+}
+.setup-btn:hover{background:var(--gold2);transform:translateY(-1px);}
+.setup-note{
+  margin-top:16px;padding:12px 14px;
+  background:var(--sapphire-dim);border:1px solid var(--sapphire-border);
+  border-radius:9px;font-size:11.5px;color:var(--sapphire);line-height:1.7;
+}
+#setup-err{color:var(--rose);font-size:12px;margin-top:10px;display:none;
+  padding:9px 13px;background:var(--rose-dim);border-radius:8px;}
+
+/* ══ LOADING ══ */
+#loading{
+  position:fixed;inset:0;background:var(--bg);z-index:9998;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+}
+.spin{width:38px;height:38px;border:3px solid var(--b1);border-top-color:var(--gold);border-radius:50%;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:12px;color:var(--muted);}
+
+/* ══ APP ══ */
+#app{display:none;height:100vh;overflow:hidden;}
+.layout{display:flex;height:100vh;overflow:hidden;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:var(--nav-w);flex-shrink:0;background:var(--s1);
+  border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;align-items:center;
+  padding:18px 0;gap:4px;overflow:visible;position:relative;z-index:50;
+}
+.sb-mark{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:#1a0e00;
+  margin-bottom:18px;flex-shrink:0;box-shadow:0 4px 14px rgba(245,166,35,.3);
+}
+.nb{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;border:none;background:none;
+  color:var(--muted);transition:all .15s;position:relative;
+}
+.nb:hover{background:var(--s2);color:var(--text);}
+.nb.active{background:var(--gold-dim);color:var(--gold);}
+.nb-tt{
+  position:absolute;left:52px;top:50%;transform:translateY(-50%);
+  background:var(--text);color:var(--bg);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;
+  padding:4px 9px;border-radius:6px;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;
+}
+.nb:hover .nb-tt{opacity:1;}
+.sb-spacer{flex:1;}
+.sb-refresh{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;border:none;background:none;
+  color:var(--muted);transition:all .15s;position:relative;
+}
+.sb-refresh:hover{background:var(--s2);color:var(--gold);}
+.sb-refresh .nb-tt{left:52px;}
+.sb-refresh:hover .nb-tt{opacity:1;}
+.sb-rec-count{font-size:9px;color:var(--muted2);text-align:center;padding:4px 2px;line-height:1.4;}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--bg);}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  height:var(--topbar-h);background:var(--s1);border-bottom:1px solid var(--b1);
+  display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;
+  overflow-x:auto;scrollbar-width:none;
+}
+.topbar::-webkit-scrollbar{display:none;}
+.tb-title{
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+  white-space:nowrap;flex-shrink:0;
+}
+.tb-title span{color:var(--gold);}
+.tb-div{width:1px;height:16px;background:var(--b1);flex-shrink:0;}
+.tb-page{font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+.tb-spacer{flex:1;min-width:8px;}
+/* date chips */
+.chip{
+  font-size:11px;padding:5px 11px;border-radius:20px;
+  border:1px solid var(--b1);background:var(--s2);
+  color:var(--muted);cursor:pointer;transition:all .15s;
+  white-space:nowrap;flex-shrink:0;
+}
+.chip:hover{border-color:var(--gold);color:var(--gold);}
+.chip.active{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold);font-weight:600;}
+/* date bar */
+.dbar{
+  display:flex;align-items:center;gap:5px;flex-shrink:0;
+  background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:4px 9px;
+}
+.dbar label{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;}
+.dbar input{
+  background:none;border:none;outline:none;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;color:var(--text);
+  cursor:pointer;width:82px;
+}
+.dsep{font-size:10px;color:var(--muted2);}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);
+  animation:pulse-g 2s infinite;flex-shrink:0;}
+@keyframes pulse-g{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-lbl{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+/* ══ CONTENT ══ */
+.content{flex:1;overflow-y:auto;padding:18px 20px 30px;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-track{background:var(--bg);}
+.content::-webkit-scrollbar-thumb{background:var(--b1);border-radius:2px;}
+
+.page{display:none;}
+.page.active{display:block;}
+
+/* ══ SECTION ══ */
+.sec{margin-bottom:18px;}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sec-hdr::after{content:'';flex:1;height:1px;background:var(--b1);}
+.sec-lbl{
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.10em;color:var(--muted);white-space:nowrap;
+}
+
+/* ══ GRIDS ══ */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+
+/* ══ KPI CARD ══ */
+.kpi{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  padding:14px 16px;position:relative;overflow:hidden;
+  transition:transform .2s,border-color .2s;
+}
+.kpi:hover{transform:translateY(-2px);border-color:var(--b2);}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--ka,var(--gold));border-radius:var(--r) var(--r) 0 0;
+}
+.kpi.emerald{--ka:var(--emerald);}
+.kpi.sapphire{--ka:var(--sapphire);}
+.kpi.rose{--ka:var(--rose);}
+.kpi.violet{--ka:var(--violet);}
+
+/* glow on gold KPIs */
+.kpi:not(.emerald):not(.sapphire):not(.rose):not(.violet)::after{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:100px;height:100px;border-radius:50%;
+  background:radial-gradient(circle,rgba(245,166,35,.08) 0%,transparent 70%);
+}
+.kpi-icon{font-size:18px;margin-bottom:10px;display:block;}
+.kpi-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px;}
+.kpi-val{
+  font-family:'Syne',sans-serif;font-size:22px;font-weight:700;
+  color:var(--gold);line-height:1;margin-bottom:3px;
+}
+.kpi.emerald .kpi-val{color:var(--emerald);}
+.kpi.sapphire .kpi-val{color:var(--sapphire);}
+.kpi.rose .kpi-val{color:var(--rose);}
+.kpi.violet .kpi-val{color:var(--violet);}
+.kpi-sub{font-size:10px;color:var(--muted);line-height:1.4;}
+.kpi-badge{
+  display:inline-flex;align-items:center;font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:20px;margin-top:5px;
+}
+.kpi-badge.up{background:var(--emerald-dim);color:var(--emerald);}
+.kpi-badge.dn{background:var(--rose-dim);color:var(--rose);}
+
+/* ══ CHART CARD ══ */
+.cc{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  padding:16px 18px;position:relative;
+}
+.cc-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px;}
+.cc-ttl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.cc-sub{font-size:10px;color:var(--muted);}
+.cc-pill{
+  font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;
+  white-space:nowrap;flex-shrink:0;
+}
+.cp-gold  {background:var(--gold-dim);   color:var(--gold);   border:1px solid var(--gold-border);}
+.cp-em    {background:var(--emerald-dim);color:var(--emerald);border:1px solid var(--emerald-border);}
+.cp-sap   {background:var(--sapphire-dim);color:var(--sapphire);border:1px solid var(--sapphire-border);}
+.cp-violet{background:var(--violet-dim); color:var(--violet); border:1px solid var(--violet-border);}
+.cp-rose  {background:var(--rose-dim);   color:var(--rose);   border:1px solid var(--rose-border);}
+.ch{position:relative;width:100%;}
+
+/* ══ HORIZONTAL BAR ROWS (platform/program breakdown) ══ */
+.hrow{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.hrow:last-child{margin-bottom:0;}
+.h-lbl{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.h-track{flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.h-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.h-fill span{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;}
+.h-val{font-size:11px;font-weight:700;color:var(--text);min-width:56px;text-align:right;font-family:'DM Mono',monospace;}
+
+/* ══ MINI STAT ROWS ══ */
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b1);}
+.mrow:last-child{border-bottom:none;}
+.mrow-lbl{font-size:11px;color:var(--muted);}
+.mrow-val{font-size:12px;font-weight:600;color:var(--text);font-family:'DM Mono',monospace;}
+
+/* ══ GAP INDICATOR ══ */
+.gap-bar{margin-top:12px;}
+.gap-bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:5px;}
+.gap-track{height:8px;background:var(--s2);border-radius:4px;overflow:hidden;}
+.gap-fill{height:100%;border-radius:4px;transition:width .8s ease;}
+
+/* ══ ANIMATIONS ══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.anim{animation:fadeUp .4s ease both;}
+.a1{animation-delay:.05s;}.a2{animation-delay:.10s;}.a3{animation-delay:.15s;}
+.a4{animation-delay:.20s;}.a5{animation-delay:.25s;}.a6{animation-delay:.30s;}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:1280px){.g4{grid-template-columns:repeat(2,1fr);}  .g3{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px) {.g2{grid-template-columns:1fr;}             .g3{grid-template-columns:1fr;}}
+@media(max-width:600px) {.g4{grid-template-columns:1fr 1fr;}.sidebar{display:none;}.main{margin-left:0;}.content{padding:12px 12px 24px;}}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-logo">₹</div>
+    <div class="setup-title">Revenue Dashboard</div>
+    <div class="setup-sub">Paresh Sampada · Income & Turnover Tracker</div>
+    <label class="setup-lbl">Apps Script Web App URL</label>
+    <input class="setup-inp" id="api-url" type="text" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+      onkeydown="if(event.key==='Enter')initDash()">
+    <button class="setup-btn" onclick="initDash()">Load Dashboard →</button>
+    <div id="setup-err"></div>
+    <div class="setup-note">Deploy the revenue-Code.gs → Web App → Execute as Me → Anyone → paste URL above</div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading"><div class="spin"></div><p id="load-msg">Loading data…</p></div>
+
+<!-- APP -->
+<div id="app">
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-mark">₹</div>
+    <button class="nb active" id="nb-overview" onclick="showPage('overview',this)">
+      📊<span class="nb-tt">Overview</span>
+    </button>
+    <button class="nb" id="nb-partnerships" onclick="showPage('partnerships',this)">
+      🤝<span class="nb-tt">Partnerships</span>
+    </button>
+    <button class="nb" id="nb-wellness" onclick="showPage('wellness',this)">
+      🌿<span class="nb-tt">Wellness Atlas</span>
+    </button>
+    <button class="nb" id="nb-income" onclick="showPage('income',this)">
+      💰<span class="nb-tt">Income</span>
+    </button>
+    <div class="sb-spacer"></div>
+    <button class="sb-refresh" onclick="refreshData()">🔄<span class="nb-tt">Refresh</span></button>
+    <div class="sb-rec-count" id="rec-count">—</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="tb-title">Paresh<span>Sampada</span></div>
+      <div class="tb-div"></div>
+      <div class="tb-page" id="tb-page">Overview</div>
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
+        <div class="sync-dot"></div>
+        <span class="sync-lbl" id="sync-lbl">Live</span>
+      </div>
+      <div class="tb-spacer"></div>
+      <!-- period chips -->
+      <div class="chip active" onclick="setPeriod('month',this)">This Month</div>
+      <div class="chip" onclick="setPeriod('3m',this)">3M</div>
+      <div class="chip" onclick="setPeriod('6m',this)">6M</div>
+      <div class="chip" onclick="setPeriod('fy',this)">FY</div>
+      <div class="chip" onclick="setPeriod('all',this)">All</div>
+      <!-- custom date range -->
+      <div class="dbar">
+        <label>From</label>
+        <input type="date" id="dt-from" onchange="setCustomRange()">
+        <span class="dsep">→</span>
+        <input type="date" id="dt-to" onchange="setCustomRange()">
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content" id="main-content">
+
+      <!-- ══════════ OVERVIEW ══════════ -->
+      <div id="pg-overview" class="page active">
+
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-lbl">Revenue Summary</span></div>
+          <div class="g4">
+            <div class="kpi anim a1">
+              <span class="kpi-icon">₹</span>
+              <div class="kpi-lbl">Total Revenue</div>
+              <div class="kpi-val" id="o-total-rev">—</div>
+              <div class="kpi-sub">Partnership + Wellness Atlas</div>
+            </div>
+            <div class="kpi anim a2">
+              <span class="kpi-icon">🤝</span>
+              <div class="kpi-lbl">Partnership Revenue</div>
+              <div class="kpi-val" id="o-p-rev">—</div>
+              <div class="kpi-sub" id="o-p-orders">— orders</div>
+            </div>
+            <div class="kpi emerald anim a3">
+              <span class="kpi-icon">🌿</span>
+              <div class="kpi-lbl">Wellness Atlas Revenue</div>
+              <div class="kpi-val" id="o-wa-rev">—</div>
+              <div class="kpi-sub" id="o-wa-enroll">— enrollments</div>
+            </div>
+            <div class="kpi sapphire anim a4">
+              <span class="kpi-icon">💰</span>
+              <div class="kpi-lbl">Income Received</div>
+              <div class="kpi-val" id="o-income">—</div>
+              <div class="kpi-sub">Actual payments received</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g2 anim a5">
+          <!-- Revenue vs Income Gap -->
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Revenue vs Income</div><div class="cc-sub">Billed vs actually received</div></div>
+              <span class="cc-pill cp-rose" id="o-gap-pill">—</span>
+            </div>
+            <div id="o-gap-rows"></div>
+            <div class="gap-bar">
+              <div class="gap-bar-lbl">
+                <span>Received</span>
+                <span id="o-gap-pct">—</span>
+              </div>
+              <div class="gap-track">
+                <div class="gap-fill" id="o-gap-fill" style="width:0%;background:var(--emerald);"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Revenue mix -->
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Revenue Mix</div><div class="cc-sub">Partnership vs Wellness Atlas split</div></div>
+            </div>
+            <div class="ch" style="height:180px"><canvas id="ch-mix"></canvas></div>
+          </div>
+        </div>
+
+        <div class="cc anim a6">
+          <div class="cc-hdr">
+            <div><div class="cc-ttl">Monthly Revenue Trend</div><div class="cc-sub">Partnership + Wellness Atlas combined</div></div>
+            <span class="cc-pill cp-gold">All Sources</span>
+          </div>
+          <div class="ch" style="height:200px"><canvas id="ch-o-trend"></canvas></div>
+        </div>
+
+      </div><!-- /overview -->
+
+      <!-- ══════════ PARTNERSHIPS ══════════ -->
+      <div id="pg-partnerships" class="page">
+
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-lbl">Partnership Metrics</span></div>
+          <div class="g4">
+            <div class="kpi anim a1">
+              <span class="kpi-icon">🤝</span>
+              <div class="kpi-lbl">Total Partnership Revenue</div>
+              <div class="kpi-val" id="p-total">—</div>
+              <div class="kpi-sub">This period</div>
+            </div>
+            <div class="kpi anim a2">
+              <span class="kpi-icon">📦</span>
+              <div class="kpi-lbl">Total Orders</div>
+              <div class="kpi-val" id="p-orders">—</div>
+              <div class="kpi-sub">Ditto + Client</div>
+            </div>
+            <div class="kpi emerald anim a3">
+              <span class="kpi-icon">♻️</span>
+              <div class="kpi-lbl">Ditto Revenue</div>
+              <div class="kpi-val" id="p-ditto">—</div>
+              <div class="kpi-sub" id="p-ditto-cnt">— orders</div>
+            </div>
+            <div class="kpi sapphire anim a4">
+              <span class="kpi-icon">👤</span>
+              <div class="kpi-lbl">Client Revenue</div>
+              <div class="kpi-val" id="p-client">—</div>
+              <div class="kpi-sub" id="p-client-cnt">— orders</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g2 anim a5">
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Revenue by Platform</div><div class="cc-sub">HealthSpan · Two Brothers · Nutrilite · TGSH</div></div>
+              <span class="cc-pill cp-gold">₹ Value</span>
+            </div>
+            <div id="p-platform-bars" style="margin-top:4px;"></div>
+          </div>
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Order Type Split</div><div class="cc-sub">Ditto vs Client by platform</div></div>
+            </div>
+            <div class="ch" style="height:200px"><canvas id="ch-p-split"></canvas></div>
+          </div>
+        </div>
+
+        <div class="cc anim a6">
+          <div class="cc-hdr">
+            <div><div class="cc-ttl">Monthly Partnership Trend</div><div class="cc-sub">Revenue per month by platform</div></div>
+          </div>
+          <div class="ch" style="height:200px"><canvas id="ch-p-trend"></canvas></div>
+        </div>
+
+      </div><!-- /partnerships -->
+
+      <!-- ══════════ WELLNESS ATLAS ══════════ -->
+      <div id="pg-wellness" class="page">
+
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-lbl">Wellness Atlas Metrics</span></div>
+          <div class="g4">
+            <div class="kpi emerald anim a1">
+              <span class="kpi-icon">🌿</span>
+              <div class="kpi-lbl">Total WA Revenue</div>
+              <div class="kpi-val" id="wa-total">—</div>
+              <div class="kpi-sub">This period</div>
+            </div>
+            <div class="kpi anim a2">
+              <span class="kpi-icon">📋</span>
+              <div class="kpi-lbl">Total Enrollments</div>
+              <div class="kpi-val" id="wa-enroll">—</div>
+              <div class="kpi-sub">Programs enrolled</div>
+            </div>
+            <div class="kpi sapphire anim a3">
+              <span class="kpi-icon">📊</span>
+              <div class="kpi-lbl">Avg Program Value</div>
+              <div class="kpi-val" id="wa-avg">—</div>
+              <div class="kpi-sub">Per enrollment</div>
+            </div>
+            <div class="kpi violet anim a4">
+              <span class="kpi-icon">🏆</span>
+              <div class="kpi-lbl">Top Program</div>
+              <div class="kpi-val" id="wa-top" style="font-size:14px;padding-top:4px;">—</div>
+              <div class="kpi-sub" id="wa-top-sub">By revenue</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g2 anim a5">
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Revenue by Program</div><div class="cc-sub">Guided · Challenge · BOB · TOS · LYL</div></div>
+              <span class="cc-pill cp-em">₹ Value</span>
+            </div>
+            <div id="wa-program-bars" style="margin-top:4px;"></div>
+          </div>
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Enrollment Distribution</div><div class="cc-sub">Count by program type</div></div>
+            </div>
+            <div class="ch" style="height:200px"><canvas id="ch-wa-dist"></canvas></div>
+          </div>
+        </div>
+
+        <div class="cc anim a6">
+          <div class="cc-hdr">
+            <div><div class="cc-ttl">Monthly Enrollment Trend</div><div class="cc-sub">New enrollments per month</div></div>
+          </div>
+          <div class="ch" style="height:200px"><canvas id="ch-wa-trend"></canvas></div>
+        </div>
+
+      </div><!-- /wellness -->
+
+      <!-- ══════════ INCOME ══════════ -->
+      <div id="pg-income" class="page">
+
+        <div class="sec">
+          <div class="sec-hdr"><span class="sec-lbl">Income Received</span></div>
+          <div class="g4">
+            <div class="kpi sapphire anim a1">
+              <span class="kpi-icon">💰</span>
+              <div class="kpi-lbl">Total Income</div>
+              <div class="kpi-val" id="i-total">—</div>
+              <div class="kpi-sub">Actual received</div>
+            </div>
+            <div class="kpi emerald anim a2">
+              <span class="kpi-icon">🌿</span>
+              <div class="kpi-lbl">Wellness Atlas</div>
+              <div class="kpi-val" id="i-wa">—</div>
+              <div class="kpi-sub" id="i-wa-cnt">— payments</div>
+            </div>
+            <div class="kpi anim a3">
+              <span class="kpi-icon">🤝</span>
+              <div class="kpi-lbl">Partnerships</div>
+              <div class="kpi-val" id="i-partner">—</div>
+              <div class="kpi-sub" id="i-partner-cnt">— payments</div>
+            </div>
+            <div class="kpi violet anim a4">
+              <span class="kpi-icon">🧬</span>
+              <div class="kpi-lbl">Nutrilite</div>
+              <div class="kpi-val" id="i-nutrilite">—</div>
+              <div class="kpi-sub" id="i-nutrilite-cnt">— payments</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g2 anim a5">
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Income by Platform</div><div class="cc-sub">Breakdown of received payments</div></div>
+              <span class="cc-pill cp-sap">₹</span>
+            </div>
+            <div id="i-platform-bars" style="margin-top:4px;"></div>
+          </div>
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Revenue vs Income Gap</div><div class="cc-sub">Total billed vs actually received</div></div>
+            </div>
+            <div class="ch" style="height:200px"><canvas id="ch-i-gap"></canvas></div>
+          </div>
+        </div>
+
+        <div class="cc anim a6">
+          <div class="cc-hdr">
+            <div><div class="cc-ttl">Monthly Income Trend</div><div class="cc-sub">Payments received per month</div></div>
+          </div>
+          <div class="ch" style="height:200px"><canvas id="ch-i-trend"></canvas></div>
+        </div>
+
+      </div><!-- /income -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /app -->
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let API_URL = '';
+let RAW = { partnerships:[], wellnessAtlas:[], income:[] };
+let PERIOD = 'month';
+let DR = { start:null, end:null };
+let CHARTS = {};
+
+// Chart colour palette
+const C = {
+  gold:'#f5a623', emerald:'#10d9a0', sapphire:'#4b9eff',
+  rose:'#ff5c87', violet:'#9d7cff', amber:'#fbbf24',
+  teal:'#2dd4bf', sky:'#38bdf8'
+};
+const PAL = [C.gold, C.emerald, C.sapphire, C.rose, C.violet, C.amber, C.teal, C.sky];
+
+// Platform colours
+const PLAT_C = {
+  'HealthSpan':   C.sapphire,
+  'Two Brothers': C.emerald,
+  'Nutrilite':    C.violet,
+  'TGSH':         C.gold,
+  'Wellness Atlas': C.emerald,
+  'Partnerships': C.gold,
+};
+
+// Program colours
+const PROG_C = {
+  'Guided Program': C.emerald,
+  'Challenge':      C.sapphire,
+  'BOB':            C.gold,
+  'TOS':            C.violet,
+  'LYL':            C.rose,
+};
+
+// ══════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════
+function parseD(v){
+  if(!v) return null;
+  const s=String(v).trim();
+  // yyyy-MM-dd
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  // dd/MM/yyyy or MM/dd/yyyy — try both
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(+m[3],+m[1]-1,+m[2]);
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function parseMoney(v){
+  if(typeof v==='number') return v;
+  if(!v) return 0;
+  return parseFloat(String(v).replace(/[₹,\s]/g,''))||0;
+}
+function fm(n){
+  if(!n||isNaN(n)) return '₹0';
+  if(n>=1e7) return '₹'+(n/1e7).toFixed(1)+'Cr';
+  if(n>=1e5) return '₹'+(n/1e5).toFixed(1)+'L';
+  if(n>=1000) return '₹'+(n/1000).toFixed(1)+'K';
+  return '₹'+Math.round(n).toLocaleString('en-IN');
+}
+function fn(n){ return (n??0).toLocaleString('en-IN'); }
+function inRange(dateVal,s,e){
+  const d=parseD(dateVal); if(!d) return false;
+  return d>=s && d<=e;
+}
+function mkKey(v){ // YYYY-MM
+  const d=parseD(v); if(!d) return null;
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function mkLabel(k){
+  if(!k) return '';
+  const [y,m]=k.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+y.slice(2);
+}
+function allMonths(keys){
+  const s=new Set(keys.filter(Boolean)); return [...s].sort();
+}
+
+// ══════════════════════════════════════════
+// DATE PERIOD
+// ══════════════════════════════════════════
+function getPeriod(p){
+  const now=new Date();
+  const end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+  let start;
+  switch(p){
+    case 'month': start=new Date(now.getFullYear(),now.getMonth(),1); break;
+    case '3m':    start=new Date(now); start.setMonth(start.getMonth()-3); break;
+    case '6m':    start=new Date(now); start.setMonth(start.getMonth()-6); break;
+    case 'fy': {
+      // April → March financial year
+      const mo=now.getMonth(); // 0=Jan
+      const fy=mo>=3?now.getFullYear():now.getFullYear()-1;
+      start=new Date(fy,3,1); // April 1
+      break;
+    }
+    default: start=new Date(2000,0,1);
+  }
+  return {start,end};
+}
+
+// ══════════════════════════════════════════
+// CHART HELPERS
+// ══════════════════════════════════════════
+function dc(id){ if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];} }
+
+function chartOpts(){
+  const grid={color:'rgba(255,255,255,0.04)'};
+  const ticks={color:'#7a88a8',font:{family:'Plus Jakarta Sans',size:10}};
+  return{
+    responsive:true, maintainAspectRatio:false, animation:{duration:400},
+    plugins:{
+      legend:{labels:{color:'#7a88a8',font:{family:'Plus Jakarta Sans',size:10},boxWidth:10,padding:14}},
+      tooltip:{
+        backgroundColor:'#1e2538',titleColor:'#eef0f8',bodyColor:'#7a88a8',
+        borderColor:'#252d45',borderWidth:1,
+        titleFont:{family:'Syne',size:12,weight:'700'},
+        bodyFont:{family:'Plus Jakarta Sans'},
+        padding:10,cornerRadius:8,
+      }
+    },
+    scales:{
+      x:{grid,ticks},
+      y:{grid,ticks,beginAtZero:true}
+    }
+  };
+}
+
+function mkBar(id,labels,datasets){
+  dc(id); const cv=document.getElementById(id); if(!cv) return;
+  const o=chartOpts();
+  CHARTS[id]=new Chart(cv.getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:datasets.map(d=>({...d,borderRadius:4,borderWidth:0}))},
+    options:o
+  });
+}
+
+function mkDoughnut(id,labels,data,colors){
+  dc(id); const cv=document.getElementById(id); if(!cv) return;
+  CHARTS[id]=new Chart(cv.getContext('2d'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:6}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:400},
+      cutout:'62%',
+      plugins:{
+        legend:{position:'right',labels:{color:'#7a88a8',font:{family:'Plus Jakarta Sans',size:10},boxWidth:10,padding:12}},
+        tooltip:{
+          backgroundColor:'#1e2538',titleColor:'#eef0f8',bodyColor:'#7a88a8',
+          borderColor:'#252d45',borderWidth:1,
+          callbacks:{label:ctx=>` ${fm(ctx.parsed)}`}
+        }
+      }
+    }
+  });
+}
+
+function mkLine(id,labels,datasets){
+  dc(id); const cv=document.getElementById(id); if(!cv) return;
+  const o=chartOpts();
+  o.plugins.tooltip.callbacks={label:ctx=>` ${fm(ctx.parsed.y)}`};
+  CHARTS[id]=new Chart(cv.getContext('2d'),{
+    type:'bar',
+    data:{labels,datasets:datasets.map((d,i)=>({...d,borderRadius:4,borderWidth:0}))},
+    options:o
+  });
+}
+
+// Horizontal bar rows HTML
+function hBars(containerId, entries, maxVal){
+  const el=document.getElementById(containerId); if(!el) return;
+  if(!entries.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:12px 0;">No data for this period</div>';return;}
+  el.innerHTML=entries.map(([lbl,val,color])=>{
+    const pct=maxVal>0?Math.round((val/maxVal)*100):0;
+    return`<div class="hrow">
+      <div class="h-lbl" title="${lbl}">${lbl}</div>
+      <div class="h-track">
+        <div class="h-fill" style="width:${pct}%;background:${color||C.gold}">
+          ${pct>12?'<span>'+fn(Math.round(pct))+'%</span>':''}
+        </div>
+      </div>
+      <div class="h-val">${fm(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// DATA FETCH
+// ══════════════════════════════════════════
+async function fetchAll(){
+  const res=await fetch(API_URL,{redirect:'follow'});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const json=await res.json();
+  if(!json.success) throw new Error(json.error||'Unknown error');
+  return json;
+}
+
+async function initDash(){
+  const url=(document.getElementById('api-url').value||'').trim();
+  const err=document.getElementById('setup-err');
+  err.style.display='none';
+  if(!url.includes('script.google.com')){
+    err.textContent='⚠ Enter a valid Google Apps Script Web App URL';
+    err.style.display='block'; return;
+  }
+  API_URL=url;
+  localStorage.setItem('ps-rev-url',url);
+  document.getElementById('setup').style.display='none';
+  document.getElementById('loading').style.display='flex';
+  try{
+    const data=await fetchAll();
+    RAW.partnerships = data.partnerships||[];
+    RAW.wellnessAtlas= data.wellnessAtlas||[];
+    RAW.income       = data.income||[];
+    const total=RAW.partnerships.length+RAW.wellnessAtlas.length+RAW.income.length;
+    document.getElementById('rec-count').textContent=fn(total)+'\nrows';
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='block';
+    DR=getPeriod('month');
+    renderAll();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('setup').style.display='flex';
+    err.textContent='⚠ '+e.message; err.style.display='block';
+  }
+}
+
+async function refreshData(){
+  if(!API_URL) return;
+  document.getElementById('load-msg').textContent='Refreshing…';
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('sync-lbl').textContent='Syncing…';
+  try{
+    const data=await fetchAll();
+    RAW.partnerships = data.partnerships||[];
+    RAW.wellnessAtlas= data.wellnessAtlas||[];
+    RAW.income       = data.income||[];
+    renderAll();
+    document.getElementById('sync-lbl').textContent='Live';
+  }catch(e){ alert('Refresh error: '+e.message); }
+  finally{ document.getElementById('loading').style.display='none'; }
+}
+
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+const PAGE_TITLES={overview:'Overview',partnerships:'Partnerships',wellness:'Wellness Atlas',income:'Income'};
+
+function showPage(pg,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const target=document.getElementById('pg-'+pg);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('.nb').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tb-page').textContent=PAGE_TITLES[pg]||pg;
+  // Scroll to top
+  const c=document.getElementById('main-content');
+  if(c) c.scrollTop=0;
+  // Retrigger animations
+  if(target){
+    target.querySelectorAll('.anim').forEach(a=>{
+      a.style.animation='none'; void a.offsetHeight; a.style.animation='';
+    });
+  }
+  renderAll();
+}
+
+function setPeriod(p,el){
+  PERIOD=p; DR=getPeriod(p);
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('dt-from').value='';
+  document.getElementById('dt-to').value='';
+  renderAll();
+}
+
+function setCustomRange(){
+  const f=document.getElementById('dt-from').value;
+  const t=document.getElementById('dt-to').value;
+  if(f&&t){
+    PERIOD='custom';
+    DR={start:new Date(f),end:new Date(t+'T23:59:59')};
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    renderAll();
+  }
+}
+
+function st(id,v){ const el=document.getElementById(id); if(el) el.textContent=v??'—'; }
+
+// ══════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════
+function renderAll(){
+  const active=document.querySelector('.page.active');
+  if(!active) return;
+  const id=active.id.replace('pg-','');
+  const {start:s,end:e}=DR;
+
+  // Filter each dataset by its own date column
+  const fp=RAW.partnerships.filter(r=>inRange(r['Order Date'],s,e));
+  const fw=RAW.wellnessAtlas.filter(r=>inRange(r['Enrollment Date'],s,e));
+  const fi=RAW.income.filter(r=>inRange(r['Payment Date'],s,e));
+
+  if(id==='overview')    renderOverview(fp,fw,fi,s,e);
+  if(id==='partnerships')renderPartnerships(fp,s,e);
+  if(id==='wellness')    renderWellness(fw,s,e);
+  if(id==='income')      renderIncome(fi,fp,fw,s,e);
+}
+
+// ══════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════
+function renderOverview(fp,fw,fi,s,e){
+  const pRev=fp.reduce((a,r)=>a+parseMoney(r['Order Value']),0);
+  const wRev=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
+  const iTotal=fi.reduce((a,r)=>a+parseMoney(r['Amount']),0);
+  const totalRev=pRev+wRev;
+
+  st('o-total-rev', fm(totalRev));
+  st('o-p-rev',     fm(pRev));
+  st('o-p-orders',  fn(fp.length)+' orders');
+  st('o-wa-rev',    fm(wRev));
+  st('o-wa-enroll', fn(fw.length)+' enrollments');
+  st('o-income',    fm(iTotal));
+
+  // Gap
+  const gapPct=totalRev>0?Math.min(Math.round((iTotal/totalRev)*100),100):0;
+  const gapAmt=totalRev-iTotal;
+  document.getElementById('o-gap-fill').style.width=gapPct+'%';
+  st('o-gap-pct', gapPct+'% collected');
+  st('o-gap-pill', fm(gapAmt)+' pending');
+  document.getElementById('o-gap-rows').innerHTML=`
+    <div class="mrow"><span class="mrow-lbl">Total Revenue</span><span class="mrow-val">${fm(totalRev)}</span></div>
+    <div class="mrow"><span class="mrow-lbl">Income Received</span><span class="mrow-val">${fm(iTotal)}</span></div>
+    <div class="mrow"><span class="mrow-lbl">Pending / Gap</span><span class="mrow-val" style="color:var(--rose)">${fm(gapAmt)}</span></div>
+  `;
+
+  // Mix doughnut
+  mkDoughnut('ch-mix',
+    ['Partnerships','Wellness Atlas'],
+    [pRev, wRev],
+    [C.gold, C.emerald]
+  );
+
+  // Monthly trend — all sources combined
+  const allMonthKeys=allMonths([
+    ...fp.map(r=>mkKey(r['Order Date'])),
+    ...fw.map(r=>mkKey(r['Enrollment Date']))
+  ]);
+  const pByM={}, wByM={};
+  fp.forEach(r=>{const k=mkKey(r['Order Date']);if(k)pByM[k]=(pByM[k]||0)+parseMoney(r['Order Value']);});
+  fw.forEach(r=>{const k=mkKey(r['Enrollment Date']);if(k)wByM[k]=(wByM[k]||0)+parseMoney(r['Program Value']);});
+  mkLine('ch-o-trend', allMonthKeys.map(mkLabel), [
+    {label:'Partnerships',  data:allMonthKeys.map(m=>pByM[m]||0), backgroundColor:C.gold+'cc'},
+    {label:'Wellness Atlas',data:allMonthKeys.map(m=>wByM[m]||0), backgroundColor:C.emerald+'cc'},
+  ]);
+}
+
+// ══════════════════════════════════════════
+// PARTNERSHIPS
+// ══════════════════════════════════════════
+function renderPartnerships(fp,s,e){
+  const total=fp.reduce((a,r)=>a+parseMoney(r['Order Value']),0);
+  const ditto=fp.filter(r=>r['Order Type']==='Ditto');
+  const client=fp.filter(r=>r['Order Type']==='Client');
+  const dittoRev=ditto.reduce((a,r)=>a+parseMoney(r['Order Value']),0);
+  const clientRev=client.reduce((a,r)=>a+parseMoney(r['Order Value']),0);
+
+  st('p-total',      fm(total));
+  st('p-orders',     fn(fp.length));
+  st('p-ditto',      fm(dittoRev));
+  st('p-ditto-cnt',  fn(ditto.length)+' orders');
+  st('p-client',     fm(clientRev));
+  st('p-client-cnt', fn(client.length)+' orders');
+
+  // Platform bars
+  const platforms=['HealthSpan','Two Brothers','Nutrilite','TGSH'];
+  const platRev={};
+  fp.forEach(r=>{const p=r['Order Platform']||'Other';platRev[p]=(platRev[p]||0)+parseMoney(r['Order Value']);});
+  const maxP=Math.max(...platforms.map(p=>platRev[p]||0),1);
+  hBars('p-platform-bars', platforms.map(p=>[p, platRev[p]||0, PLAT_C[p]||C.gold]), maxP);
+
+  // Ditto vs Client by platform grouped bar
+  const pLabels=platforms;
+  mkBar('ch-p-split', pLabels, [
+    {
+      label:'Ditto',
+      data:pLabels.map(p=>ditto.filter(r=>r['Order Platform']===p).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
+      backgroundColor:C.emerald+'cc'
+    },
+    {
+      label:'Client',
+      data:pLabels.map(p=>client.filter(r=>r['Order Platform']===p).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
+      backgroundColor:C.sapphire+'cc'
+    }
+  ]);
+
+  // Monthly trend by platform
+  const mKeys=allMonths(fp.map(r=>mkKey(r['Order Date'])));
+  mkLine('ch-p-trend', mKeys.map(mkLabel),
+    platforms.map(p=>({
+      label:p,
+      data:mKeys.map(m=>fp.filter(r=>r['Order Platform']===p&&mkKey(r['Order Date'])===m).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
+      backgroundColor:(PLAT_C[p]||C.gold)+'cc'
+    }))
+  );
+}
+
+// ══════════════════════════════════════════
+// WELLNESS ATLAS
+// ══════════════════════════════════════════
+function renderWellness(fw,s,e){
+  const total=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
+  const avg=fw.length?total/fw.length:0;
+
+  // Top program by revenue
+  const progRev={};
+  fw.forEach(r=>{const p=r['Program Name']||'Other';progRev[p]=(progRev[p]||0)+parseMoney(r['Program Value']);});
+  const topProg=Object.entries(progRev).sort((a,b)=>b[1]-a[1])[0];
+
+  st('wa-total',   fm(total));
+  st('wa-enroll',  fn(fw.length));
+  st('wa-avg',     fm(avg));
+  st('wa-top',     topProg?topProg[0]:'—');
+  st('wa-top-sub', topProg?fm(topProg[1]):'By revenue');
+
+  // Program bars
+  const programs=['Guided Program','Challenge','BOB','TOS','LYL'];
+  const maxW=Math.max(...programs.map(p=>progRev[p]||0),1);
+  hBars('wa-program-bars', programs.map(p=>[p, progRev[p]||0, PROG_C[p]||C.emerald]), maxW);
+
+  // Enrollment distribution doughnut
+  const progCnt={};
+  fw.forEach(r=>{const p=r['Program Name']||'Other';progCnt[p]=(progCnt[p]||0)+1;});
+  const pLabels=programs.filter(p=>progCnt[p]);
+  mkDoughnut('ch-wa-dist', pLabels, pLabels.map(p=>progCnt[p]||0), pLabels.map(p=>PROG_C[p]||C.gold));
+
+  // Monthly enrollment trend
+  const mKeys=allMonths(fw.map(r=>mkKey(r['Enrollment Date'])));
+  mkLine('ch-wa-trend', mKeys.map(mkLabel),
+    programs.map(p=>({
+      label:p,
+      data:mKeys.map(m=>fw.filter(r=>r['Program Name']===p&&mkKey(r['Enrollment Date'])===m).reduce((a,r)=>a+parseMoney(r['Program Value']),0)),
+      backgroundColor:(PROG_C[p]||C.gold)+'cc'
+    }))
+  );
+}
+
+// ══════════════════════════════════════════
+// INCOME
+// ══════════════════════════════════════════
+function renderIncome(fi,fp,fw,s,e){
+  const total=fi.reduce((a,r)=>a+parseMoney(r['Amount']),0);
+  const byPlat={};
+  fi.forEach(r=>{const p=r['Platform']||'Other';byPlat[p]=(byPlat[p]||0)+parseMoney(r['Amount']);});
+
+  st('i-total',           fm(total));
+  st('i-wa',              fm(byPlat['Wellness Atlas']||0));
+  st('i-wa-cnt',          fn(fi.filter(r=>r['Platform']==='Wellness Atlas').length)+' payments');
+  st('i-partner',         fm(byPlat['Partnerships']||0));
+  st('i-partner-cnt',     fn(fi.filter(r=>r['Platform']==='Partnerships').length)+' payments');
+  st('i-nutrilite',       fm(byPlat['Nutrilite']||0));
+  st('i-nutrilite-cnt',   fn(fi.filter(r=>r['Platform']==='Nutrilite').length)+' payments');
+
+  // Platform bars
+  const iPlatforms=['Wellness Atlas','Partnerships','Nutrilite'];
+  const maxI=Math.max(...iPlatforms.map(p=>byPlat[p]||0),1);
+  hBars('i-platform-bars', iPlatforms.map(p=>[p, byPlat[p]||0, PLAT_C[p]||C.sapphire]), maxI);
+
+  // Revenue vs Income bar chart
+  const pRev=fp.reduce((a,r)=>a+parseMoney(r['Order Value']),0);
+  const wRev=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
+  mkBar('ch-i-gap',
+    ['Partnership Revenue','WA Revenue','Total Income'],
+    [{
+      label:'Amount',
+      data:[pRev, wRev, total],
+      backgroundColor:[C.gold+'cc', C.emerald+'cc', C.sapphire+'cc']
+    }]
+  );
+
+  // Monthly income trend
+  const mKeys=allMonths(fi.map(r=>mkKey(r['Payment Date'])));
+  const byM={};
+  fi.forEach(r=>{const k=mkKey(r['Payment Date']);if(k)byM[k]=(byM[k]||0)+parseMoney(r['Amount']);});
+  mkLine('ch-i-trend', mKeys.map(mkLabel),[{
+    label:'Income Received',
+    data:mKeys.map(m=>byM[m]||0),
+    backgroundColor:C.sapphire+'cc'
+  }]);
+}
+
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+window.addEventListener('load',()=>{
+  const saved=localStorage.getItem('ps-rev-url');
+  if(saved) document.getElementById('api-url').value=saved;
+  DR=getPeriod('month');
+});
+</script>
+</body>
+</html>
