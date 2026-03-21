@@ -1119,8 +1119,8 @@ function renderWellness(fw,s,e){
     }
 
     // Show what program names and values actually look like
-    out += `\n── UNIQUE "Program Name" values found ──\n`;
-    const names = [...new Set(RAW.wellnessAtlas.map(r=>r['Program Name']))];
+    out += `\n── UNIQUE "Program Type" values found ──\n`;
+    const names = [...new Set(RAW.wellnessAtlas.map(r=>r['Program Type']))];
     names.forEach(n => out += `  "${n}"\n`);
 
     out += `\n── UNIQUE "Program Value" samples ──\n`;
@@ -1144,7 +1144,7 @@ function renderWellness(fw,s,e){
   // Build program revenue + count from ACTUAL data — no hardcoded list
   const progRev={}, progCnt={};
   fw.forEach(r=>{
-    const p=(r['Program Name']||'').trim()||'Other';
+    const p=(r['Program Type']||'').trim()||'Other';
     progRev[p]=(progRev[p]||0)+parseMoney(r['Program Value']);
     progCnt[p]=(progCnt[p]||0)+1;
   });
@@ -1188,7 +1188,7 @@ function renderWellness(fw,s,e){
   const mKeys=allMonths(fw.map(r=>mkKey(r['Enrollment Date'])));
   const datasets=programs.map((p,i)=>{
     const byM={};
-    fw.filter(r=>(r['Program Name']||'').trim()===p)
+    fw.filter(r=>(r['Program Type']||'').trim()===p)
       .forEach(r=>{const k=mkKey(r['Enrollment Date']);if(k)byM[k]=(byM[k]||0)+parseMoney(r['Program Value']);});
     return{
       label:p,
