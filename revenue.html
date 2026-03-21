@@ -687,24 +687,33 @@ function parseD(v){
   if(!v) return null;
   const s=String(v).trim();
   if(!s) return null;
-  // yyyy-MM-dd (from Apps Script formatter)
+
+  // 1. yyyy-MM-dd (Apps Script formatted)
   let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if(m) return new Date(+m[1],+m[2]-1,+m[3]);
-  // DD/MM/YYYY — Indian format (most likely)
+
+  // 2. Full JS Date.toString(): "Fri Mar 20 2026 05:30:00 GMT+0530 (...)"
+  //    Extract month-name, day, year directly — no timezone conversion issues
+  const MONTHS={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  m=s.match(/[A-Za-z]+\s+([A-Za-z]+)\s+(\d{1,2})\s+(\d{4})/);
+  if(m && MONTHS[m[1]]!==undefined){
+    return new Date(+m[3], MONTHS[m[1]], +m[2]);
+  }
+
+  // 3. DD/MM/YYYY — Indian format
   m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if(m){
     const day=+m[1], mon=+m[2], yr=+m[3];
-    // If day > 12, it MUST be DD/MM/YYYY
-    // If mon > 12, it MUST be MM/DD/YYYY
-    if(day>12) return new Date(yr, mon-1, day);
-    if(mon>12) return new Date(yr, day-1, mon);
-    // Ambiguous — assume DD/MM/YYYY (Indian default)
-    return new Date(yr, mon-1, day);
+    if(day>12) return new Date(yr,mon-1,day);
+    if(mon>12) return new Date(yr,day-1,mon);
+    return new Date(yr,mon-1,day); // default DD/MM
   }
-  // DD-MM-YYYY
+
+  // 4. DD-MM-YYYY
   m=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
-  // Try native parse as last resort
+  if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+
+  // 5. Last resort — native parse
   const d=new Date(s); return isNaN(d)?null:d;
 }
 
