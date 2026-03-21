@@ -1024,6 +1024,12 @@ async function loadData(){
     document.querySelectorAll('.chip-group .chip').forEach(c=>c.classList.remove('active'));
     const allChip = Array.from(document.querySelectorAll('.chip-group .chip')).find(c=>c.textContent==='All');
     if(allChip) allChip.classList.add('active');
+    // Always scroll to very top on load
+    window.scrollTo(0,0);
+    document.body.scrollTop=0;
+    document.documentElement.scrollTop=0;
+    const mc=document.getElementById('main-content');
+    if(mc) mc.scrollTop=0;
     renderAll();
   }catch(e){
     alert('Connection error: '+e.message);
@@ -1081,6 +1087,10 @@ function showPage(pg,el,siblingId){
   document.getElementById('tb-page').textContent=PAGE_TITLES[pg]||pg;
   const c=document.getElementById('main-content');
   if(c) c.scrollTop=0;
+  // On mobile the scroll container is window/body, not the content div
+  window.scrollTo(0,0);
+  document.body.scrollTop=0;
+  document.documentElement.scrollTop=0;
   if(target){
     target.querySelectorAll('.anim').forEach(a=>{
       a.style.animation='none'; void a.offsetHeight; a.style.animation='';
