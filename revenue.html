@@ -982,18 +982,6 @@ function renderOverview(fp,fw,fi,s,e){
   st('o-wa-enroll', fn(fw.length)+' enrollments');
   st('o-income',    fm(iTotal));
 
-  // Gap
-  const gapPct=totalRev>0?Math.min(Math.round((iTotal/totalRev)*100),100):0;
-  const gapAmt=totalRev-iTotal;
-  document.getElementById('o-gap-fill').style.width=gapPct+'%';
-  st('o-gap-pct', gapPct+'% collected');
-  st('o-gap-pill', fm(gapAmt)+' pending');
-  document.getElementById('o-gap-rows').innerHTML=`
-    <div class="mrow"><span class="mrow-lbl">Total Revenue</span><span class="mrow-val">${fm(totalRev)}</span></div>
-    <div class="mrow"><span class="mrow-lbl">Income Received</span><span class="mrow-val">${fm(iTotal)}</span></div>
-    <div class="mrow"><span class="mrow-lbl">Pending / Gap</span><span class="mrow-val" style="color:var(--rose)">${fm(gapAmt)}</span></div>
-  `;
-
   // Mix doughnut
   mkDoughnut('ch-mix',
     ['Partnerships','Wellness Atlas'],
@@ -1072,46 +1060,6 @@ function renderPartnerships(fp,s,e){
 // WELLNESS ATLAS
 // ══════════════════════════════════════════
 function renderWellness(fw,s,e){
-
-  // ── DIAGNOSTIC ─────────────────────────────────────────────
-  const dbEl = document.getElementById('wa-debug-body');
-  if(dbEl){
-    const sample = RAW.wellnessAtlas.slice(0,3);
-    const keys   = sample[0] ? Object.keys(sample[0]) : [];
-
-    let out = '';
-    out += `Total rows in RAW.wellnessAtlas : ${RAW.wellnessAtlas.length}\n`;
-    out += `Rows after date filter (fw)     : ${fw.length}\n\n`;
-
-    out += `── COLUMN NAMES (${keys.length} columns) ──\n`;
-    keys.forEach((k,i) => { out += `  [${i}] "${k}"\n`; });
-
-    out += `\n── SAMPLE ROW 1 ──\n`;
-    if(sample[0]){
-      Object.entries(sample[0]).forEach(([k,v])=>{
-        out += `  "${k}" → "${v}"\n`;
-      });
-    }
-
-    // Show what program names and values actually look like
-    out += `\n── UNIQUE "Program Type" values found ──\n`;
-    const names = [...new Set(RAW.wellnessAtlas.map(r=>r['Program Type']))];
-    names.forEach(n => out += `  "${n}"\n`);
-
-    out += `\n── UNIQUE "Program Value" samples ──\n`;
-    RAW.wellnessAtlas.slice(0,5).forEach(r => {
-      out += `  raw="${r['Program Value']}"  parsed=${parseMoney(r['Program Value'])}\n`;
-    });
-
-    out += `\n── UNIQUE "Enrollment Date" samples ──\n`;
-    RAW.wellnessAtlas.slice(0,5).forEach(r => {
-      const d = parseD(r['Enrollment Date']);
-      out += `  raw="${r['Enrollment Date']}"  parsed=${d?d.toDateString():'NULL'}\n`;
-    });
-
-    dbEl.textContent = out;
-  }
-  // ── END DIAGNOSTIC ──────────────────────────────────────────
 
   const total=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
   const avg=fw.length?total/fw.length:0;
@@ -1194,18 +1142,6 @@ function renderIncome(fi,fp,fw,s,e){
   const iPlatforms=['Wellness Atlas','Partnerships','Nutrilite'];
   const maxI=Math.max(...iPlatforms.map(p=>byPlat[p]||0),1);
   hBars('i-platform-bars', iPlatforms.map(p=>[p, byPlat[p]||0, PLAT_C[p]||C.sapphire]), maxI);
-
-  // Revenue vs Income bar chart
-  const pRev=fp.reduce((a,r)=>a+parseMoney(r['Order Value']),0);
-  const wRev=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
-  mkBar('ch-i-gap',
-    ['Partnership Revenue','WA Revenue','Total Income'],
-    [{
-      label:'Amount',
-      data:[pRev, wRev, total],
-      backgroundColor:[C.gold+'cc', C.emerald+'cc', C.sapphire+'cc']
-    }]
-  );
 
   // Monthly income trend
   const mKeys=allMonths(fi.map(r=>mkKey(r['Payment Date'])));
