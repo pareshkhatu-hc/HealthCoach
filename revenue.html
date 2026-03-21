@@ -676,13 +676,35 @@ const PROG_C = {
 function parseD(v){
   if(!v) return null;
   const s=String(v).trim();
-  // yyyy-MM-dd
+  if(!s) return null;
+  // yyyy-MM-dd (from Apps Script formatter)
   let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if(m) return new Date(+m[1],+m[2]-1,+m[3]);
-  // dd/MM/yyyy or MM/dd/yyyy — try both
-  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m) return new Date(+m[3],+m[1]-1,+m[2]);
+  // DD/MM/YYYY — Indian format (most likely)
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){
+    const day=+m[1], mon=+m[2], yr=+m[3];
+    // If day > 12, it MUST be DD/MM/YYYY
+    // If mon > 12, it MUST be MM/DD/YYYY
+    if(day>12) return new Date(yr, mon-1, day);
+    if(mon>12) return new Date(yr, day-1, mon);
+    // Ambiguous — assume DD/MM/YYYY (Indian default)
+    return new Date(yr, mon-1, day);
+  }
+  // DD-MM-YYYY
+  m=s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if(m) return new Date(+m[3], +m[2]-1, +m[1]);
+  // Try native parse as last resort
   const d=new Date(s); return isNaN(d)?null:d;
+}
+
+// Normalise all row keys: trim whitespace from header names on raw load
+function normaliseRows(rows){
+  return rows.map(r=>{
+    const out={};
+    Object.keys(r).forEach(k=>{ out[k.trim()]=r[k]; });
+    return out;
+  });
 }
 function parseMoney(v){
   if(typeof v==='number') return v;
@@ -698,7 +720,11 @@ function fm(n){
 }
 function fn(n){ return (n??0).toLocaleString('en-IN'); }
 function inRange(dateVal,s,e){
-  const d=parseD(dateVal); if(!d) return false;
+  // If no date field at all, include the row (don't silently drop it)
+  if(!dateVal || String(dateVal).trim()==='') return true;
+  const d=parseD(dateVal);
+  // If date can't be parsed, include the row
+  if(!d) return true;
   return d>=s && d<=e;
 }
 function mkKey(v){ // YYYY-MM
@@ -848,14 +874,23 @@ async function initDash(){
   document.getElementById('loading').style.display='flex';
   try{
     const data=await fetchAll();
-    RAW.partnerships = data.partnerships||[];
-    RAW.wellnessAtlas= data.wellnessAtlas||[];
-    RAW.income       = data.income||[];
+    RAW.partnerships = normaliseRows(data.partnerships||[]);
+    RAW.wellnessAtlas= normaliseRows(data.wellnessAtlas||[]);
+    RAW.income       = normaliseRows(data.income||[]);
     const total=RAW.partnerships.length+RAW.wellnessAtlas.length+RAW.income.length;
     document.getElementById('rec-count').textContent=fn(total)+'\nrows';
+    // Debug: log first row of each sheet to console so column names are visible
+    if(RAW.partnerships[0])  console.log('[Partnerships] first row:', RAW.partnerships[0]);
+    if(RAW.wellnessAtlas[0]) console.log('[Wellness Atlas] first row:', RAW.wellnessAtlas[0]);
+    if(RAW.income[0])        console.log('[Income] first row:', RAW.income[0]);
     document.getElementById('loading').style.display='none';
     document.getElementById('app').style.display='block';
-    DR=getPeriod('month');
+    // Default to All so data is visible immediately regardless of month
+    DR=getPeriod('all');
+    // Mark "All" chip active
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    const allChip=Array.from(document.querySelectorAll('.chip')).find(c=>c.textContent==='All');
+    if(allChip) allChip.classList.add('active');
     renderAll();
   }catch(e){
     document.getElementById('loading').style.display='none';
@@ -871,9 +906,9 @@ async function refreshData(){
   document.getElementById('sync-lbl').textContent='Syncing…';
   try{
     const data=await fetchAll();
-    RAW.partnerships = data.partnerships||[];
-    RAW.wellnessAtlas= data.wellnessAtlas||[];
-    RAW.income       = data.income||[];
+    RAW.partnerships = normaliseRows(data.partnerships||[]);
+    RAW.wellnessAtlas= normaliseRows(data.wellnessAtlas||[]);
+    RAW.income       = normaliseRows(data.income||[]);
     renderAll();
     document.getElementById('sync-lbl').textContent='Live';
   }catch(e){ alert('Refresh error: '+e.message); }
@@ -1135,7 +1170,7 @@ function renderIncome(fi,fp,fw,s,e){
 window.addEventListener('load',()=>{
   const saved=localStorage.getItem('ps-rev-url');
   if(saved) document.getElementById('api-url').value=saved;
-  DR=getPeriod('month');
+  DR=getPeriod('all');
 });
 </script>
 </body>
