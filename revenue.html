@@ -9,37 +9,37 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0c12;
-  --s1:#111520;
-  --s2:#171c2a;
-  --s3:#1e2538;
-  --b1:#252d45;
-  --b2:#2e3855;
+  --bg:#f0f2f8;
+  --s1:#ffffff;
+  --s2:#f5f7fc;
+  --s3:#eceef6;
+  --b1:#dde1ee;
+  --b2:#c8cde0;
 
-  --gold:#f5a623;
-  --gold2:#e8941a;
-  --gold-dim:rgba(245,166,35,.12);
-  --gold-border:rgba(245,166,35,.25);
+  --gold:#d4830a;
+  --gold2:#b86e06;
+  --gold-dim:rgba(212,131,10,.10);
+  --gold-border:rgba(212,131,10,.28);
 
-  --emerald:#10d9a0;
-  --emerald-dim:rgba(16,217,160,.10);
-  --emerald-border:rgba(16,217,160,.22);
+  --emerald:#0aaa7c;
+  --emerald-dim:rgba(10,170,124,.10);
+  --emerald-border:rgba(10,170,124,.28);
 
-  --sapphire:#4b9eff;
-  --sapphire-dim:rgba(75,158,255,.10);
-  --sapphire-border:rgba(75,158,255,.22);
+  --sapphire:#1a72d9;
+  --sapphire-dim:rgba(26,114,217,.10);
+  --sapphire-border:rgba(26,114,217,.28);
 
-  --rose:#ff5c87;
-  --rose-dim:rgba(255,92,135,.10);
-  --rose-border:rgba(255,92,135,.22);
+  --rose:#d63060;
+  --rose-dim:rgba(214,48,96,.10);
+  --rose-border:rgba(214,48,96,.28);
 
-  --violet:#9d7cff;
-  --violet-dim:rgba(157,124,255,.10);
-  --violet-border:rgba(157,124,255,.22);
+  --violet:#6d4fd4;
+  --violet-dim:rgba(109,79,212,.10);
+  --violet-border:rgba(109,79,212,.28);
 
-  --text:#eef0f8;
-  --muted:#7a88a8;
-  --muted2:#3d4d6a;
+  --text:#1a1f36;
+  --muted:#6b7694;
+  --muted2:#a0a8c0;
 
   --nav-w:64px;
   --topbar-h:58px;
@@ -55,13 +55,13 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
   background:var(--bg);
   display:flex;align-items:center;justify-content:center;
   background-image:
-    radial-gradient(ellipse 60% 40% at 30% 60%,rgba(245,166,35,.06) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 60% at 80% 20%,rgba(75,158,255,.05) 0%,transparent 70%);
+    radial-gradient(ellipse 60% 40% at 30% 60%,rgba(212,131,10,.07) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 60% at 80% 20%,rgba(26,114,217,.05) 0%,transparent 70%);
 }
 .setup-card{
   background:var(--s1);border:1px solid var(--b1);border-radius:22px;
   padding:44px 44px;width:480px;max-width:94vw;
-  box-shadow:0 32px 80px rgba(0,0,0,.6);
+  box-shadow:0 32px 80px rgba(0,0,0,.12);
 }
 .setup-logo{
   width:54px;height:54px;border-radius:14px;
@@ -222,8 +222,9 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
   background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
   padding:14px 16px;position:relative;overflow:hidden;
   transition:transform .2s,border-color .2s;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
 }
-.kpi:hover{transform:translateY(-2px);border-color:var(--b2);}
+.kpi:hover{transform:translateY(-2px);border-color:var(--b2);box-shadow:0 6px 18px rgba(0,0,0,.09);}
 .kpi::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:var(--ka,var(--gold));border-radius:var(--r) var(--r) 0 0;
@@ -233,11 +234,11 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 .kpi.rose{--ka:var(--rose);}
 .kpi.violet{--ka:var(--violet);}
 
-/* glow on gold KPIs */
+/* subtle shadow on gold KPIs */
 .kpi:not(.emerald):not(.sapphire):not(.rose):not(.violet)::after{
   content:'';position:absolute;top:-40px;right:-40px;
   width:100px;height:100px;border-radius:50%;
-  background:radial-gradient(circle,rgba(245,166,35,.08) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(212,131,10,.06) 0%,transparent 70%);
 }
 .kpi-icon{font-size:18px;margin-bottom:10px;display:block;}
 .kpi-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px;}
@@ -261,6 +262,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 .cc{
   background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
   padding:16px 18px;position:relative;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
 }
 .cc-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px;}
 .cc-ttl{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
@@ -370,7 +372,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
     background:var(--s1);border-top:1px solid var(--b1);
     align-items:center;justify-content:space-around;
     padding:0 4px;
-    box-shadow:0 -4px 20px rgba(0,0,0,.4);
+    box-shadow:0 -4px 20px rgba(0,0,0,.08);
   }
   .bn-btn{
     flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -854,15 +856,15 @@ function getPeriod(p){
 function dc(id){ if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];} }
 
 function chartOpts(){
-  const grid={color:'rgba(255,255,255,0.04)'};
-  const ticks={color:'#7a88a8',font:{family:'Plus Jakarta Sans',size:10}};
+  const grid={color:'rgba(0,0,0,0.06)'};
+  const ticks={color:'#6b7694',font:{family:'Plus Jakarta Sans',size:10}};
   return{
     responsive:true, maintainAspectRatio:false, animation:{duration:400},
     plugins:{
-      legend:{labels:{color:'#7a88a8',font:{family:'Plus Jakarta Sans',size:10},boxWidth:10,padding:14}},
+      legend:{labels:{color:'#6b7694',font:{family:'Plus Jakarta Sans',size:10},boxWidth:10,padding:14}},
       tooltip:{
-        backgroundColor:'#1e2538',titleColor:'#eef0f8',bodyColor:'#7a88a8',
-        borderColor:'#252d45',borderWidth:1,
+        backgroundColor:'#ffffff',titleColor:'#1a1f36',bodyColor:'#6b7694',
+        borderColor:'#dde1ee',borderWidth:1,
         titleFont:{family:'Syne',size:12,weight:'700'},
         bodyFont:{family:'Plus Jakarta Sans'},
         padding:10,cornerRadius:8,
@@ -894,10 +896,10 @@ function mkDoughnut(id,labels,data,colors){
       responsive:true,maintainAspectRatio:false,animation:{duration:400},
       cutout:'62%',
       plugins:{
-        legend:{position:'right',labels:{color:'#7a88a8',font:{family:'Plus Jakarta Sans',size:10},boxWidth:10,padding:12}},
+        legend:{position:'right',labels:{color:'#6b7694',font:{family:'Plus Jakarta Sans',size:10},boxWidth:10,padding:12}},
         tooltip:{
-          backgroundColor:'#1e2538',titleColor:'#eef0f8',bodyColor:'#7a88a8',
-          borderColor:'#252d45',borderWidth:1,
+          backgroundColor:'#ffffff',titleColor:'#1a1f36',bodyColor:'#6b7694',
+          borderColor:'#dde1ee',borderWidth:1,
           callbacks:{label:ctx=>` ${fm(ctx.parsed)}`}
         }
       }
