@@ -418,23 +418,6 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
         </div>
 
         <div class="g2 anim a5">
-          <!-- Revenue vs Income Gap -->
-          <div class="cc">
-            <div class="cc-hdr">
-              <div><div class="cc-ttl">Revenue vs Income</div><div class="cc-sub">Billed vs actually received</div></div>
-              <span class="cc-pill cp-rose" id="o-gap-pill">—</span>
-            </div>
-            <div id="o-gap-rows"></div>
-            <div class="gap-bar">
-              <div class="gap-bar-lbl">
-                <span>Received</span>
-                <span id="o-gap-pct">—</span>
-              </div>
-              <div class="gap-track">
-                <div class="gap-fill" id="o-gap-fill" style="width:0%;background:var(--emerald);"></div>
-              </div>
-            </div>
-          </div>
           <!-- Revenue mix -->
           <div class="cc">
             <div class="cc-hdr">
@@ -442,14 +425,14 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
             </div>
             <div class="ch" style="height:180px"><canvas id="ch-mix"></canvas></div>
           </div>
-        </div>
-
-        <div class="cc anim a6">
-          <div class="cc-hdr">
-            <div><div class="cc-ttl">Monthly Revenue Trend</div><div class="cc-sub">Partnership + Wellness Atlas combined</div></div>
-            <span class="cc-pill cp-gold">All Sources</span>
+          <!-- Monthly Revenue Trend -->
+          <div class="cc">
+            <div class="cc-hdr">
+              <div><div class="cc-ttl">Monthly Revenue Trend</div><div class="cc-sub">Partnership + Wellness Atlas combined</div></div>
+              <span class="cc-pill cp-gold">All Sources</span>
+            </div>
+            <div class="ch" style="height:180px"><canvas id="ch-o-trend"></canvas></div>
           </div>
-          <div class="ch" style="height:200px"><canvas id="ch-o-trend"></canvas></div>
         </div>
 
       </div><!-- /overview -->
@@ -568,16 +551,6 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
           <div class="ch" style="height:200px"><canvas id="ch-wa-trend"></canvas></div>
         </div>
 
-        <!-- DEBUG PANEL — remove once charts work -->
-        <div class="cc anim a7" id="wa-debug" style="margin-top:12px;">
-          <div class="cc-hdr">
-            <div><div class="cc-ttl">🔍 Debug — Wellness Atlas Data</div><div class="cc-sub">Actual column names and sample values from your sheet</div></div>
-            <button onclick="document.getElementById('wa-debug').style.display='none'"
-              style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:3px 10px;color:var(--muted);cursor:pointer;font-size:11px;">Hide</button>
-          </div>
-          <div id="wa-debug-body" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.9;color:var(--muted);white-space:pre-wrap;"></div>
-        </div>
-
       </div><!-- /wellness -->
 
       <!-- ══════════ INCOME ══════════ -->
@@ -623,17 +596,10 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
           </div>
           <div class="cc">
             <div class="cc-hdr">
-              <div><div class="cc-ttl">Revenue vs Income Gap</div><div class="cc-sub">Total billed vs actually received</div></div>
+              <div><div class="cc-ttl">Monthly Income Trend</div><div class="cc-sub">Payments received per month</div></div>
             </div>
-            <div class="ch" style="height:200px"><canvas id="ch-i-gap"></canvas></div>
+            <div class="ch" style="height:200px"><canvas id="ch-i-trend"></canvas></div>
           </div>
-        </div>
-
-        <div class="cc anim a6">
-          <div class="cc-hdr">
-            <div><div class="cc-ttl">Monthly Income Trend</div><div class="cc-sub">Payments received per month</div></div>
-          </div>
-          <div class="ch" style="height:200px"><canvas id="ch-i-trend"></canvas></div>
         </div>
 
       </div><!-- /income -->
