@@ -281,8 +281,8 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 .hrow:last-child{margin-bottom:0;}
 .h-lbl{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .h-track{flex:1;height:20px;background:var(--s2);border-radius:4px;overflow:hidden;}
-.h-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;transition:width .8s cubic-bezier(.4,0,.2,1);}
-.h-fill span{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;}
+.h-fill{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.h-pct{font-size:10px;font-weight:700;color:var(--muted);min-width:32px;text-align:right;font-family:'DM Mono',monospace;}
 .h-val{font-size:11px;font-weight:700;color:var(--text);min-width:56px;text-align:right;font-family:'DM Mono',monospace;}
 
 /* ══ MINI STAT ROWS ══ */
@@ -304,9 +304,86 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 .a4{animation-delay:.20s;}.a5{animation-delay:.25s;}.a6{animation-delay:.30s;}
 
 /* ══ RESPONSIVE ══ */
-@media(max-width:1280px){.g4{grid-template-columns:repeat(2,1fr);}  .g3{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:900px) {.g2{grid-template-columns:1fr;}             .g3{grid-template-columns:1fr;}}
-@media(max-width:600px) {.g4{grid-template-columns:1fr 1fr;}.sidebar{display:none;}.main{margin-left:0;}.content{padding:12px 12px 24px;}}
+@media(max-width:1280px){.g4{grid-template-columns:repeat(2,1fr);} .g3{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:900px){.g2{grid-template-columns:1fr;} .g3{grid-template-columns:1fr;}}
+
+/* ══ BOTTOM NAV (mobile) ══ */
+.bottom-nav{display:none;}
+
+@media(max-width:640px){
+  :root{--nav-w:0px;}
+
+  html,body{overflow:auto;}
+  #app{height:auto;overflow:visible;}
+  .layout{display:flex;flex-direction:column;height:auto;overflow:visible;}
+
+  /* hide desktop sidebar */
+  .sidebar{display:none;}
+
+  .main{flex:1;display:flex;flex-direction:column;overflow:visible;}
+
+  /* topbar: stack into two rows */
+  .topbar{
+    height:auto;flex-wrap:wrap;padding:10px 12px;gap:6px;
+    row-gap:8px;overflow:visible;
+  }
+  .tb-title{font-size:13px;}
+  .tb-spacer{display:none;}
+  .tb-div{display:none;}
+  /* push chips + dbar to second row */
+  .topbar .chip-group{order:3;width:100%;display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;}
+  .topbar .chip-group::-webkit-scrollbar{display:none;}
+  .dbar{order:4;width:100%;justify-content:flex-start;}
+  .dbar input{width:100px;}
+
+  /* content */
+  .content{
+    padding:10px 10px 90px;/* bottom padding for bottom nav */
+    overflow-y:visible;flex:none;
+  }
+
+  /* grids: all single column on mobile */
+  .g4{grid-template-columns:1fr 1fr;}
+  .g2,.g3{grid-template-columns:1fr;}
+
+  /* KPI cards: tighter */
+  .kpi{padding:11px 13px;}
+  .kpi-val{font-size:18px;}
+  .kpi-icon{font-size:15px;margin-bottom:7px;}
+
+  /* chart cards */
+  .cc{padding:12px 13px;}
+
+  /* horizontal bar label shorter on mobile */
+  .h-lbl{width:72px;font-size:10px;}
+  .h-val{min-width:46px;font-size:10px;}
+  .h-pct{min-width:26px;font-size:9px;}
+
+  /* bottom nav */
+  .bottom-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    height:62px;z-index:100;
+    background:var(--s1);border-top:1px solid var(--b1);
+    align-items:center;justify-content:space-around;
+    padding:0 4px;
+    box-shadow:0 -4px 20px rgba(0,0,0,.4);
+  }
+  .bn-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;cursor:pointer;border:none;background:none;
+    color:var(--muted);padding:6px 4px;border-radius:10px;transition:all .15s;
+    font-size:18px;
+  }
+  .bn-btn span{font-size:9px;font-weight:600;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.02em;}
+  .bn-btn.active{color:var(--gold);}
+  .bn-btn.active span{color:var(--gold);}
+  .bn-refresh{
+    flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+    border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold-border);
+    font-size:16px;cursor:pointer;color:var(--gold);
+  }
+}
 </style>
 </head>
 <body>
@@ -367,11 +444,13 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
       </div>
       <div class="tb-spacer"></div>
       <!-- period chips -->
-      <div class="chip active" onclick="setPeriod('month',this)">This Month</div>
-      <div class="chip" onclick="setPeriod('3m',this)">3M</div>
-      <div class="chip" onclick="setPeriod('6m',this)">6M</div>
-      <div class="chip" onclick="setPeriod('fy',this)">FY</div>
-      <div class="chip" onclick="setPeriod('all',this)">All</div>
+      <div class="chip-group">
+        <div class="chip active" onclick="setPeriod('month',this)">This Month</div>
+        <div class="chip" onclick="setPeriod('3m',this)">3M</div>
+        <div class="chip" onclick="setPeriod('6m',this)">6M</div>
+        <div class="chip" onclick="setPeriod('fy',this)">FY</div>
+        <div class="chip" onclick="setPeriod('all',this)">All</div>
+      </div>
       <!-- custom date range -->
       <div class="dbar">
         <label>From</label>
@@ -607,6 +686,24 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- BOTTOM NAV (mobile only) -->
+<nav class="bottom-nav">
+  <button class="bn-btn active" id="bn-overview" onclick="showPage('overview',this,'nb-overview')">
+    📊<span>Overview</span>
+  </button>
+  <button class="bn-btn" id="bn-partnerships" onclick="showPage('partnerships',this,'nb-partnerships')">
+    🤝<span>Partners</span>
+  </button>
+  <button class="bn-btn" id="bn-wellness" onclick="showPage('wellness',this,'nb-wellness')">
+    🌿<span>Wellness</span>
+  </button>
+  <button class="bn-btn" id="bn-income" onclick="showPage('income',this,'nb-income')">
+    💰<span>Income</span>
+  </button>
+  <button class="bn-refresh" onclick="refreshData()">🔄</button>
+</nav>
+
 </div><!-- /app -->
 
 <script>
@@ -827,10 +924,9 @@ function hBars(containerId, entries, maxVal){
     return`<div class="hrow">
       <div class="h-lbl" title="${lbl}">${lbl}</div>
       <div class="h-track">
-        <div class="h-fill" style="width:${barW}%;background:${color||C.gold}">
-          ${barW>12?'<span>'+sharePct+'%</span>':''}
-        </div>
+        <div class="h-fill" style="width:${barW}%;background:${color||C.gold}"></div>
       </div>
+      <div class="h-pct">${sharePct}%</div>
       <div class="h-val">${fm(val)}</div>
     </div>`;
   }).join('');
@@ -875,8 +971,8 @@ async function initDash(){
     // Default to All so data is visible immediately regardless of month
     DR=getPeriod('all');
     // Mark "All" chip active
-    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-    const allChip=Array.from(document.querySelectorAll('.chip')).find(c=>c.textContent==='All');
+    document.querySelectorAll('.chip-group .chip').forEach(c=>c.classList.remove('active'));
+    const allChip=Array.from(document.querySelectorAll('.chip-group .chip')).find(c=>c.textContent==='All');
     if(allChip) allChip.classList.add('active');
     renderAll();
   }catch(e){
@@ -907,17 +1003,25 @@ async function refreshData(){
 // ══════════════════════════════════════════
 const PAGE_TITLES={overview:'Overview',partnerships:'Partnerships',wellness:'Wellness Atlas',income:'Income'};
 
-function showPage(pg,el){
+function showPage(pg,el,siblingId){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   const target=document.getElementById('pg-'+pg);
   if(target) target.classList.add('active');
+  // sync sidebar nav
   document.querySelectorAll('.nb').forEach(n=>n.classList.remove('active'));
-  el.classList.add('active');
+  const sbBtn=document.getElementById('nb-'+pg);
+  if(sbBtn) sbBtn.classList.add('active');
+  // sync bottom nav
+  document.querySelectorAll('.bn-btn').forEach(n=>n.classList.remove('active'));
+  const bnBtn=document.getElementById('bn-'+pg);
+  if(bnBtn) bnBtn.classList.add('active');
+  // also handle direct el click (works for both nav types)
+  if(el && !el.classList.contains('nb') && !el.classList.contains('bn-btn')){
+    el.classList.add('active');
+  }
   document.getElementById('tb-page').textContent=PAGE_TITLES[pg]||pg;
-  // Scroll to top
   const c=document.getElementById('main-content');
   if(c) c.scrollTop=0;
-  // Retrigger animations
   if(target){
     target.querySelectorAll('.anim').forEach(a=>{
       a.style.animation='none'; void a.offsetHeight; a.style.animation='';
@@ -928,7 +1032,7 @@ function showPage(pg,el){
 
 function setPeriod(p,el){
   PERIOD=p; DR=getPeriod(p);
-  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.chip-group .chip,.chip-group .chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('dt-from').value='';
   document.getElementById('dt-to').value='';
@@ -941,7 +1045,7 @@ function setCustomRange(){
   if(f&&t){
     PERIOD='custom';
     DR={start:new Date(f),end:new Date(t+'T23:59:59')};
-    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    document.querySelectorAll('.chip-group .chip').forEach(c=>c.classList.remove('active'));
     renderAll();
   }
 }
