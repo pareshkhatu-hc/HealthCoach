@@ -568,6 +568,16 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
           <div class="ch" style="height:200px"><canvas id="ch-wa-trend"></canvas></div>
         </div>
 
+        <!-- DEBUG PANEL — remove once charts work -->
+        <div class="cc anim a7" id="wa-debug" style="margin-top:12px;">
+          <div class="cc-hdr">
+            <div><div class="cc-ttl">🔍 Debug — Wellness Atlas Data</div><div class="cc-sub">Actual column names and sample values from your sheet</div></div>
+            <button onclick="document.getElementById('wa-debug').style.display='none'"
+              style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:3px 10px;color:var(--muted);cursor:pointer;font-size:11px;">Hide</button>
+          </div>
+          <div id="wa-debug-body" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.9;color:var(--muted);white-space:pre-wrap;"></div>
+        </div>
+
       </div><!-- /wellness -->
 
       <!-- ══════════ INCOME ══════════ -->
@@ -1087,6 +1097,47 @@ function renderPartnerships(fp,s,e){
 // WELLNESS ATLAS
 // ══════════════════════════════════════════
 function renderWellness(fw,s,e){
+
+  // ── DIAGNOSTIC ─────────────────────────────────────────────
+  const dbEl = document.getElementById('wa-debug-body');
+  if(dbEl){
+    const sample = RAW.wellnessAtlas.slice(0,3);
+    const keys   = sample[0] ? Object.keys(sample[0]) : [];
+
+    let out = '';
+    out += `Total rows in RAW.wellnessAtlas : ${RAW.wellnessAtlas.length}\n`;
+    out += `Rows after date filter (fw)     : ${fw.length}\n\n`;
+
+    out += `── COLUMN NAMES (${keys.length} columns) ──\n`;
+    keys.forEach((k,i) => { out += `  [${i}] "${k}"\n`; });
+
+    out += `\n── SAMPLE ROW 1 ──\n`;
+    if(sample[0]){
+      Object.entries(sample[0]).forEach(([k,v])=>{
+        out += `  "${k}" → "${v}"\n`;
+      });
+    }
+
+    // Show what program names and values actually look like
+    out += `\n── UNIQUE "Program Name" values found ──\n`;
+    const names = [...new Set(RAW.wellnessAtlas.map(r=>r['Program Name']))];
+    names.forEach(n => out += `  "${n}"\n`);
+
+    out += `\n── UNIQUE "Program Value" samples ──\n`;
+    RAW.wellnessAtlas.slice(0,5).forEach(r => {
+      out += `  raw="${r['Program Value']}"  parsed=${parseMoney(r['Program Value'])}\n`;
+    });
+
+    out += `\n── UNIQUE "Enrollment Date" samples ──\n`;
+    RAW.wellnessAtlas.slice(0,5).forEach(r => {
+      const d = parseD(r['Enrollment Date']);
+      out += `  raw="${r['Enrollment Date']}"  parsed=${d?d.toDateString():'NULL'}\n`;
+    });
+
+    dbEl.textContent = out;
+  }
+  // ── END DIAGNOSTIC ──────────────────────────────────────────
+
   const total=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
   const avg=fw.length?total/fw.length:0;
 
