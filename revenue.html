@@ -49,8 +49,8 @@
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;}
 
-/* ══ SETUP SCREEN ══ */
-#setup{
+/* ══ LOGIN SCREEN ══ */
+#loginScreen{
   position:fixed;inset:0;z-index:9999;
   background:var(--bg);
   display:flex;align-items:center;justify-content:center;
@@ -58,42 +58,49 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
     radial-gradient(ellipse 60% 40% at 30% 60%,rgba(212,131,10,.07) 0%,transparent 70%),
     radial-gradient(ellipse 40% 60% at 80% 20%,rgba(26,114,217,.05) 0%,transparent 70%);
 }
-.setup-card{
+.login-box{
   background:var(--s1);border:1px solid var(--b1);border-radius:22px;
-  padding:44px 44px;width:480px;max-width:94vw;
-  box-shadow:0 32px 80px rgba(0,0,0,.12);
+  padding:44px 38px;width:100%;max-width:400px;text-align:center;
+  box-shadow:0 24px 60px rgba(0,0,0,.12);
 }
-.setup-logo{
-  width:54px;height:54px;border-radius:14px;
+.login-logo{
+  width:58px;height:58px;border-radius:16px;
   background:linear-gradient(135deg,var(--gold),var(--gold2));
   display:flex;align-items:center;justify-content:center;
-  font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#1a0e00;
-  margin:0 auto 20px;box-shadow:0 6px 24px rgba(245,166,35,.35);
+  font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#1a0e00;
+  margin:0 auto 18px;box-shadow:0 6px 20px rgba(212,131,10,.3);
 }
-.setup-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center;margin-bottom:4px;}
-.setup-sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:28px;}
-.setup-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:7px;display:block;}
-.setup-inp{
-  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:10px;
-  padding:12px 15px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;
-  outline:none;transition:border-color .2s;
+.login-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:28px;line-height:1.6;}
+.login-input{
+  width:100%;background:var(--s2);border:1px solid var(--b1);
+  color:var(--text);padding:13px 16px;border-radius:11px;
+  font-family:'DM Mono',monospace;font-size:14px;outline:none;
+  margin-bottom:10px;transition:border-color .2s;
+  text-align:center;letter-spacing:.15em;
 }
-.setup-inp:focus{border-color:var(--gold);}
-.setup-inp::placeholder{color:var(--muted2);}
-.setup-btn{
-  width:100%;margin-top:18px;background:var(--gold);
-  color:#1a0e00;border:none;border-radius:10px;padding:13px;
+.login-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim);}
+.login-input::placeholder{color:var(--muted2);letter-spacing:normal;}
+.login-btn{
+  width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#1a0e00;border:none;padding:13px;border-radius:11px;
   font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
-  cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(245,166,35,.3);
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(212,131,10,.3);
 }
-.setup-btn:hover{background:var(--gold2);transform:translateY(-1px);}
-.setup-note{
-  margin-top:16px;padding:12px 14px;
-  background:var(--sapphire-dim);border:1px solid var(--sapphire-border);
-  border-radius:9px;font-size:11.5px;color:var(--sapphire);line-height:1.7;
+.login-btn:hover{opacity:.92;transform:translateY(-1px);}
+.login-btn:disabled{opacity:.6;transform:none;cursor:not-allowed;}
+.login-error{color:var(--rose);font-size:12px;margin-top:10px;display:none;
+  padding:9px 13px;background:var(--rose-dim);border-radius:8px;text-align:left;}
+
+/* ══ LOGOUT BUTTON ══ */
+.sb-logout{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;border:none;background:none;
+  color:var(--muted);transition:all .15s;position:relative;
 }
-#setup-err{color:var(--rose);font-size:12px;margin-top:10px;display:none;
-  padding:9px 13px;background:var(--rose-dim);border-radius:8px;}
+.sb-logout:hover{background:var(--rose-dim);color:var(--rose);}
+.sb-logout .nb-tt{left:52px;}
 
 /* ══ LOADING ══ */
 #loading{
@@ -393,18 +400,17 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 </head>
 <body>
 
-<!-- SETUP -->
-<div id="setup">
-  <div class="setup-card">
-    <div class="setup-logo">₹</div>
-    <div class="setup-title">Revenue Dashboard</div>
-    <div class="setup-sub">Paresh Sampada · Income & Turnover Tracker</div>
-    <label class="setup-lbl">Apps Script Web App URL</label>
-    <input class="setup-inp" id="api-url" type="text" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
-      onkeydown="if(event.key==='Enter')initDash()">
-    <button class="setup-btn" onclick="initDash()">Load Dashboard →</button>
-    <div id="setup-err"></div>
-    <div class="setup-note">Deploy the revenue-Code.gs → Web App → Execute as Me → Anyone → paste URL above</div>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">₹</div>
+    <div class="login-title">Revenue Dashboard</div>
+    <div class="login-sub">Paresh Sampada · Income & Turnover Tracker<br>Enter your password to continue</div>
+    <input class="login-input" id="passwordInput" type="password"
+      placeholder="••••••••••••"
+      onkeydown="if(event.key==='Enter')checkPassword()">
+    <button class="login-btn" id="loginBtn" onclick="checkPassword()">🔐 Access Dashboard</button>
+    <div class="login-error" id="loginError">⚠ Incorrect password. Please try again.</div>
   </div>
 </div>
 
@@ -432,6 +438,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
     </button>
     <div class="sb-spacer"></div>
     <button class="sb-refresh" onclick="refreshData()">🔄<span class="nb-tt">Refresh</span></button>
+    <button class="sb-logout" onclick="doLogout()">🚪<span class="nb-tt">Logout</span></button>
     <div class="sb-rec-count" id="rec-count">—</div>
   </aside>
 
@@ -713,9 +720,15 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 
 <script>
 // ══════════════════════════════════════════
+// CONFIG — hardcoded API URL
+// ══════════════════════════════════════════
+// Paste your Apps Script Web App URL here:
+const API_URL = 'https://script.google.com/macros/s/AKfycbzuxDj9qGVt7S6uo_9AGKDkt56n5QKjtiXjOu-GOP61e00m_O8BHvx7C6qWn9_hvt9r/exec';
+
+// ══════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════
-let API_URL = '';
+let SESSION_TOKEN = null;
 let RAW = { partnerships:[], wellnessAtlas:[], income:[] };
 let PERIOD = 'month';
 let DR = { start:null, end:null };
@@ -938,69 +951,110 @@ function hBars(containerId, entries, maxVal){
 }
 
 // ══════════════════════════════════════════
-// DATA FETCH
+// AUTH
 // ══════════════════════════════════════════
-async function fetchAll(){
-  const res=await fetch(API_URL,{redirect:'follow'});
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const json=await res.json();
-  if(!json.success) throw new Error(json.error||'Unknown error');
-  return json;
+async function checkPassword(){
+  const pw = document.getElementById('passwordInput').value.trim();
+  if(!pw) return;
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = '⏳ Checking…'; btn.disabled = true;
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('load-msg').textContent = 'Verifying password…';
+  try{
+    const res = await fetch(API_URL+'?action=auth&password='+encodeURIComponent(pw));
+    const data = await res.json();
+    if(data.success && data.token){
+      SESSION_TOKEN = data.token;
+      sessionStorage.setItem('ps-rev-token', SESSION_TOKEN);
+      showApp();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('passwordInput').focus();
+    }
+  }catch(e){
+    document.getElementById('loginError').textContent = '⚠ Connection error. Check your internet.';
+    document.getElementById('loginError').style.display = 'block';
+  }finally{
+    document.getElementById('loading').style.display = 'none';
+    btn.textContent = '🔐 Access Dashboard'; btn.disabled = false;
+  }
 }
 
-async function initDash(){
-  const url=(document.getElementById('api-url').value||'').trim();
-  const err=document.getElementById('setup-err');
-  err.style.display='none';
-  if(!url.includes('script.google.com')){
-    err.textContent='⚠ Enter a valid Google Apps Script Web App URL';
-    err.style.display='block'; return;
-  }
-  API_URL=url;
-  localStorage.setItem('ps-rev-url',url);
-  document.getElementById('setup').style.display='none';
-  document.getElementById('loading').style.display='flex';
+function showApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  DR = getPeriod('all');
+  loadData();
+}
+
+function doLogout(){
+  SESSION_TOKEN = null;
+  sessionStorage.removeItem('ps-rev-token');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('sync-lbl').textContent = 'Live';
+  RAW = { partnerships:[], wellnessAtlas:[], income:[] };
+  Object.keys(CHARTS).forEach(id=>{ try{CHARTS[id].destroy();}catch(e){} });
+  CHARTS = {};
+}
+
+// ══════════════════════════════════════════
+// DATA FETCH
+// ══════════════════════════════════════════
+async function loadData(){
+  document.getElementById('load-msg').textContent = 'Loading data…';
+  document.getElementById('loading').style.display = 'flex';
   try{
-    const data=await fetchAll();
-    RAW.partnerships = normaliseRows(data.partnerships||[]);
-    RAW.wellnessAtlas= normaliseRows(data.wellnessAtlas||[]);
-    RAW.income       = normaliseRows(data.income||[]);
-    const total=RAW.partnerships.length+RAW.wellnessAtlas.length+RAW.income.length;
-    document.getElementById('rec-count').textContent=fn(total)+'\nrows';
-    // Debug: log first row of each sheet to console so column names are visible
-    if(RAW.partnerships[0])  console.log('[Partnerships] first row:', RAW.partnerships[0]);
-    if(RAW.wellnessAtlas[0]) console.log('[Wellness Atlas] first row:', RAW.wellnessAtlas[0]);
-    if(RAW.income[0])        console.log('[Income] first row:', RAW.income[0]);
-    document.getElementById('loading').style.display='none';
-    document.getElementById('app').style.display='block';
-    // Default to All so data is visible immediately regardless of month
-    DR=getPeriod('all');
-    // Mark "All" chip active
+    const res = await fetch(API_URL+'?action=all&token='+encodeURIComponent(SESSION_TOKEN));
+    const json = await res.json();
+    if(!json.success){
+      if(json.code===401){ doLogout(); return; }
+      alert('Error: '+(json.error||'Failed to load')); return;
+    }
+    RAW.partnerships  = normaliseRows(json.partnerships||[]);
+    RAW.wellnessAtlas = normaliseRows(json.wellnessAtlas||[]);
+    RAW.income        = normaliseRows(json.income||[]);
+    const total = RAW.partnerships.length + RAW.wellnessAtlas.length + RAW.income.length;
+    document.getElementById('rec-count').textContent = fn(total)+'\nrows';
+    document.getElementById('sync-lbl').textContent = 'Live';
     document.querySelectorAll('.chip-group .chip').forEach(c=>c.classList.remove('active'));
-    const allChip=Array.from(document.querySelectorAll('.chip-group .chip')).find(c=>c.textContent==='All');
+    const allChip = Array.from(document.querySelectorAll('.chip-group .chip')).find(c=>c.textContent==='All');
     if(allChip) allChip.classList.add('active');
     renderAll();
   }catch(e){
-    document.getElementById('loading').style.display='none';
-    document.getElementById('setup').style.display='flex';
-    err.textContent='⚠ '+e.message; err.style.display='block';
+    alert('Connection error: '+e.message);
+  }finally{
+    document.getElementById('loading').style.display = 'none';
   }
 }
 
 async function refreshData(){
-  if(!API_URL) return;
-  document.getElementById('load-msg').textContent='Refreshing…';
-  document.getElementById('loading').style.display='flex';
-  document.getElementById('sync-lbl').textContent='Syncing…';
+  if(!SESSION_TOKEN) return;
+  document.getElementById('load-msg').textContent = 'Refreshing…';
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('sync-lbl').textContent = 'Syncing…';
   try{
-    const data=await fetchAll();
-    RAW.partnerships = normaliseRows(data.partnerships||[]);
-    RAW.wellnessAtlas= normaliseRows(data.wellnessAtlas||[]);
-    RAW.income       = normaliseRows(data.income||[]);
+    const res = await fetch(API_URL+'?action=all&token='+encodeURIComponent(SESSION_TOKEN));
+    const json = await res.json();
+    if(!json.success){
+      if(json.code===401){ doLogout(); return; }
+      document.getElementById('sync-lbl').textContent = 'Error'; return;
+    }
+    RAW.partnerships  = normaliseRows(json.partnerships||[]);
+    RAW.wellnessAtlas = normaliseRows(json.wellnessAtlas||[]);
+    RAW.income        = normaliseRows(json.income||[]);
+    document.getElementById('sync-lbl').textContent = 'Live';
     renderAll();
-    document.getElementById('sync-lbl').textContent='Live';
-  }catch(e){ alert('Refresh error: '+e.message); }
-  finally{ document.getElementById('loading').style.display='none'; }
+  }catch(e){
+    document.getElementById('sync-lbl').textContent = 'Error';
+    alert('Refresh error: '+e.message);
+  }finally{
+    document.getElementById('loading').style.display = 'none';
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1269,9 +1323,13 @@ function renderIncome(fi,fp,fw,s,e){
 // BOOT
 // ══════════════════════════════════════════
 window.addEventListener('load',()=>{
-  const saved=localStorage.getItem('ps-rev-url');
-  if(saved) document.getElementById('api-url').value=saved;
-  DR=getPeriod('all');
+  DR = getPeriod('all');
+  const saved = sessionStorage.getItem('ps-rev-token');
+  if(saved){
+    SESSION_TOKEN = saved;
+    showApp();
+  }
+  // else: loginScreen stays visible
 });
 </script>
 </body>
