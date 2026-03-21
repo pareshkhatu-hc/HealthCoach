@@ -1047,24 +1047,27 @@ function renderPartnerships(fp,s,e){
   st('p-client',     fm(clientRev));
   st('p-client-cnt', fn(client.length)+' orders');
 
-  // Platform bars
-  const platforms=['HealthSpan','Two Brothers','Nutrilite','TGSH'];
-  const platRev={};
-  fp.forEach(r=>{const p=r['Order Platform']||'Other';platRev[p]=(platRev[p]||0)+parseMoney(r['Order Value']);});
-  const maxP=Math.max(...platforms.map(p=>platRev[p]||0),1);
-  hBars('p-platform-bars', platforms.map(p=>[p, platRev[p]||0, PLAT_C[p]||C.gold]), maxP);
+  // Platform bars — derived from actual data, not hardcoded
+  const platRev={}, platCnt={};
+  fp.forEach(r=>{
+    const p=(r['Order Platform']||'').trim()||'Other';
+    platRev[p]=(platRev[p]||0)+parseMoney(r['Order Value']);
+    platCnt[p]=(platCnt[p]||0)+1;
+  });
+  const platforms=Object.keys(platRev).sort((a,b)=>platRev[b]-platRev[a]);
+  const maxP=Math.max(...platforms.map(p=>platRev[p]),1);
+  hBars('p-platform-bars', platforms.map((p,i)=>[p, platRev[p], PLAT_C[p]||PAL[i%PAL.length]]), maxP);
 
   // Ditto vs Client by platform grouped bar
-  const pLabels=platforms;
-  mkBar('ch-p-split', pLabels, [
+  mkBar('ch-p-split', platforms, [
     {
       label:'Ditto',
-      data:pLabels.map(p=>ditto.filter(r=>r['Order Platform']===p).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
+      data:platforms.map(p=>ditto.filter(r=>(r['Order Platform']||'').trim()===p).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
       backgroundColor:C.emerald+'cc'
     },
     {
       label:'Client',
-      data:pLabels.map(p=>client.filter(r=>r['Order Platform']===p).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
+      data:platforms.map(p=>client.filter(r=>(r['Order Platform']||'').trim()===p).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
       backgroundColor:C.sapphire+'cc'
     }
   ]);
@@ -1072,10 +1075,10 @@ function renderPartnerships(fp,s,e){
   // Monthly trend by platform
   const mKeys=allMonths(fp.map(r=>mkKey(r['Order Date'])));
   mkLine('ch-p-trend', mKeys.map(mkLabel),
-    platforms.map(p=>({
+    platforms.map((p,i)=>({
       label:p,
-      data:mKeys.map(m=>fp.filter(r=>r['Order Platform']===p&&mkKey(r['Order Date'])===m).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
-      backgroundColor:(PLAT_C[p]||C.gold)+'cc'
+      data:mKeys.map(m=>fp.filter(r=>(r['Order Platform']||'').trim()===p&&mkKey(r['Order Date'])===m).reduce((a,r)=>a+parseMoney(r['Order Value']),0)),
+      backgroundColor:(PLAT_C[p]||PAL[i%PAL.length])+'cc'
     }))
   );
 }
@@ -1087,9 +1090,14 @@ function renderWellness(fw,s,e){
   const total=fw.reduce((a,r)=>a+parseMoney(r['Program Value']),0);
   const avg=fw.length?total/fw.length:0;
 
-  // Top program by revenue
-  const progRev={};
-  fw.forEach(r=>{const p=r['Program Name']||'Other';progRev[p]=(progRev[p]||0)+parseMoney(r['Program Value']);});
+  // Build program revenue + count from ACTUAL data — no hardcoded list
+  const progRev={}, progCnt={};
+  fw.forEach(r=>{
+    const p=(r['Program Name']||'').trim()||'Other';
+    progRev[p]=(progRev[p]||0)+parseMoney(r['Program Value']);
+    progCnt[p]=(progCnt[p]||0)+1;
+  });
+
   const topProg=Object.entries(progRev).sort((a,b)=>b[1]-a[1])[0];
 
   st('wa-total',   fm(total));
@@ -1098,26 +1106,46 @@ function renderWellness(fw,s,e){
   st('wa-top',     topProg?topProg[0]:'—');
   st('wa-top-sub', topProg?fm(topProg[1]):'By revenue');
 
-  // Program bars
-  const programs=['Guided Program','Challenge','BOB','TOS','LYL'];
-  const maxW=Math.max(...programs.map(p=>progRev[p]||0),1);
-  hBars('wa-program-bars', programs.map(p=>[p, progRev[p]||0, PROG_C[p]||C.emerald]), maxW);
+  // Programs sorted by revenue descending
+  const programs=Object.keys(progRev).sort((a,b)=>progRev[b]-progRev[a]);
+
+  if(!programs.length){
+    document.getElementById('wa-program-bars').innerHTML=
+      '<div style="font-size:11px;color:var(--muted);padding:12px 0;">No data for this period</div>';
+    dc('ch-wa-dist'); dc('ch-wa-trend');
+    return;
+  }
+
+  // Program colour — use PROG_C map if known, otherwise cycle palette
+  const getProgColor=(p,i)=>PROG_C[p]||PAL[i%PAL.length];
+
+  // Revenue by program bars
+  const maxW=Math.max(...programs.map(p=>progRev[p]),1);
+  hBars('wa-program-bars',
+    programs.map((p,i)=>[p, progRev[p], getProgColor(p,i)]),
+    maxW
+  );
 
   // Enrollment distribution doughnut
-  const progCnt={};
-  fw.forEach(r=>{const p=r['Program Name']||'Other';progCnt[p]=(progCnt[p]||0)+1;});
-  const pLabels=programs.filter(p=>progCnt[p]);
-  mkDoughnut('ch-wa-dist', pLabels, pLabels.map(p=>progCnt[p]||0), pLabels.map(p=>PROG_C[p]||C.gold));
-
-  // Monthly enrollment trend
-  const mKeys=allMonths(fw.map(r=>mkKey(r['Enrollment Date'])));
-  mkLine('ch-wa-trend', mKeys.map(mkLabel),
-    programs.map(p=>({
-      label:p,
-      data:mKeys.map(m=>fw.filter(r=>r['Program Name']===p&&mkKey(r['Enrollment Date'])===m).reduce((a,r)=>a+parseMoney(r['Program Value']),0)),
-      backgroundColor:(PROG_C[p]||C.gold)+'cc'
-    }))
+  mkDoughnut('ch-wa-dist',
+    programs,
+    programs.map(p=>progCnt[p]||0),
+    programs.map((p,i)=>getProgColor(p,i))
   );
+
+  // Monthly enrollment trend — one dataset per program
+  const mKeys=allMonths(fw.map(r=>mkKey(r['Enrollment Date'])));
+  const datasets=programs.map((p,i)=>{
+    const byM={};
+    fw.filter(r=>(r['Program Name']||'').trim()===p)
+      .forEach(r=>{const k=mkKey(r['Enrollment Date']);if(k)byM[k]=(byM[k]||0)+parseMoney(r['Program Value']);});
+    return{
+      label:p,
+      data:mKeys.map(m=>byM[m]||0),
+      backgroundColor:getProgColor(p,i)+'cc'
+    };
+  });
+  mkLine('ch-wa-trend', mKeys.map(mkLabel), datasets);
 }
 
 // ══════════════════════════════════════════
