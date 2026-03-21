@@ -715,8 +715,6 @@ body{
   .g4{grid-template-columns:1fr 1fr !important;}
   .speed-g{grid-template-columns:1fr 1fr !important;}
   .topbar-brand-name{font-size:11px;}
-  .topbar-divider{display:none;}
-  .page-ttl{display:none;}
 }
 </style>
 </head>
@@ -1183,7 +1181,7 @@ body{
 // 1. Open Apps Script, paste the new Code.gs, click Deploy → New deployment
 // 2. Type: Web App · Execute as: Me · Access: Anyone
 // 3. Copy the Web App URL and paste it below (replacing the placeholder)
-const API_URL = 'https://script.google.com/macros/s/AKfycbx-Y3QORLbPHppktAWpOqjTRDOyb9MviB01uiAX2KGgTPFGv4tbDpUH537UZs8qqunu7w/exec';
+const API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
 
 // ══════════════════════════════════════════
 // STATE
@@ -1657,17 +1655,41 @@ function renderOv(fd){
     }
   );
 
-  // Transformation pipeline
-  const stRows=[
-    ALL.filter(r=>r['Transformation Stage']==='Not started'    && ir(r['Stage1 Date'],s,e)),
-    ALL.filter(r=>r['Transformation Stage']==='Lost'           && ir(r['Stage1 Date'],s,e)),
-    ALL.filter(r=>r['Transformation Stage']==='In progress'    && ir(r['Program Start'],s,e)),
-    ALL.filter(r=>r['Transformation Stage']==='Did not finish' && ir(r['Stage2 Date'],s,e)),
-    ALL.filter(r=>r['Transformation Stage']==='Completed'      && ir(r['Stage2 Date'],s,e)),
-  ];
-  const stLbls=['Not Started','Lost','In Progress','Did Not Finish','Completed'];
-  mkH('ch-transform',stLbls,stRows.map(r=>r.length),[C.blue,C.coral,C.amber,C.orange,C.green],false,
-    lbl=>{const i=stLbls.indexOf(lbl);return i>=0?stRows[i]||[]:[]}
+  // Transformation pipeline — derive stages dynamically from actual data
+  // Date-column logic preserved: Stage1=Not started/Lost, Program Start=In progress, Stage2=Completed/Did not finish
+  const STAGE_CFG_MAP = {
+    // key: lowercase-trimmed stage value → { col, color }
+    'not started'    : { col:'Stage1 Date',   color:C.blue   },
+    'lost'           : { col:'Stage1 Date',   color:C.coral  },
+    'in progress'    : { col:'Program Start', color:C.amber  },
+    'did not finish' : { col:'Stage2 Date',   color:C.orange },
+    'completed'      : { col:'Stage2 Date',   color:C.green  },
+  };
+  // Collect all unique actual stage values present in ALL data
+  const actualStages=[...new Set(ALL.map(r=>(r['Transformation Stage']||'').trim()).filter(Boolean))];
+  // Sort by a preferred order if known, otherwise alphabetical
+  const ORDER=['not started','lost','in progress','did not finish','completed'];
+  actualStages.sort((a,b)=>{
+    const ai=ORDER.indexOf(a.toLowerCase()); const bi=ORDER.indexOf(b.toLowerCase());
+    if(ai!==-1&&bi!==-1) return ai-bi;
+    if(ai!==-1) return -1; if(bi!==-1) return 1;
+    return a.localeCompare(b);
+  });
+  const stageRows=actualStages.map(stage=>{
+    const cfg=STAGE_CFG_MAP[stage.toLowerCase()];
+    const col=cfg?cfg.col:'Stage1 Date';
+    return ALL.filter(r=>r['Transformation Stage']===stage && ir(r[col],s,e));
+  });
+  const stageColors=actualStages.map((stage,i)=>{
+    const cfg=STAGE_CFG_MAP[stage.toLowerCase()];
+    return cfg?cfg.color:PC[i%PC.length];
+  });
+  mkH('ch-transform',
+    actualStages,
+    stageRows.map(r=>r.length),
+    stageColors,
+    false,
+    lbl=>{const i=actualStages.indexOf(lbl);return i>=0?stageRows[i]||[]:[]}
   );
 
   // Lead To table
@@ -1794,14 +1816,32 @@ function renderDeep(fd){
     lbl=>{const k=allM[allM.map(ml).indexOf(lbl)];return lvcRowMap[k]||[];}
   );
 
-  // Stage Over Time
-  const sc=[
-    {label:'Not Started',stage:'Not started',col:'Stage1 Date',color:C.blue},
-    {label:'Lost',stage:'Lost',col:'Stage1 Date',color:C.coral},
-    {label:'In Progress',stage:'In progress',col:'Program Start',color:C.amber},
-    {label:'Did Not Finish',stage:'Did not finish',col:'Stage2 Date',color:C.orange},
-    {label:'Completed',stage:'Completed',col:'Stage2 Date',color:C.green},
-  ];
+  // Stage Over Time — derive stages dynamically from actual data
+  const SOT_CFG = {
+    'not started'    : { col:'Stage1 Date',   color:C.blue   },
+    'lost'           : { col:'Stage1 Date',   color:C.coral  },
+    'in progress'    : { col:'Program Start', color:C.amber  },
+    'did not finish' : { col:'Stage2 Date',   color:C.orange },
+    'completed'      : { col:'Stage2 Date',   color:C.green  },
+  };
+  const sotStages=[...new Set(ALL.map(r=>(r['Transformation Stage']||'').trim()).filter(Boolean))];
+  const SOT_ORDER=['not started','lost','in progress','did not finish','completed'];
+  sotStages.sort((a,b)=>{
+    const ai=SOT_ORDER.indexOf(a.toLowerCase()); const bi=SOT_ORDER.indexOf(b.toLowerCase());
+    if(ai!==-1&&bi!==-1) return ai-bi;
+    if(ai!==-1) return -1; if(bi!==-1) return 1;
+    return a.localeCompare(b);
+  });
+  // Build sc config from actual stages
+  const sc=sotStages.map((stage,i)=>{
+    const cfg=SOT_CFG[stage.toLowerCase()];
+    return{
+      label:stage,
+      stage,
+      col:cfg?cfg.col:'Stage1 Date',
+      color:cfg?cfg.color:PC[i%PC.length]
+    };
+  });
   const sms=new Set();
   ALL.forEach(r=>{const s2=sc.find(x=>x.stage===r['Transformation Stage']);if(s2){const k=mk(r[s2.col]);if(k)sms.add(k);}});
   const stM=[...sms].sort();
@@ -1847,5 +1887,6 @@ window.addEventListener('load',()=>{
   });
 });
 </script>
+
 </body>
 </html>
