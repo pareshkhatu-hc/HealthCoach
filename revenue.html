@@ -820,13 +820,15 @@ function mkLine(id,labels,datasets){
 function hBars(containerId, entries, maxVal){
   const el=document.getElementById(containerId); if(!el) return;
   if(!entries.length){el.innerHTML='<div style="font-size:11px;color:var(--muted);padding:12px 0;">No data for this period</div>';return;}
+  const totalVal=entries.reduce((a,[,v])=>a+v,0);
   el.innerHTML=entries.map(([lbl,val,color])=>{
-    const pct=maxVal>0?Math.round((val/maxVal)*100):0;
+    const barW=maxVal>0?Math.round((val/maxVal)*100):0;
+    const sharePct=totalVal>0?Math.round((val/totalVal)*100):0;
     return`<div class="hrow">
       <div class="h-lbl" title="${lbl}">${lbl}</div>
       <div class="h-track">
-        <div class="h-fill" style="width:${pct}%;background:${color||C.gold}">
-          ${pct>12?'<span>'+fn(Math.round(pct))+'%</span>':''}
+        <div class="h-fill" style="width:${barW}%;background:${color||C.gold}">
+          ${barW>12?'<span>'+sharePct+'%</span>':''}
         </div>
       </div>
       <div class="h-val">${fm(val)}</div>
