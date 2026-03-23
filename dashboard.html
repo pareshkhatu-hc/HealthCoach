@@ -300,6 +300,9 @@ body{
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+/* Fixed grids — never collapse on desktop, only on mobile */
+.g4-fixed{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.g3-fixed{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 
 /* ═══════════════════════════════════
    KPI / METRIC CARD  (reference kpi style)
@@ -652,7 +655,9 @@ body{
 
   /* ── grids: KPI cards always 2 per row ── */
   .g4{grid-template-columns:1fr 1fr !important;}
+  .g4-fixed{grid-template-columns:1fr 1fr !important;}
   .g3{grid-template-columns:1fr;}
+  .g3-fixed{grid-template-columns:1fr;}
   .g2{grid-template-columns:1fr;}
   .speed-g{grid-template-columns:1fr 1fr !important;}
 
@@ -714,6 +719,7 @@ body{
 @media(max-width:400px){
   /* keep 2 per row even at 400px */
   .g4{grid-template-columns:1fr 1fr !important;}
+  .g4-fixed{grid-template-columns:1fr 1fr !important;}
   .speed-g{grid-template-columns:1fr 1fr !important;}
   .topbar-brand-name{font-size:11px;}
 }
@@ -863,7 +869,7 @@ body{
 
         <div class="sec">
           <div class="sec-hdr"><span class="sec-ttl">Lead Pipeline</span></div>
-          <div class="g4">
+          <div class="g4-fixed">
             <div class="mc anim a1">
               <div class="mc-icon">📥</div>
               <div class="mc-lbl">Total Leads</div>
@@ -896,7 +902,7 @@ body{
 
         <div class="sec">
           <div class="sec-hdr"><span class="sec-ttl">Client Overview</span></div>
-          <div class="g4">
+          <div class="g4-fixed">
             <div class="mc anim a1">
               <div class="mc-icon">👥</div>
               <div class="mc-lbl">Total Clients</div>
@@ -1122,7 +1128,7 @@ body{
           </div>
         </div>
 
-        <div class="g3 anim a6">
+        <div class="g3-fixed anim a6">
           <div class="cc">
             <div class="cc-hdr">
               <div class="cc-hdr-left"><div class="cc-ttl">Lead To — Team Split</div><div class="cc-sub">Lead count per team member</div></div>
