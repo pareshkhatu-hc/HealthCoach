@@ -300,9 +300,6 @@ body{
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
 .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
-/* Fixed grids — never collapse on desktop, only on mobile */
-.g4-fixed{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
-.g3-fixed{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
 
 /* ═══════════════════════════════════
    KPI / METRIC CARD  (reference kpi style)
@@ -655,9 +652,7 @@ body{
 
   /* ── grids: KPI cards always 2 per row ── */
   .g4{grid-template-columns:1fr 1fr !important;}
-  .g4-fixed{grid-template-columns:1fr 1fr !important;}
   .g3{grid-template-columns:1fr;}
-  .g3-fixed{grid-template-columns:1fr;}
   .g2{grid-template-columns:1fr;}
   .speed-g{grid-template-columns:1fr 1fr !important;}
 
@@ -719,9 +714,10 @@ body{
 @media(max-width:400px){
   /* keep 2 per row even at 400px */
   .g4{grid-template-columns:1fr 1fr !important;}
-  .g4-fixed{grid-template-columns:1fr 1fr !important;}
   .speed-g{grid-template-columns:1fr 1fr !important;}
   .topbar-brand-name{font-size:11px;}
+  .topbar-divider{display:none;}
+  .page-ttl{display:none;}
 }
 </style>
 </head>
@@ -869,7 +865,7 @@ body{
 
         <div class="sec">
           <div class="sec-hdr"><span class="sec-ttl">Lead Pipeline</span></div>
-          <div class="g4-fixed">
+          <div class="g4">
             <div class="mc anim a1">
               <div class="mc-icon">📥</div>
               <div class="mc-lbl">Total Leads</div>
@@ -902,7 +898,7 @@ body{
 
         <div class="sec">
           <div class="sec-hdr"><span class="sec-ttl">Client Overview</span></div>
-          <div class="g4-fixed">
+          <div class="g4">
             <div class="mc anim a1">
               <div class="mc-icon">👥</div>
               <div class="mc-lbl">Total Clients</div>
@@ -971,7 +967,7 @@ body{
 
         <div class="sec">
           <div class="sec-hdr"><span class="sec-ttl">Pipeline Metrics</span></div>
-          <div class="g4-fixed">
+          <div class="g4">
             <div class="mc blue anim a1">
               <div class="mc-icon">📞</div>
               <div class="mc-lbl">Lead → Consult %</div>
@@ -1083,7 +1079,7 @@ body{
 
         <div class="sec">
           <div class="sec-hdr"><span class="sec-ttl">Key Analytics</span></div>
-          <div class="g4-fixed">
+          <div class="g4">
             <div class="mc purple anim a1">
               <div class="mc-icon">💎</div>
               <div class="mc-lbl">Avg Program Value</div>
@@ -1128,7 +1124,7 @@ body{
           </div>
         </div>
 
-        <div class="g3-fixed anim a6">
+        <div class="g3 anim a6">
           <div class="cc">
             <div class="cc-hdr">
               <div class="cc-hdr-left"><div class="cc-ttl">Lead To — Team Split</div><div class="cc-sub">Lead count per team member</div></div>
@@ -1621,8 +1617,17 @@ function setCustomRange(){
 function renderActive(){
   const pg=document.querySelector('.page.active');if(!pg)return;
   const id=pg.id.replace('pg-','');
-  const fd=fld(ALL,DR.start,DR.end);
-  if(id==='overview')renderOv(fd);
+  const{start:s,end:e}=DR;
+  // fd  = filtered by Lead Date       → Lead Pipeline section
+  // fcs = filtered by Program Start   → Client Overview section (client started in this period)
+  const fd  = fld(ALL,s,e);
+  const fcs = ALL.filter(r=>
+    r['Status']==='Client' &&
+    r['Program Start'] &&
+    String(r['Program Start']).trim()!=='' &&
+    ir(r['Program Start'],s,e)
+  );
+  if(id==='overview')renderOv(fd,fcs);
   if(id==='pipeline')renderPipe(fd);
   if(id==='deep')renderDeep(fd);
 }
@@ -1630,24 +1635,28 @@ function renderActive(){
 // ══════════════════════════════════════════
 // OVERVIEW
 // ══════════════════════════════════════════
-function renderOv(fd){
+function renderOv(fd,fcs){
   const{start:s,end:e}=DR;
+
+  // ── Lead Pipeline (filtered by Lead Date) ──
   const total=fd.length;
-  const clients=fd.filter(r=>r['Status']==='Client');
-  const nC=clients.length;
-  const con=fd.filter(r=>r['Consultation Date']).length;
-  const sta=fd.filter(r=>r['Program Start']).length;
-  const pVal=clients.reduce((a,r)=>a+pm(r['Program Value']),0);
-  const inp=fd.filter(r=>r['Transformation Stage']==='In progress').length;
-  const don=fd.filter(r=>r['Transformation Stage']==='Completed').length;
+  const con  =fd.filter(r=>r['Consultation Date']).length;
+  const sta  =fd.filter(r=>r['Program Start']).length;
+  const nC   =fd.filter(r=>r['Status']==='Client').length;
 
   st('o-leads',fn(total));st('o-con',fn(con));st('o-sta',fn(sta));
   st('o-cvr',total>0?((nC/total)*100).toFixed(1)+'%':'0%');
-  st('o-cli',fn(nC));st('o-inp',fn(inp));st('o-don',fn(don));st('o-val',fm(pVal));
 
   tbar('tb-leads',total,TGT.leads,C.purple);
   tbar('tb-con',con,TGT.con,C.blue);
   tbar('tb-sta',sta,TGT.sta,C.amber);
+
+  // ── Client Overview (filtered by Program Start) ──
+  const pVal=fcs.reduce((a,r)=>a+pm(r['Program Value']),0);
+  const inp =fcs.filter(r=>r['Transformation Stage']==='In progress').length;
+  const don =fcs.filter(r=>r['Transformation Stage']==='Completed').length;
+
+  st('o-cli',fn(fcs.length));st('o-inp',fn(inp));st('o-don',fn(don));st('o-val',fm(pVal));
   tbar('tb-rev',pVal,TGT.rev,C.purple);
 
   // Funnel
@@ -1662,52 +1671,17 @@ function renderOv(fd){
     }
   );
 
-  // Transformation pipeline — derive stages dynamically from actual data
-  // Date-column logic:
-  //   Not started / Lost      → Stage1 Date  (both bounds)
-  //   Did not finish/Completed→ Stage2 Date  (both bounds)
-  //   In progress             → Program Start ≤ end date only (ceiling check)
-  //                             + Status='Client' + Program Start not blank
-  const STAGE_CFG_MAP = {
-    'not started'    : { col:'Stage1 Date',   color:C.blue   },
-    'lost'           : { col:'Stage1 Date',   color:C.coral  },
-    'in progress'    : { col:'Program Start', color:C.amber  },
-    'did not finish' : { col:'Stage2 Date',   color:C.orange },
-    'completed'      : { col:'Stage2 Date',   color:C.green  },
-  };
-  const actualStages=[...new Set(ALL.map(r=>(r['Transformation Stage']||'').trim()).filter(Boolean))];
-  const ORDER=['not started','lost','in progress','did not finish','completed'];
-  actualStages.sort((a,b)=>{
-    const ai=ORDER.indexOf(a.toLowerCase()); const bi=ORDER.indexOf(b.toLowerCase());
-    if(ai!==-1&&bi!==-1) return ai-bi;
-    if(ai!==-1) return -1; if(bi!==-1) return 1;
-    return a.localeCompare(b);
-  });
-  const stageRows=actualStages.map(stage=>{
-    const cfg=STAGE_CFG_MAP[stage.toLowerCase()];
-    const col=cfg?cfg.col:'Stage1 Date';
-    if(stage.toLowerCase()==='in progress'){
-      // Special rule: Status=Client, Program Start not blank, Program Start ≤ end date
-      return ALL.filter(r=>
-        r['Transformation Stage']===stage &&
-        r['Status']==='Client' &&
-        r['Program Start'] &&
-        String(r['Program Start']).trim()!=='' &&
-        (()=>{const d=pd(r['Program Start']);return d&&d<=e;})()
-      );
-    }
-    return ALL.filter(r=>r['Transformation Stage']===stage && ir(r[col],s,e));
-  });
-  const stageColors=actualStages.map((stage,i)=>{
-    const cfg=STAGE_CFG_MAP[stage.toLowerCase()];
-    return cfg?cfg.color:PC[i%PC.length];
-  });
-  mkH('ch-transform',
-    actualStages,
-    stageRows.map(r=>r.length),
-    stageColors,
-    false,
-    lbl=>{const i=actualStages.indexOf(lbl);return i>=0?stageRows[i]||[]:[]}
+  // Transformation pipeline
+  const stRows=[
+    ALL.filter(r=>r['Transformation Stage']==='Not started'    && ir(r['Stage1 Date'],s,e)),
+    ALL.filter(r=>r['Transformation Stage']==='Lost'           && ir(r['Stage1 Date'],s,e)),
+    ALL.filter(r=>r['Transformation Stage']==='In progress'    && ir(r['Program Start'],s,e)),
+    ALL.filter(r=>r['Transformation Stage']==='Did not finish' && ir(r['Stage2 Date'],s,e)),
+    ALL.filter(r=>r['Transformation Stage']==='Completed'      && ir(r['Stage2 Date'],s,e)),
+  ];
+  const stLbls=['Not Started','Lost','In Progress','Did Not Finish','Completed'];
+  mkH('ch-transform',stLbls,stRows.map(r=>r.length),[C.blue,C.coral,C.amber,C.orange,C.green],false,
+    lbl=>{const i=stLbls.indexOf(lbl);return i>=0?stRows[i]||[]:[]}
   );
 
   // Lead To table
@@ -1834,91 +1808,21 @@ function renderDeep(fd){
     lbl=>{const k=allM[allM.map(ml).indexOf(lbl)];return lvcRowMap[k]||[];}
   );
 
-  // Stage Over Time — derive stages dynamically from actual data
-  // In progress: Status=Client + Program Start not blank + Program Start ≤ month end
-  // All others: date falls within month using stage-specific date column
-  const SOT_CFG = {
-    'not started'    : { col:'Stage1 Date',   color:C.blue   },
-    'lost'           : { col:'Stage1 Date',   color:C.coral  },
-    'in progress'    : { col:'Program Start', color:C.amber  },
-    'did not finish' : { col:'Stage2 Date',   color:C.orange },
-    'completed'      : { col:'Stage2 Date',   color:C.green  },
-  };
-  const sotStages=[...new Set(ALL.map(r=>(r['Transformation Stage']||'').trim()).filter(Boolean))];
-  const SOT_ORDER=['not started','lost','in progress','did not finish','completed'];
-  sotStages.sort((a,b)=>{
-    const ai=SOT_ORDER.indexOf(a.toLowerCase()); const bi=SOT_ORDER.indexOf(b.toLowerCase());
-    if(ai!==-1&&bi!==-1) return ai-bi;
-    if(ai!==-1) return -1; if(bi!==-1) return 1;
-    return a.localeCompare(b);
-  });
-  const sc=sotStages.map((stage,i)=>{
-    const cfg=SOT_CFG[stage.toLowerCase()];
-    return{
-      label:stage,
-      stage,
-      col:cfg?cfg.col:'Stage1 Date',
-      color:cfg?cfg.color:PC[i%PC.length],
-      isInProgress: stage.toLowerCase()==='in progress'
-    };
-  });
-
-  // Collect all month keys
+  // Stage Over Time
+  const sc=[
+    {label:'Not Started',stage:'Not started',col:'Stage1 Date',color:C.blue},
+    {label:'Lost',stage:'Lost',col:'Stage1 Date',color:C.coral},
+    {label:'In Progress',stage:'In progress',col:'Program Start',color:C.amber},
+    {label:'Did Not Finish',stage:'Did not finish',col:'Stage2 Date',color:C.orange},
+    {label:'Completed',stage:'Completed',col:'Stage2 Date',color:C.green},
+  ];
   const sms=new Set();
-  ALL.forEach(r=>{
-    const s2=sc.find(x=>x.stage===r['Transformation Stage']);
-    if(!s2) return;
-    if(s2.isInProgress){
-      // In progress: use Program Start month if valid
-      if(r['Status']==='Client' && r['Program Start'] && String(r['Program Start']).trim()!==''){
-        const k=mk(r['Program Start']); if(k) sms.add(k);
-      }
-    } else {
-      const k=mk(r[s2.col]); if(k) sms.add(k);
-    }
-  });
+  ALL.forEach(r=>{const s2=sc.find(x=>x.stage===r['Transformation Stage']);if(s2){const k=mk(r[s2.col]);if(k)sms.add(k);}});
   const stM=[...sms].sort();
-
-  // Per-month row map for drilldown
+  // Build per-month row map across all stages for drilldown
   const sotRowMap={};
-  sc.forEach(x=>{
-    const rows=x.isInProgress
-      ? ALL.filter(r=>r['Transformation Stage']===x.stage && r['Status']==='Client' && r['Program Start'] && String(r['Program Start']).trim()!=='')
-      : ALL.filter(r=>r['Transformation Stage']===x.stage);
-    rows.forEach(r=>{
-      const k=mk(r[x.col]); if(k)(sotRowMap[k]=sotRowMap[k]||[]).push(r);
-    });
-  });
-
-  // Build datasets: for In Progress, month M includes all records with Program Start ≤ last day of M
-  mkV('ch-sot', stM.map(ml), sc.map(x=>{
-    if(x.isInProgress){
-      // Count records whose Program Start ≤ end of each month key
-      return{
-        label:x.label,
-        data:stM.map(monthKey=>{
-          // end of this month
-          const [yr,mo]=monthKey.split('-');
-          const monthEnd=new Date(+yr,+mo,0,23,59,59); // last day of month
-          return ALL.filter(r=>
-            r['Transformation Stage']===x.stage &&
-            r['Status']==='Client' &&
-            r['Program Start'] &&
-            String(r['Program Start']).trim()!=='' &&
-            (()=>{const d=pd(r['Program Start']);return d&&d<=monthEnd;})()
-          ).length;
-        }),
-        backgroundColor:x.color,
-        borderColor:x.color
-      };
-    }
-    // All other stages: count records whose stage date falls in this exact month
-    const m={};
-    ALL.filter(r=>r['Transformation Stage']===x.stage).forEach(r=>{
-      const k=mk(r[x.col]); if(k)m[k]=(m[k]||0)+1;
-    });
-    return{label:x.label,data:stM.map(m2=>m[m2]||0),backgroundColor:x.color,borderColor:x.color};
-  }),{},
+  sc.forEach(x=>{ALL.filter(r=>r['Transformation Stage']===x.stage).forEach(r=>{const k=mk(r[x.col]);if(k)(sotRowMap[k]=sotRowMap[k]||[]).push(r);});});
+  mkV('ch-sot',stM.map(ml),sc.map(x=>{const m={};ALL.filter(r=>r['Transformation Stage']===x.stage).forEach(r=>{const k=mk(r[x.col]);if(k)m[k]=(m[k]||0)+1;});return{label:x.label,data:stM.map(m2=>m[m2]||0),backgroundColor:x.color,borderColor:x.color};}),{},
     lbl=>{const k=stM[stM.map(ml).indexOf(lbl)];return sotRowMap[k]||[];}
   );
 
@@ -1957,6 +1861,5 @@ window.addEventListener('load',()=>{
   });
 });
 </script>
-
 </body>
 </html>
