@@ -450,7 +450,7 @@ tr:hover td{background:var(--table-hover)}
       <div class="topbar-right">
         <button class="topbar-btn" id="syncBtn" onclick="currentClientName=null;fetchData(true)">🔄 <span class="btn-text">Sync</span></button>
         <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" id="topbarThemeBtn">🌙</button>
-        <button class="topbar-btn danger" id="logoutBtn" onclick="logout()">🚪 <span class="btn-text">Logout</span></button>
+        <button class="topbar-btn danger" id="logoutBtn" onclick="logout()">⏻ <span class="btn-text">Logout</span></button>
       </div>
     </header>
     <div class="client-row" id="clientSelectorWrap">
@@ -475,7 +475,7 @@ tr:hover td{background:var(--table-hover)}
   <button class="bottom-nav-item active" id="bnDash">📊<span>Dashboard</span></button>
   <button class="bottom-nav-item" id="bnSync" onclick="currentClientName=null;fetchData(true)">🔄<span>Sync</span></button>
   <button class="bottom-nav-item" id="bnSettings" onclick="toggleSettings()">⚙️<span>Links</span></button>
-  <button class="bottom-nav-item" id="bnLogout" onclick="logout()">🚪<span>Logout</span></button>
+  <button class="bottom-nav-item" id="bnLogout" onclick="logout()">⏻<span>Logout</span></button>
 </nav>
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbw-EtFykaGOEXdD2wSf-5UKgNODncQzwPhDWH49W1qZSyvLCNUtq1yACLqXGT9Q4fFY/exec';
@@ -807,7 +807,7 @@ async function loadClient(name){
 
   <div class="section-header anim anim-5"><span class="section-title">Body Composition</span><div class="section-line"></div></div>
   <div class="charts-grid anim anim-5">
-    <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div><span class="chart-badge green">↓ ${Math.abs(wLost)} kg lost</span></div><canvas id="weightChart" height="80"></canvas></div>
+    <div class="chart-card full-width"><div class="chart-header"><div><div class="chart-title">Weight Progression</div><div class="chart-subtitle">All recorded sessions • kg</div></div><span class="chart-badge green">↓ ${Math.abs(wLost)} kg lost</span></div><canvas id="weightChart" height="160"></canvas></div>
     <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Body Fat %</div><div class="chart-subtitle">Percentage body fat over time</div></div><span class="chart-badge orange">↓ ${Math.abs(fLost)}% reduced</span></div><canvas id="fatChart" height="150"></canvas></div>
     <div class="chart-card"><div class="chart-header"><div><div class="chart-title">Visceral Fat Level</div><div class="chart-subtitle">Scale 1–9 • Optimum: below 7</div></div><span class="chart-badge purple">↓ ${Math.abs(vDrop)} levels</span></div><canvas id="visceralChart" height="150"></canvas></div>
   </div>
