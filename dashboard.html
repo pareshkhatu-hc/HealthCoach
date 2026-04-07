@@ -181,6 +181,13 @@ body{
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 2s infinite;flex-shrink:0;}
 .sync-status{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
 @keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.4;}}
+.tb-logout-mobile{
+  display:none;
+  width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--red-border);background:var(--red-dim);color:var(--red);
+  align-items:center;justify-content:center;
+  font-size:15px;cursor:pointer;flex-shrink:0;
+}
 
 .data-meta{
   font-size:9px;color:var(--muted2);text-align:center;
@@ -646,6 +653,7 @@ body{
   .topbar-row2{padding:0 10px 8px;gap:5px;}
   .topbar-brand-name{font-size:12px;}
   .page-ttl{font-size:11px;}
+  .tb-logout-mobile{display:flex;}
   .date-bar{padding:4px 8px;}
   .date-bar label{display:none;}
   .date-bar input{width:76px;font-size:10px;}
@@ -821,7 +829,7 @@ body{
       📋<span class="nav-tt">Client Dashboard</span>
     </button>
     <button class="sb-footer-btn nav-danger" onclick="logout()" style="margin-bottom:6px;">
-      🚪<span class="nav-tt">Logout</span>
+      ⏻<span class="nav-tt">Logout</span>
     </button>
   </aside>
 
@@ -840,6 +848,7 @@ body{
         <div class="sync-status"><div class="sync-dot"></div><span id="syncLabel">Live</span></div>
         <div id="data-meta" style="font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0;"></div>
         <div style="flex:1;min-width:4px;"></div>
+        <button class="tb-logout-mobile" onclick="logout()" title="Logout">⏻</button>
         <button class="tb-icon-btn" onclick="openAlerts()" title="Follow-up Alerts">
           🔔 Alerts<span class="tb-badge" id="al-badge" style="display:none">0</span>
         </button>
@@ -858,6 +867,7 @@ body{
         <div class="chip" onclick="setPeriod('2m',this)">2M</div>
         <div class="chip" onclick="setPeriod('3m',this)">3M</div>
         <div class="chip" onclick="setPeriod('6m',this)">6M</div>
+        <div class="chip" onclick="setPeriod('fy',this)">FY</div>
         <div class="chip" onclick="setPeriod('all',this)">All</div>
       </div>
     </div>
@@ -1189,7 +1199,7 @@ body{
 // 1. Open Apps Script, paste the new Code.gs, click Deploy → New deployment
 // 2. Type: Web App · Execute as: Me · Access: Anyone
 // 3. Copy the Web App URL and paste it below (replacing the placeholder)
-const API_URL = 'https://script.google.com/macros/s/AKfycbx-Y3QORLbPHppktAWpOqjTRDOyb9MviB01uiAX2KGgTPFGv4tbDpUH537UZs8qqunu7w/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwUmJPI94dt163z1M-R1Clg3e4stQ2CvYaD3DRgQe3nRvx-Ze4ag5AP15h5GvGfOoKN/exec';
 
 // ══════════════════════════════════════════
 // STATE
@@ -1238,9 +1248,46 @@ function fld(data,s,e){return data.filter(r=>ir(r['Lead Date'],s,e));}
 function st(id,v){const el=document.getElementById(id);if(el)el.textContent=v??'—';}
 function ini(n){if(!n)return'?';const p=n.trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
 function gp(period){
-  const now=new Date(),end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);let start;
-  switch(period){case'current':start=new Date(now.getFullYear(),now.getMonth(),1);break;case'1m':start=new Date(now);start.setMonth(start.getMonth()-1);break;case'2m':start=new Date(now);start.setMonth(start.getMonth()-2);break;case'3m':start=new Date(now);start.setMonth(start.getMonth()-3);break;case'6m':start=new Date(now);start.setMonth(start.getMonth()-6);break;default:start=new Date(2000,0,1);}
+  const now=new Date();
+  let start,end;
+  switch(period){
+    case'current':
+      start=new Date(now.getFullYear(),now.getMonth(),1);
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+      break;
+    case'1m':
+      start=new Date(now.getFullYear(),now.getMonth()-1,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case'2m':
+      start=new Date(now.getFullYear(),now.getMonth()-2,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case'3m':
+      start=new Date(now.getFullYear(),now.getMonth()-3,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case'6m':
+      start=new Date(now.getFullYear(),now.getMonth()-6,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case'fy':{
+      const mo=now.getMonth();
+      const fy=mo>=3?now.getFullYear():now.getFullYear()-1;
+      start=new Date(fy,3,1);
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+      break;
+    }
+    default:
+      start=new Date(2000,0,1);
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+  }
   return{start,end};
+}
+function fad(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function dataUrl(){
+  const qs=new URLSearchParams({action:'data',token:SESSION_TOKEN,from:fad(DR.start),to:fad(DR.end)});
+  return API_URL+'?'+qs.toString();
 }
 
 // WhatsApp
@@ -1532,7 +1579,7 @@ function hideLoading(){
 async function loadData(){
   showLoading('Loading data…');
   try{
-    const res=await fetch(API_URL+'?action=data&token='+encodeURIComponent(SESSION_TOKEN));
+    const res=await fetch(dataUrl());
     const json=await res.json();
     if(!json.success){
       if(json.error&&json.error.includes('token')){logout();return;}
@@ -1551,7 +1598,7 @@ async function reloadData(){
   showLoading('Refreshing…');
   document.getElementById('syncLabel').textContent='Syncing…';
   try{
-    const res=await fetch(API_URL+'?action=data&token='+encodeURIComponent(SESSION_TOKEN));
+    const res=await fetch(dataUrl());
     const json=await res.json();
     if(!json.success){if(json.error&&json.error.includes('token')){logout();return;}}
     ALL=json.data||[];
@@ -1613,11 +1660,11 @@ function setPeriod(p,el){
   el.classList.add('active');
   document.getElementById('dt-from').value='';
   document.getElementById('dt-to').value='';
-  renderActive();
+  if(SESSION_TOKEN)loadData();
 }
 function setCustomRange(){
   const f=document.getElementById('dt-from').value,t=document.getElementById('dt-to').value;
-  if(f&&t){PERIOD='custom';DR={start:new Date(f),end:new Date(t+'T23:59:59')};document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));renderActive();}
+  if(f&&t){PERIOD='custom';DR={start:new Date(f),end:new Date(t+'T23:59:59')};document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));if(SESSION_TOKEN)loadData();}
 }
 function renderActive(){
   const pg=document.querySelector('.page.active');if(!pg)return;

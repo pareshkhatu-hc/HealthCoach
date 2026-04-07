@@ -137,6 +137,15 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 }
 .nb:hover{background:var(--s2);color:var(--text);}
 .nb.active{background:var(--gold-dim);color:var(--gold);}
+.wa-nav-mark{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:24px;height:24px;padding:0 6px;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--emerald),#34d399);
+  color:#083b2f;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;
+  letter-spacing:.06em;line-height:1;
+  box-shadow:0 3px 10px rgba(16,217,160,.22);
+}
 .nb-tt{
   position:absolute;left:52px;top:50%;transform:translateY(-50%);
   background:var(--text);color:var(--bg);
@@ -200,6 +209,13 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
   animation:pulse-g 2s infinite;flex-shrink:0;}
 @keyframes pulse-g{0%,100%{opacity:1}50%{opacity:.3}}
 .sync-lbl{font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+.tb-logout-mobile{
+  display:none;
+  width:36px;height:36px;border-radius:10px;
+  align-items:center;justify-content:center;
+  border:1px solid var(--rose-border);background:var(--rose-dim);
+  color:var(--rose);font-size:16px;cursor:pointer;flex-shrink:0;
+}
 
 /* ══ CONTENT ══ */
 .content{flex:1;overflow-y:auto;padding:18px 20px 30px;}
@@ -342,6 +358,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
   .tb-title{font-size:13px;}
   .tb-spacer{display:none;}
   .tb-div{display:none;}
+  .tb-logout-mobile{display:flex;margin-left:auto;}
   /* push chips + dbar to second row */
   .topbar .chip-group{order:3;width:100%;display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;}
   .topbar .chip-group::-webkit-scrollbar{display:none;}
@@ -388,11 +405,14 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
     font-size:18px;
   }
   .bn-btn span{font-size:9px;font-weight:600;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.02em;}
-  .bn-btn.active{color:var(--gold);}
-  .bn-btn.active span{color:var(--gold);}
-  .bn-refresh{
-    flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
-    border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold-border);
+.bn-btn.active{color:var(--gold);}
+.bn-btn.active span{color:var(--gold);}
+.bn-btn .wa-nav-mark{
+  min-width:26px;height:20px;font-size:9px;padding:0 6px;
+}
+.bn-refresh{
+  flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold-border);
     font-size:16px;cursor:pointer;color:var(--gold);
   }
 }
@@ -431,14 +451,14 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
       🤝<span class="nb-tt">Partnerships</span>
     </button>
     <button class="nb" id="nb-wellness" onclick="showPage('wellness',this)">
-      🌿<span class="nb-tt">Wellness Atlas</span>
+      <span class="wa-nav-mark">WA</span><span class="nb-tt">Wellness Atlas</span>
     </button>
     <button class="nb" id="nb-income" onclick="showPage('income',this)">
       💰<span class="nb-tt">Income</span>
     </button>
     <div class="sb-spacer"></div>
     <button class="sb-refresh" onclick="refreshData()">🔄<span class="nb-tt">Refresh</span></button>
-    <button class="sb-logout" onclick="doLogout()">🚪<span class="nb-tt">Logout</span></button>
+    <button class="sb-logout" onclick="doLogout()">⏻<span class="nb-tt">Logout</span></button>
     <div class="sb-rec-count" id="rec-count">—</div>
   </aside>
 
@@ -454,10 +474,12 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
         <div class="sync-dot"></div>
         <span class="sync-lbl" id="sync-lbl">Live</span>
       </div>
+      <button class="tb-logout-mobile" onclick="doLogout()" title="Logout">⏻</button>
       <div class="tb-spacer"></div>
       <!-- period chips -->
       <div class="chip-group">
         <div class="chip active" onclick="setPeriod('month',this)">This Month</div>
+        <div class="chip" onclick="setPeriod('1m',this)">1M</div>
         <div class="chip" onclick="setPeriod('3m',this)">3M</div>
         <div class="chip" onclick="setPeriod('6m',this)">6M</div>
         <div class="chip" onclick="setPeriod('fy',this)">FY</div>
@@ -709,7 +731,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
     🤝<span>Partners</span>
   </button>
   <button class="bn-btn" id="bn-wellness" onclick="showPage('wellness',this,'nb-wellness')">
-    🌿<span>Wellness</span>
+    <span class="wa-nav-mark">WA</span><span>Wellness</span>
   </button>
   <button class="bn-btn" id="bn-income" onclick="showPage('income',this,'nb-income')">
     💰<span>Income</span>
@@ -724,7 +746,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
 // CONFIG — hardcoded API URL
 // ══════════════════════════════════════════
 // Paste your Apps Script Web App URL here:
-const API_URL = 'https://script.google.com/macros/s/AKfycbwHhNayyaRRXxixNwj5D7-VEv3K3MFJEebUzO4aavvjMJ7uxaw_rkj-_gw-YnAUm7g/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxng7M-tOGqkjVtBdViKNxeXLQP0XOYGwXwOX6Qlbzz3cc-FNRY2gDJrp7lczLm6ZZy/exec';
 
 // ══════════════════════════════════════════
 // STATE
@@ -850,6 +872,7 @@ function getPeriod(p){
   let start;
   switch(p){
     case 'month': start=new Date(now.getFullYear(),now.getMonth(),1); break;
+    case '1m':    start=new Date(now); start.setMonth(start.getMonth()-1); break;
     case '3m':    start=new Date(now); start.setMonth(start.getMonth()-3); break;
     case '6m':    start=new Date(now); start.setMonth(start.getMonth()-6); break;
     case 'fy': {
@@ -868,6 +891,23 @@ function getPeriod(p){
 // CHART HELPERS
 // ══════════════════════════════════════════
 function dc(id){ if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];} }
+
+function fmtApiDate(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function buildDataUrl(){
+  const qs = new URLSearchParams({
+    action:'all',
+    token:SESSION_TOKEN,
+    from:fmtApiDate(DR.start),
+    to:fmtApiDate(DR.end)
+  });
+  return API_URL+'?'+qs.toString();
+}
 
 function chartOpts(){
   const grid={color:'rgba(0,0,0,0.06)'};
@@ -986,7 +1026,8 @@ async function checkPassword(){
 function showApp(){
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  DR = getPeriod('all');
+  PERIOD = 'month';
+  DR = getPeriod('month');
   loadData();
 }
 
@@ -1010,7 +1051,7 @@ async function loadData(){
   document.getElementById('load-msg').textContent = 'Loading data…';
   document.getElementById('loading').style.display = 'flex';
   try{
-    const res = await fetch(API_URL+'?action=all&token='+encodeURIComponent(SESSION_TOKEN));
+    const res = await fetch(buildDataUrl());
     const json = await res.json();
     if(!json.success){
       if(json.code===401){ doLogout(); return; }
@@ -1023,8 +1064,15 @@ async function loadData(){
     document.getElementById('rec-count').textContent = fn(total)+'\nrows';
     document.getElementById('sync-lbl').textContent = 'Live';
     document.querySelectorAll('.chip-group .chip').forEach(c=>c.classList.remove('active'));
-    const allChip = Array.from(document.querySelectorAll('.chip-group .chip')).find(c=>c.textContent==='All');
-    if(allChip) allChip.classList.add('active');
+    const activeChip = Array.from(document.querySelectorAll('.chip-group .chip')).find(c =>
+      (PERIOD === 'month' && c.textContent === 'This Month') ||
+      (PERIOD === '1m' && c.textContent === '1M') ||
+      (PERIOD === '3m' && c.textContent === '3M') ||
+      (PERIOD === '6m' && c.textContent === '6M') ||
+      (PERIOD === 'fy' && c.textContent === 'FY') ||
+      (PERIOD === 'all' && c.textContent === 'All')
+    );
+    if(activeChip) activeChip.classList.add('active');
     // Always scroll to very top on load
     window.scrollTo(0,0);
     document.body.scrollTop=0;
@@ -1045,7 +1093,7 @@ async function refreshData(){
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('sync-lbl').textContent = 'Syncing…';
   try{
-    const res = await fetch(API_URL+'?action=all&token='+encodeURIComponent(SESSION_TOKEN));
+    const res = await fetch(buildDataUrl());
     const json = await res.json();
     if(!json.success){
       if(json.code===401){ doLogout(); return; }
@@ -1106,7 +1154,7 @@ function setPeriod(p,el){
   el.classList.add('active');
   document.getElementById('dt-from').value='';
   document.getElementById('dt-to').value='';
-  renderAll();
+  if(SESSION_TOKEN) loadData();
 }
 
 function setCustomRange(){
@@ -1116,7 +1164,7 @@ function setCustomRange(){
     PERIOD='custom';
     DR={start:new Date(f),end:new Date(t+'T23:59:59')};
     document.querySelectorAll('.chip-group .chip').forEach(c=>c.classList.remove('active'));
-    renderAll();
+    if(SESSION_TOKEN) loadData();
   }
 }
 
@@ -1335,7 +1383,8 @@ function renderIncome(fi,fp,fw,s,e){
 // BOOT
 // ══════════════════════════════════════════
 window.addEventListener('load',()=>{
-  DR = getPeriod('all');
+  PERIOD = 'month';
+  DR = getPeriod('month');
   const saved = sessionStorage.getItem('ps-rev-token');
   if(saved){
     SESSION_TOKEN = saved;
