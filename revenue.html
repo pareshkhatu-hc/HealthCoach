@@ -630,6 +630,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
           <div class="cc">
             <div class="cc-hdr">
               <div><div class="cc-ttl">Enrollment Distribution</div><div class="cc-sub">Count by program type</div></div>
+              <span class="cc-pill cp-em">Count</span>
             </div>
             <div class="ch" style="height:200px"><canvas id="ch-wa-dist"></canvas></div>
           </div>
@@ -900,7 +901,7 @@ function mkBar(id,labels,datasets){
   });
 }
 
-function mkDoughnut(id,labels,data,colors){
+function mkDoughnut(id,labels,data,colors,labelFmt=fm){
   dc(id); const cv=document.getElementById(id); if(!cv) return;
   CHARTS[id]=new Chart(cv.getContext('2d'),{
     type:'doughnut',
@@ -913,7 +914,7 @@ function mkDoughnut(id,labels,data,colors){
         tooltip:{
           backgroundColor:'#ffffff',titleColor:'#1a1f36',bodyColor:'#6b7694',
           borderColor:'#dde1ee',borderWidth:1,
-          callbacks:{label:ctx=>` ${fm(ctx.parsed)}`}
+          callbacks:{label:ctx=>` ${labelFmt(ctx.parsed)}`}
         }
       }
     }
@@ -1279,7 +1280,8 @@ function renderWellness(fw,s,e){
   mkDoughnut('ch-wa-dist',
     programs,
     programs.map(p=>progCnt[p]||0),
-    programs.map((p,i)=>getProgColor(p,i))
+    programs.map((p,i)=>getProgColor(p,i)),
+    v=>fn(v)
   );
 
   // Monthly enrollment trend — one dataset per program
