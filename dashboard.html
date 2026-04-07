@@ -1634,7 +1634,7 @@ function renderActive(){
   );
   if(id==='overview')renderOv(fd,fcs);
   if(id==='pipeline')renderPipe(fd);
-  if(id==='deep')renderDeep(fd);
+  if(id==='deep')renderDeep(fd,fcs);
 }
 
 // ══════════════════════════════════════════
@@ -1646,7 +1646,7 @@ function renderOv(fd,fcs){
   // ── Lead Pipeline (filtered by Lead Date) ──
   const total=fd.length;
   const con  =fd.filter(r=>r['Consultation Date']).length;
-  const sta  =fd.filter(r=>r['Program Start']).length;
+  const sta  =fcs.length;
   const nC   =fd.filter(r=>r['Status']==='Client').length;
 
   st('o-leads',fn(total));st('o-con',fn(con));st('o-sta',fn(sta));
@@ -1672,7 +1672,7 @@ function renderOv(fd,fcs){
     lbl=>{
       if(lbl==='Total Leads')return fd;
       if(lbl==='Consultations')return fd.filter(r=>r['Consultation Date']);
-      return fd.filter(r=>r['Program Start']);
+      return fcs;
     }
   );
 
@@ -1791,12 +1791,12 @@ function renderPipe(fd){
 // ══════════════════════════════════════════
 // DEEP ANALYTICS
 // ══════════════════════════════════════════
-function renderDeep(fd){
-  const clients=fd.filter(r=>r['Status']==='Client');
+function renderDeep(fd,fcs){
+  const clients=fcs;
   const tVal=clients.reduce((s,r)=>s+pm(r['Program Value']),0);
   const avgVal=clients.length>0?tVal/clients.length:0;
-  const dnf=fd.filter(r=>r['Transformation Stage']==='Did not finish').length;
-  const comp=fd.filter(r=>r['Transformation Stage']==='Completed').length;
+  const dnf=clients.filter(r=>r['Transformation Stage']==='Did not finish').length;
+  const comp=clients.filter(r=>r['Transformation Stage']==='Completed').length;
 
   st('d-avg',fm(avgVal));st('d-tot',fm(tVal));
   st('d-drp',clients.length>0?((dnf/clients.length)*100).toFixed(1)+'%':'0%');
