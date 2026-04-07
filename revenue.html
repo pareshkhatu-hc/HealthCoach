@@ -480,6 +480,7 @@ body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans
       <div class="chip-group">
         <div class="chip active" onclick="setPeriod('month',this)">This Month</div>
         <div class="chip" onclick="setPeriod('1m',this)">1M</div>
+        <div class="chip" onclick="setPeriod('2m',this)">2M</div>
         <div class="chip" onclick="setPeriod('3m',this)">3M</div>
         <div class="chip" onclick="setPeriod('6m',this)">6M</div>
         <div class="chip" onclick="setPeriod('fy',this)">FY</div>
@@ -868,21 +869,39 @@ function allMonths(keys){
 // ══════════════════════════════════════════
 function getPeriod(p){
   const now=new Date();
-  const end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
-  let start;
+  let start,end;
   switch(p){
-    case 'month': start=new Date(now.getFullYear(),now.getMonth(),1); break;
-    case '1m':    start=new Date(now); start.setMonth(start.getMonth()-1); break;
-    case '3m':    start=new Date(now); start.setMonth(start.getMonth()-3); break;
-    case '6m':    start=new Date(now); start.setMonth(start.getMonth()-6); break;
+    case 'month':
+      start=new Date(now.getFullYear(),now.getMonth(),1);
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+      break;
+    case '1m':
+      start=new Date(now.getFullYear(),now.getMonth()-1,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case '2m':
+      start=new Date(now.getFullYear(),now.getMonth()-2,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case '3m':
+      start=new Date(now.getFullYear(),now.getMonth()-3,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
+    case '6m':
+      start=new Date(now.getFullYear(),now.getMonth()-6,1);
+      end=new Date(now.getFullYear(),now.getMonth(),0,23,59,59);
+      break;
     case 'fy': {
       // April → March financial year
       const mo=now.getMonth(); // 0=Jan
       const fy=mo>=3?now.getFullYear():now.getFullYear()-1;
       start=new Date(fy,3,1); // April 1
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
       break;
     }
-    default: start=new Date(2000,0,1);
+    default:
+      start=new Date(2000,0,1);
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
   }
   return {start,end};
 }
@@ -1067,6 +1086,7 @@ async function loadData(){
     const activeChip = Array.from(document.querySelectorAll('.chip-group .chip')).find(c =>
       (PERIOD === 'month' && c.textContent === 'This Month') ||
       (PERIOD === '1m' && c.textContent === '1M') ||
+      (PERIOD === '2m' && c.textContent === '2M') ||
       (PERIOD === '3m' && c.textContent === '3M') ||
       (PERIOD === '6m' && c.textContent === '6M') ||
       (PERIOD === 'fy' && c.textContent === 'FY') ||
