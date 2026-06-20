@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Household Ledger — Financial Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ---- Design tokens ---- */
+  --paper:#FAF8F4;
+  --paper-raised:#FFFFFF;
+  --ink:#0F1729;
+  --ink-soft:#3C4456;
+  --slate:#5B6472;
+  --line:#E4DFD3;
+  --line-strong:#D2CBB8;
+  --gold:#9C7A3C;
+  --gold-soft:#F1E7D2;
+  --forest:#3A5F4F;
+  --forest-soft:#E4EEE8;
+  --clay:#A6522C;
+  --clay-soft:#F3E3D8;
+  --navy:#26405C;
+  --navy-soft:#E6ECF1;
+  --plum:#6B4C7A;
+  --shadow:0 1px 2px rgba(15,23,41,.04), 0 8px 24px rgba(15,23,41,.06);
+  --radius:10px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+  line-height:1.5;
+  background-image:
+    linear-gradient(180deg, #F3EEE3 0%, var(--paper) 280px);
+}
+button,input{font:inherit}
+button{font-family:'Inter',sans-serif}
+.num,.tabular{font-variant-numeric:tabular-nums}
+.serif{font-family:'Source Serif 4',Georgia,serif}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+.shell{max-width:1480px;margin:0 auto;padding:32px 28px 60px}
+
+/* ---------- Masthead ---------- */
+.masthead{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+  padding-bottom:22px;margin-bottom:26px;border-bottom:2px solid var(--ink);
+}
+.masthead-left{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.mark{
+  width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  font-family:'Source Serif 4',serif;font-weight:600;font-size:16px;color:var(--gold);
+}
+.masthead h1{
+  font-family:'Source Serif 4',serif;font-weight:600;font-size:clamp(26px,3vw,34px);
+  margin:0;letter-spacing:-.01em;
+}
+.masthead .eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold);display:block;margin-bottom:2px;
+}
+.masthead-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.statline{font-size:12px;color:var(--slate);text-align:right;line-height:1.4}
+.statline strong{color:var(--ink-soft);font-weight:600}
+.btn{
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+  border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+  transition:transform .12s ease, opacity .12s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn .spinner{width:12px;height:12px;border-radius:50%;border:2px solid rgba(250,248,244,.35);border-top-color:#FAF8F4;animation:spin .7s linear infinite;display:none}
+.btn.loading .spinner{display:inline-block}
+.btn.loading .btn-label{opacity:.8}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-chip{
+  font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:6px 10px;border-radius:999px;border:1px solid var(--line-strong);
+  color:var(--slate);background:var(--paper-raised);
+}
+.status-chip.live{color:var(--forest);border-color:var(--forest);background:var(--forest-soft)}
+.status-chip.offline{color:var(--clay);border-color:var(--clay);background:var(--clay-soft)}
+.status-chip.loading{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+
+/* ---------- Ledger band (KPI strip) ---------- */
+.ledger-band{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--paper-raised);box-shadow:var(--shadow);
+  margin-bottom:28px;overflow:hidden;
+}
+.ledger-item{
+  padding:18px 18px;border-right:1px solid var(--line);position:relative;min-width:0;
+}
+.ledger-item:last-child{border-right:none}
+.ledger-item .l-label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--slate)}
+.ledger-item .l-value{font-family:'Source Serif 4',serif;font-size:22px;font-weight:600;margin-top:6px;color:var(--ink);white-space:nowrap}
+.ledger-item .l-note{font-size:11.5px;color:var(--slate);margin-top:5px}
+.ledger-item .l-note.pos{color:var(--forest);font-weight:600}
+.ledger-item .l-note.warn{color:var(--clay);font-weight:600}
+.ledger-item::before{content:"";position:absolute;left:0;top:0;width:3px;height:100%;background:var(--gold)}
+.ledger-item:nth-child(2)::before{background:var(--forest)}
+.ledger-item:nth-child(3)::before{background:var(--navy)}
+.ledger-item:nth-child(4)::before{background:var(--plum)}
+.ledger-item:nth-child(5)::before{background:var(--gold)}
+.ledger-item:nth-child(6)::before{background:var(--clay)}
+
+/* ---------- Tabs ---------- */
+.tabs{
+  display:flex;gap:2px;margin-bottom:24px;border-bottom:1px solid var(--line-strong);
+  position:sticky;top:0;z-index:20;background:var(--paper);padding-top:6px;
+}
+.tab{
+  border:none;background:none;padding:11px 18px;font-size:13.5px;font-weight:600;
+  color:var(--slate);cursor:pointer;position:relative;border-radius:6px 6px 0 0;
+}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--ink)}
+.tab.active::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;background:var(--gold)}
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---------- Cards & grids ---------- */
+.grid{display:grid;gap:18px}
+.g-two{grid-template-columns:1.2fr .8fr}
+.g-two-rev{grid-template-columns:.8fr 1.2fr}
+.g-three{grid-template-columns:repeat(3,1fr)}
+.g-even{grid-template-columns:1fr 1fr}
+.card{
+  background:var(--paper-raised);border:1px solid var(--line-strong);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px;min-width:0;
+}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:16px}
+.card-head h2{font-family:'Source Serif 4',serif;font-size:17px;font-weight:600;margin:0}
+.card-sub{font-size:12px;color:var(--slate)}
+.tag{
+  font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;background:var(--gold-soft);color:var(--gold);white-space:nowrap;
+}
+.tag.forest{background:var(--forest-soft);color:var(--forest)}
+.tag.clay{background:var(--clay-soft);color:var(--clay)}
+.tag.navy{background:var(--navy-soft);color:var(--navy)}
+
+/* ---------- Donut ---------- */
+.donut-wrap{display:grid;grid-template-columns:230px 1fr;gap:24px;align-items:center}
+.donut{position:relative;width:200px;aspect-ratio:1;margin:auto}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.donut-center strong{font-family:'Source Serif 4',serif;font-size:21px;display:block;color:var(--ink)}
+.donut-center span{font-size:10px;color:var(--slate);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+/* ---------- Bars ---------- */
+.bar-list{display:grid;gap:13px}
+.bar-row .bar-head{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:6px}
+.bar-row .bar-head strong{font-weight:600;color:var(--ink-soft)}
+.bar-row .bar-head span{color:var(--slate);font-size:12.5px}
+.bar-track{height:7px;background:#EFEAE0;border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px}
+
+/* ---------- Insights ---------- */
+.insights{display:grid;gap:10px}
+.insight{
+  display:grid;grid-template-columns:6px 1fr;gap:12px;padding:13px 14px;
+  border:1px solid var(--line);border-radius:8px;background:#FCFBF8;font-size:13px;color:var(--ink-soft);
+}
+.dot{width:6px;height:6px;border-radius:50%;margin-top:7px}
+.dot.ok{background:var(--forest)}.dot.watch{background:var(--gold)}.dot.risk{background:var(--clay)}
+
+/* ---------- Tables ---------- */
+.table-wrap{overflow:auto;border:1px solid var(--line-strong);border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:600px;font-size:13px}
+th,td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{
+  background:#F5F1E8;color:var(--slate);font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.06em;font-weight:700;position:sticky;top:0;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FCFBF6}
+.num-cell{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pos-cell{color:var(--forest);font-weight:600}
+.neg-cell{color:var(--clay);font-weight:600}
+.empty{padding:28px;border:1px dashed var(--line-strong);border-radius:8px;color:var(--slate);background:#FCFBF6;text-align:center;font-size:13px}
+
+/* ---------- Timeline ---------- */
+.timeline{display:grid;gap:0}
+.t-item{display:grid;grid-template-columns:96px 1fr auto;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
+.t-item:last-child{border-bottom:none}
+.t-date{font-size:11.5px;color:var(--slate);font-weight:700;letter-spacing:.02em}
+.t-title{font-size:13.5px;font-weight:600;color:var(--ink-soft)}
+.t-sub{font-size:12px;color:var(--slate);margin-top:2px}
+.t-tag{font-size:11px;font-weight:700;color:var(--navy);background:var(--navy-soft);padding:4px 9px;border-radius:6px;white-space:nowrap}
+
+/* ---------- Toolbar / search ---------- */
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.search{
+  flex:1;min-width:220px;border:1px solid var(--line-strong);border-radius:8px;
+  background:#FCFBF6;padding:10px 13px;outline:none;font-size:13px;color:var(--ink);
+}
+.search:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+
+/* ---------- Mini stat tiles ---------- */
+.mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mini{padding:14px;border:1px solid var(--line);border-radius:8px;background:#FCFBF6}
+.mini .l-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)}
+.mini strong{display:block;font-family:'Source Serif 4',serif;font-size:19px;margin-top:5px;color:var(--ink)}
+
+/* ---------- Monthly progression / ledger signature ---------- */
+.ledger-passbook{border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.passbook-row{
+  display:grid;grid-template-columns:90px 1fr 130px 130px;gap:12px;align-items:center;
+  padding:13px 16px;border-bottom:1px solid var(--line);font-size:13px;background:var(--paper-raised);
+}
+.passbook-row.head{
+  background:#F5F1E8;font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--slate);padding:10px 16px;
+}
+.passbook-row:last-child{border-bottom:none}
+.passbook-date{font-weight:700;color:var(--ink-soft);font-size:12px}
+.passbook-purpose{font-size:11.5px;color:var(--slate);margin-top:2px}
+.passbook-amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--forest)}
+.passbook-running{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.chip-type{
+  display:inline-block;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:5px;
+  background:var(--gold-soft);color:var(--gold);
+}
+
+/* ---------- Footer ---------- */
+.footer-note{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--slate);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1180px){
+  .ledger-band{grid-template-columns:repeat(3,1fr)}
+  .ledger-item:nth-child(3){border-right:none}
+  .ledger-item:nth-child(n+4){border-top:1px solid var(--line)}
+  .g-two,.g-two-rev,.g-three,.g-even,.donut-wrap,.mini-grid{grid-template-columns:1fr}
+}
+@media(max-width:720px){
+  .shell{padding:20px 16px 48px}
+  .masthead{flex-direction:column;align-items:flex-start}
+  .masthead-right{justify-content:flex-start;width:100%}
+  .statline{text-align:left}
+  .ledger-band{grid-template-columns:1fr 1fr}
+  .ledger-item:nth-child(n+3){border-top:1px solid var(--line)}
+  .ledger-item:nth-child(odd){border-right:1px solid var(--line)}
+  .ledger-item:nth-child(even){border-right:none}
+  table{min-width:540px}
+  .passbook-row{grid-template-columns:74px 1fr 96px;font-size:12px}
+  .passbook-row .passbook-running{display:none}
+  .passbook-row.head{grid-template-columns:74px 1fr 96px}
+  .passbook-row.head span:nth-child(4){display:none}
+}
+@media print{
+  .tabs,.btn,.search{display:none}
+  .view{display:block !important}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="masthead">
+    <div class="masthead-left">
+      <div class="mark">PS</div>
+      <div>
+        <span class="eyebrow">Household Ledger</span>
+        <h1>Financial Dashboard</h1>
+      </div>
+    </div>
+    <div class="masthead-right">
+      <div class="statline">
+        <div><strong id="updatedOn">Sheet updated —</strong></div>
+        <div id="loadedAtLine">Loaded —</div>
+      </div>
+      <span class="status-chip" id="statusChip">Connecting…</span>
+      <button class="btn" id="refreshBtn" type="button">
+        <span class="spinner"></span>
+        <span class="btn-label">Refresh data</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="ledger-band" id="ledgerBand"></section>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <!-- ============ OVERVIEW ============ -->
+  <section class="view active" data-view="overview">
+    <div class="grid g-two">
+      <div class="card">
+        <div class="card-head"><h2>Asset Allocation</h2><span class="tag" id="allocationTag">—</span></div>
+        <div class="donut-wrap">
+          <div class="donut"><svg id="assetDonut" viewBox="0 0 120 120"></svg><div class="donut-center"><strong id="donutTotal">—</strong><span>Net worth</span></div></div>
+          <div class="bar-list" id="assetBars"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Executive Signals</h2><span class="tag navy">Auto-read</span></div>
+        <div class="insights" id="insights"></div>
+      </div>
+    </div>
+    <div class="grid g-two" style="margin-top:18px">
+      <div class="card">
+        <div class="card-head"><h2>Goal Buckets</h2><span class="tag forest">Purpose view</span></div>
+        <div class="bar-list" id="goalBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Owner Split</h2><span class="tag forest">Household view</span></div>
+        <div class="bar-list" id="ownerBars"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INVESTMENTS ============ -->
+  <section class="view" data-view="investments">
+    <div class="grid g-two">
+      <div class="card">
+        <div class="card-head"><h2>Mutual Funds &amp; ETF</h2><span class="tag" id="mfSummary">—</span></div>
+        <div id="mfTable"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Fixed Deposit Ladder</h2><span class="tag" id="fdSummary">—</span></div>
+        <div id="fdTable"></div>
+      </div>
+    </div>
+    <div class="grid g-two" style="margin-top:18px">
+      <div class="card"><div class="card-head"><h2>Provident Fund</h2><span class="tag navy">Retirement base</span></div><div id="pfTable"></div></div>
+      <div class="card"><div class="card-head"><h2>Gold Holdings</h2><span class="tag">Fixed asset</span></div><div id="goldTable"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ MONTHLY PROGRESSION (signature view) ============ -->
+  <section class="view" data-view="progression">
+    <div class="grid g-two">
+      <div class="card">
+        <div class="card-head">
+          <div><h2>Cumulative Net Worth</h2><div class="card-sub">Running total from logged contributions, by category</div></div>
+          <span class="tag forest" id="progressionRange">—</span>
+        </div>
+        <div id="progressionChart"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Month-over-Month</h2><span class="tag">Growth read</span></div>
+        <div class="mini-grid" id="momTiles"></div>
+        <div class="insights" id="momInsights" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div class="card-head">
+        <div><h2>Contribution Ledger</h2><div class="card-sub">Every logged entry from "Monthly split of my invstents" — newest first</div></div>
+        <span class="tag" id="ledgerCount">—</span>
+      </div>
+      <div class="ledger-passbook" id="ledgerPassbook"></div>
+    </div>
+  </section>
+
+  <!-- ============ BANKING ============ -->
+  <section class="view" data-view="banking">
+    <div class="card">
+      <div class="toolbar">
+        <div><h2 style="font-family:'Source Serif 4',serif;font-size:17px;margin:0">Bank Accounts</h2><div class="card-sub">Balances grouped by bank, account type, and owner</div></div>
+        <input class="search" id="bankSearch" type="search" placeholder="Search bank accounts…">
+      </div>
+      <div id="bankTable"></div>
+    </div>
+  </section>
+
+  <!-- ============ INSURANCE ============ -->
+  <section class="view" data-view="insurance">
+    <div class="grid g-two">
+      <div class="card"><div class="card-head"><h2>Insurance Cover</h2><span class="tag" id="insuranceSummary">—</span></div><div id="insuranceTable"></div></div>
+      <div class="card"><div class="card-head"><h2>Renewal Watch</h2><span class="tag clay">Date driven</span></div><div class="timeline" id="renewalTimeline"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ TIMELINE ============ -->
+  <section class="view" data-view="timeline">
+    <div class="grid g-two">
+      <div class="card"><div class="card-head"><h2>Upcoming Financial Dates</h2><span class="tag navy">FD + Insurance</span></div><div class="timeline" id="timeline"></div></div>
+      <div class="card"><div class="card-head"><h2>Recent Ledger Entries</h2><span class="tag">Latest first</span></div><div id="timelineMonthlyTable"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ DATA HEALTH ============ -->
+  <section class="view" data-view="data">
+    <div class="grid g-three">
+      <div class="card"><div class="l-label" style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)">Source</div><div class="l-value" id="sourceName" style="font-family:'Source Serif 4',serif;font-size:20px;margin-top:6px">—</div><div class="card-sub" style="margin-top:6px">Google Sheet read by Apps Script</div></div>
+      <div class="card"><div class="l-label" style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)">Last Loaded</div><div class="l-value" id="loadedAt" style="font-family:'Source Serif 4',serif;font-size:20px;margin-top:6px">—</div><div class="card-sub" style="margin-top:6px">Refresh timestamp</div></div>
+      <div class="card"><div class="l-label" style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--slate)">Data Health</div><div class="l-value" id="dataHealth" style="font-family:'Source Serif 4',serif;font-size:20px;margin-top:6px">—</div><div class="card-sub" id="dataHealthNote" style="margin-top:6px">Completeness checks</div></div>
+    </div>
+    <div class="card" style="margin-top:18px"><div class="card-head"><h2>Data Quality Checks</h2><span class="tag">Operational</span></div><div class="insights" id="qualityChecks"></div></div>
+  </section>
+
+  <div class="footer-note">
+    <span>Household Ledger · private financial dashboard</span>
+    <span id="footerUrl">Connected via Google Apps Script Web App</span>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// Household Ledger — Financial Dashboard
+// =====================================================================
+
+// Paste your Apps Script Web App /exec URL here after deploying code.gs.
+// Example: https://script.google.com/macros/s/AKfycb.../exec
+const WEB_APP_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+const sampleData = {
+  source: "Financial Dashboard.xlsx preview", loadedAt: "2026-06-19T19:25:51", updatedOn: "2026-06-01", emergencyTarget: 600000,
+  assets: [{ name: "Fixed Deposits", value: 750000, color: "#3a5a8c" }, { name: "Investments", value: 80000, color: "#7c5cbf" }, { name: "Provident Fund", value: 958504, color: "#2f6f4e" }, { name: "Bank Balance", value: 486000, color: "#1f8a8a" }, { name: "Gold", value: 3000000, color: "#b08968" }],
+  goalBuckets: [{ name: "Emergency Fund", value: 1236000, color: "#1f8a8a" }, { name: "Retirement Fund", value: 958504, color: "#2f6f4e" }, { name: "Fixed Asset", value: 3000000, color: "#b08968" }, { name: "10 Years Plan", value: 80000, color: "#7c5cbf" }],
+  bankAccounts: [{ bank: "HDFC Bank", type: "Savings", balance: 200000, holder: "Paresh" }, { bank: "ICICI Bank", type: "Savings", balance: 100000, holder: "Paresh" }, { bank: "Yes Bank", type: "Savings", balance: 0, holder: "Paresh" }, { bank: "Yes Bank", type: "", balance: 60000, holder: "Sampada" }, { bank: "Yes Bank", type: "", balance: 3000, holder: "Joint" }, { bank: "HDFC Bank", type: "", balance: 0, holder: "Sampada" }, { bank: "Bank of India", type: "", balance: 67000, holder: "Sampada" }, { bank: "Cash", type: "Cash in hand", balance: 56000, holder: "Sampada" }],
+  mutualFunds: [{ name: "Nippon India Small Cap Fund Direct Growth", start: "2026-05-21", sip: 15000, invested: 25000, current: 0, investor: "Paresh" }, { name: "Parag Parikh Flexi Cap Fund Direct Growth", start: "2026-05-21", sip: 10000, invested: 20000, current: 0, investor: "Paresh" }, { name: "HDFC Floating Rate Debt Fund Direct Plan Growth", start: "2026-06-08", sip: 5000, invested: 5000, current: 0, investor: "Paresh" }, { name: "HDFC Mid Cap Fund Direct Growth", start: "2026-06-11", sip: 15000, invested: 15000, current: 0, investor: "Paresh" }, { name: "Kotak Gold Exchange Traded Fund", start: "2026-06-18", sip: 5000, invested: 5000, current: 0, investor: "Paresh" }, { name: "Fund1", start: "", sip: 4000, invested: 4000, current: 0, investor: "Sampdda" }, { name: "Fund2", start: "", sip: 3000, invested: 3000, current: 0, investor: "Sampdda" }, { name: "Fund3", start: "", sip: 3000, invested: 3000, current: 0, investor: "Sampdda" }],
+  gold: [{ quantity: 50, rate: 15000, amount: 750000, investor: "Paresh" }, { quantity: 150, rate: 15000, amount: 2250000, investor: "Sampada" }],
+  fixedDeposits: [{ bank: "HDFC Bank", amount: 100000, maturity: "2027-05-14", rate: .0625, maturityAmount: 108397, investor: "Paresh" }, { bank: "HDFC Bank", amount: 100000, maturity: "2029-06-14", rate: .065, maturityAmount: 122009, investor: "Paresh" }, { bank: "Yes Bank", amount: 100000, maturity: "2029-05-21", rate: .07, maturityAmount: 123145, investor: "Paresh" }, { bank: "Yes Bank", amount: 100000, maturity: "2028-05-21", rate: .07, maturityAmount: 114902, investor: "Paresh" }, { bank: "ICICI Bank", amount: 100000, maturity: "2028-05-15", rate: .0645, maturityAmount: 113672, investor: "Paresh" }, { bank: "Tirumala Coperative", amount: 50000, maturity: "", rate: 0, maturityAmount: 50000, investor: "Sampada" }, { bank: "Yes Bank", amount: 100000, maturity: "2028-06-07", rate: .0725, maturityAmount: 115377, investor: "Sampada" }, { bank: "HDFC Bank", amount: 100000, maturity: "2029-06-12", rate: .065, maturityAmount: 121361, investor: "Sampada" }],
+  providentFund: [{ employer: "Nitor Infotech", balance: 633916, pensionBalance: 0 }, { employer: "Persistent", balance: 214873, pensionBalance: 0 }, { employer: "Nell Infotech", balance: 109715, pensionBalance: 0 }],
+  monthlySplit: [{ month: "2026-06-10", type: "Fixed Deposite", amount: 750000, purpose: "Emergency Fund" }, { month: "2026-06-10", type: "Bank Balance", amount: 486000, purpose: "Emergency Fund" }, { month: "2026-06-10", type: "Provident Fund", amount: 958504, purpose: "Retirement Fund" }, { month: "2026-06-10", type: "Gold", amount: 3000000, purpose: "Fixed Asset" }, { month: "2026-06-10", type: "Investment", amount: 81176, purpose: "10 Years Plan" }],
+  insurance: [{ category: "Life", provider: "HDFC Ergo", type: "Term Life", tenure: "2043-01-18", renewal: "2027-01-18", coverage: "1 Cr" }, { category: "Life", provider: "Axis Max Life", type: "Term Life", tenure: "2049-08-12", renewal: "2026-08-12", coverage: "50 Lac" }, { category: "Health", provider: "Care Health", type: "Family Floater", tenure: "", renewal: "2026-08-04", coverage: "25 Lac" }]
+};
+
+let state = sampleData;
+const tabs = [
+  { id: "overview", label: "Overview" },
+  { id: "investments", label: "Investments" },
+  { id: "progression", label: "Monthly Progression" },
+  { id: "banking", label: "Banking" },
+  { id: "insurance", label: "Insurance" },
+  { id: "timeline", label: "Timeline" },
+  { id: "data", label: "Data Health" }
+];
+const today = new Date();
+const $ = id => document.getElementById(id);
+
+const fmt = n => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(n) || 0);
+const pct = n => `${(Number(n) || 0).toFixed(1)}%`;
+const short = n => {
+  const v = Number(n) || 0;
+  const sign = v < 0 ? "-" : "";
+  const a = Math.abs(v);
+  if (a >= 10000000) return `${sign}₹${(a / 10000000).toFixed(2)} Cr`;
+  if (a >= 100000) return `${sign}₹${(a / 100000).toFixed(2)} L`;
+  return fmt(v);
+};
+const sum = (rows, key) => rows.reduce((s, row) => s + (Number(row[key]) || 0), 0);
+const daysUntil = d => d ? Math.ceil((new Date(`${d}T00:00:00`) - today) / 86400000) : null;
+const dateText = d => d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+const monthText = d => d ? new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { month: "short", year: "numeric" }) : "—";
+
+// =====================================================================
+// Data loading
+// =====================================================================
+function setStatus(mode, label) {
+  const chip = $("statusChip");
+  chip.className = "status-chip" + (mode ? " " + mode : "");
+  chip.textContent = label;
+}
+
+function setLoading(isLoading) {
+  const btn = $("refreshBtn");
+  btn.disabled = isLoading;
+  btn.classList.toggle("loading", isLoading);
+  btn.querySelector(".btn-label").textContent = isLoading ? "Refreshing…" : "Refresh data";
+}
+
+function loadData() {
+  setLoading(true);
+  setStatus("loading", "Refreshing…");
+
+  if (window.google && google.script && google.script.run) {
+    // Running inside Apps Script HtmlService — direct server call, no network hop.
+    google.script.run.withSuccessHandler(resp => {
+      applyResponse(resp, true);
+    }).withFailureHandler(err => {
+      applyFailure(err);
+    }).getFinanceDashboardData();
+  } else if (WEB_APP_URL && WEB_APP_URL.indexOf('PASTE_YOUR') === -1) {
+    loadViaJsonp(WEB_APP_URL).then(resp => {
+      applyResponse(resp, true);
+    }).catch(err => {
+      applyFailure(err);
+    });
+  } else {
+    state = sampleData;
+    render();
+    setStatus("offline", "Preview data — no Web App URL set");
+    setLoading(false);
+  }
+}
+
+function applyResponse(resp, isLive) {
+  // Backend wraps payload as {ok, data} or {ok:false, error}. Handle both
+  // that shape and a bare data object for backward compatibility.
+  let data = resp;
+  if (resp && typeof resp === "object" && "ok" in resp) {
+    if (!resp.ok) { applyFailure(resp.error || "Unknown server error"); return; }
+    data = resp.data;
+  }
+  state = data;
+  render();
+  setStatus("live", isLive ? "Live Google Sheet data" : "Preview data");
+  setLoading(false);
+}
+
+function applyFailure(err) {
+  state = sampleData;
+  render();
+  setStatus("offline", `Preview data — ${err && err.message ? err.message : err}`);
+  setLoading(false);
+}
+
+function loadViaJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `financeDashboardCallback_${Date.now()}_${Math.round(Math.random() * 100000)}`;
+    const script = document.createElement("script");
+    const separator = url.includes("?") ? "&" : "?";
+    const timeout = setTimeout(() => { cleanup(); reject(new Error("Request timed out")); }, 20000);
+
+    function cleanup() { clearTimeout(timeout); delete window[callbackName]; script.remove(); }
+
+    window[callbackName] = data => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error("Could not reach Apps Script Web App")); };
+    script.src = `${url}${separator}callback=${encodeURIComponent(callbackName)}&ts=${Date.now()}`;
+    document.head.appendChild(script);
+  });
+}
+
+// =====================================================================
+// Render orchestration
+// =====================================================================
+function render() {
+  renderTabs();
+  renderLedgerBand();
+  drawDonut("assetDonut", state.assets, "donutTotal");
+  renderBars("assetBars", state.assets);
+  renderBars("goalBars", state.goalBuckets);
+  renderOwnerBars();
+  renderInsights();
+  renderInvestments();
+  renderProgression();
+  renderBanking();
+  renderInsurance();
+  renderTimeline();
+  renderDataHealth();
+  $("updatedOn").textContent = `Sheet updated ${dateText(state.updatedOn)}`;
+  $("loadedAtLine").textContent = `Loaded ${state.loadedAt ? new Date(state.loadedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—"}`;
+}
+
+function renderTabs() {
+  $("tabs").innerHTML = tabs.map((t, i) => `<button class="tab ${i === 0 ? "active" : ""}" data-tab="${t.id}">${t.label}</button>`).join("");
+  $("tabs").onclick = event => {
+    const btn = event.target.closest(".tab");
+    if (!btn) return;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelector(`[data-view="${btn.dataset.tab}"]`).classList.add("active");
+  };
+}
+
+// =====================================================================
+// Ledger band (KPI strip)
+// =====================================================================
+function renderLedgerBand() {
+  const netWorth = sum(state.assets, "value");
+  const emergency = (state.goalBuckets.find(x => x.name.toLowerCase().includes("emergency")) || {}).value || 0;
+  const target = state.emergencyTarget || 600000;
+  const mfCurrent = sum(state.mutualFunds, "current") || sum(state.mutualFunds, "invested");
+  const sip = sum(state.mutualFunds, "sip");
+  const plan = (state.goalBuckets.find(x => x.name.toLowerCase().includes("10")) || {}).value || 0;
+  const gold = (state.assets.find(x => x.name.toLowerCase().includes("gold")) || {}).value || 0;
+  const upcoming = state.insurance.filter(x => x.renewal && daysUntil(x.renewal) >= 0 && daysUntil(x.renewal) <= 120).sort((a, b) => a.renewal.localeCompare(b.renewal));
+  const emergencyMet = emergency >= target;
+
+  const items = [
+    { label: "Net Worth", value: short(netWorth), note: `${state.assets.length} asset classes` },
+    { label: "Emergency Coverage", value: pct(target ? emergency / target * 100 : 0), note: emergencyMet ? "Target met" : `${short(target - emergency)} gap`, noteClass: emergencyMet ? "pos" : "warn" },
+    { label: "Investments", value: short(mfCurrent), note: `${fmt(sip)} / mo SIP` },
+    { label: "10-Year Plan", value: short(plan), note: `${pct(netWorth ? plan / netWorth * 100 : 0)} of net worth` },
+    { label: "Gold Exposure", value: pct(netWorth ? gold / netWorth * 100 : 0), note: short(gold), noteClass: (gold / netWorth) > .45 ? "warn" : "" },
+    { label: "Renewals (120d)", value: String(upcoming.length), note: upcoming[0] ? `Next: ${dateText(upcoming[0].renewal)}` : "Clear", noteClass: upcoming.length ? "warn" : "pos" }
+  ];
+
+  $("ledgerBand").innerHTML = items.map(i => `
+    <div class="ledger-item">
+      <div class="l-label">${i.label}</div>
+      <div class="l-value">${i.value}</div>
+      <div class="l-note ${i.noteClass || ""}">${i.note}</div>
+    </div>`).join("");
+
+  $("allocationTag").textContent = short(netWorth);
+}
+
+// =====================================================================
+// Donut + bars
+// =====================================================================
+function drawDonut(id, rows, centerId) {
+  const total = sum(rows, "value");
+  const svg = $(id);
+  svg.innerHTML = "";
+  let offset = 0;
+  const r = 48, circ = 2 * Math.PI * r;
+  rows.forEach(row => {
+    const len = total ? row.value / total * circ : 0;
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("cx", 60); c.setAttribute("cy", 60); c.setAttribute("r", r);
+    c.setAttribute("fill", "none"); c.setAttribute("stroke", row.color || "#5B6472"); c.setAttribute("stroke-width", 15);
+    c.setAttribute("stroke-dasharray", `${len} ${circ - len}`); c.setAttribute("stroke-dashoffset", -offset);
+    c.setAttribute("stroke-linecap", "butt");
+    svg.appendChild(c); offset += len;
+  });
+  const hole = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  hole.setAttribute("cx", 60); hole.setAttribute("cy", 60); hole.setAttribute("r", 36); hole.setAttribute("fill", "#FFFFFF");
+  svg.appendChild(hole);
+  $(centerId).textContent = short(total);
+}
+
+function renderBars(id, rows) {
+  const total = sum(rows, "value");
+  $(id).innerHTML = rows.map(row => `
+    <div class="bar-row">
+      <div class="bar-head"><strong>${row.name}</strong><span>${fmt(row.value)} · ${pct(total ? row.value / total * 100 : 0)}</span></div>
+      <div class="bar-track"><span class="bar-fill" style="width:${total ? row.value / total * 100 : 0}%;background:${row.color || "var(--gold)"}"></span></div>
+    </div>`).join("");
+}
+
+function renderOwnerBars() {
+  const totals = {};
+  const add = (name, value) => { const key = name || "Unassigned"; totals[key] = (totals[key] || 0) + (Number(value) || 0); };
+  state.bankAccounts.forEach(x => add(x.holder, x.balance));
+  state.mutualFunds.forEach(x => add(x.investor, x.current || x.invested));
+  state.gold.forEach(x => add(x.investor, x.amount));
+  state.fixedDeposits.forEach(x => add(x.investor, x.amount));
+  state.providentFund.forEach(x => add(x.employer ? guessOwnerFromPF_() : "Unassigned", x.balance));
+  const palette = ["#9C7A3C", "#3A5F4F", "#26405C", "#6B4C7A", "#A6522C"];
+  const rows = Object.entries(totals).map(([name, value], i) => ({ name, value, color: palette[i % palette.length] })).sort((a, b) => b.value - a.value);
+  renderBars("ownerBars", rows);
+}
+
+// PF rows in this sheet don't carry an explicit owner column; default to the
+// primary account holder seen elsewhere unless the sheet is extended later.
+function guessOwnerFromPF_() {
+  const holders = state.bankAccounts.map(x => x.holder).filter(Boolean);
+  return holders[0] || "Paresh";
+}
+
+// =====================================================================
+// Insights
+// =====================================================================
+function renderInsights() {
+  const netWorth = sum(state.assets, "value");
+  const emergency = (state.goalBuckets.find(x => x.name.toLowerCase().includes("emergency")) || {}).value || 0;
+  const target = state.emergencyTarget || 600000;
+  const gold = (state.assets.find(x => x.name.toLowerCase().includes("gold")) || {}).value || 0;
+  const missingCurrent = state.mutualFunds.filter(x => !x.current).length;
+  const next = nextEvents()[0];
+  const items = [
+    { s: emergency >= target ? "ok" : "watch", t: `Emergency bucket is ${pct(target ? emergency / target * 100 : 0)} of the fixed ${fmt(target)} target.` },
+    { s: netWorth && (gold / netWorth) > .45 ? "watch" : "ok", t: `Gold exposure is ${pct(netWorth ? gold / netWorth * 100 : 0)} of tracked net worth.` },
+    { s: missingCurrent ? "watch" : "ok", t: missingCurrent ? `${missingCurrent} fund row${missingCurrent > 1 ? "s" : ""} missing current value — return tracking will improve once filled in.` : "Mutual fund current values are available." },
+    { s: next ? "watch" : "ok", t: next ? `Next financial date: ${next.title} on ${dateText(next.date)}.` : "No upcoming dates found." }
+  ];
+  $("insights").innerHTML = items.map(i => `<div class="insight"><span class="dot ${i.s}"></span><div>${i.t}</div></div>`).join("");
+}
+
+// =====================================================================
+// Investments tab
+// =====================================================================
+function renderInvestments() {
+  $("mfSummary").textContent = `${state.mutualFunds.length} funds`;
+  $("fdSummary").textContent = `${state.fixedDeposits.length} deposits`;
+  $("mfTable").innerHTML = table(
+    ["Fund", "Investor", "Start", "SIP", "Invested", "Current"],
+    state.mutualFunds.map(x => [x.name, x.investor, dateText(x.start), fmt(x.sip), fmt(x.invested), x.current ? fmt(x.current) : "Pending"]),
+    [0, 0, 0, 1, 1, 1]
+  );
+  $("fdTable").innerHTML = table(
+    ["Bank", "Investor", "Principal", "Rate", "Maturity", "Maturity Amount"],
+    state.fixedDeposits.map(x => [x.bank, x.investor, fmt(x.amount), x.rate ? pct(x.rate * 100) : "—", dateText(x.maturity), fmt(x.maturityAmount)]),
+    [0, 0, 1, 1, 0, 1]
+  );
+  $("pfTable").innerHTML = table(["Employer", "PF Balance", "Pension Balance"], state.providentFund.map(x => [x.employer, fmt(x.balance), fmt(x.pensionBalance)]), [0, 1, 1]);
+  $("goldTable").innerHTML = table(["Investor", "Quantity", "Rate", "Amount"], state.gold.map(x => [x.investor, `${x.quantity} gm`, fmt(x.rate), fmt(x.amount)]), [0, 1, 1, 1]);
+}
+
+// =====================================================================
+// Monthly Progression (signature view)
+// Transaction-style ledger: each row is a NEW contribution/change.
+// We sort chronologically, accumulate per-category running totals, and
+// derive a cumulative net-worth trend from those running totals.
+// =====================================================================
+function buildProgressionSeries() {
+  const rows = state.monthlySplit
+    .filter(x => x.month)
+    .map(x => ({ ...x, monthKey: String(x.month).slice(0, 10) }))
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+
+  const categories = [...new Set(rows.map(x => x.type || "Other"))];
+  const running = {};
+  categories.forEach(c => running[c] = 0);
+
+  // Group by exact date present in the sheet (each "batch" of entries).
+  const byDate = [];
+  const seen = new Map();
+  rows.forEach(r => {
+    if (!seen.has(r.monthKey)) { seen.set(r.monthKey, { date: r.monthKey, entries: [] }); byDate.push(seen.get(r.monthKey)); }
+    seen.get(r.monthKey).entries.push(r);
+  });
+
+  const points = byDate.map(batch => {
+    batch.entries.forEach(e => { running[e.type || "Other"] += Number(e.amount) || 0; });
+    const total = Object.values(running).reduce((s, v) => s + v, 0);
+    return { date: batch.date, total, byCategory: { ...running } };
+  });
+
+  return { points, categories, rows };
+}
+
+function renderProgression() {
+  const { points, categories, rows } = buildProgressionSeries();
+
+  if (!rows.length) {
+    $("progressionChart").innerHTML = `<div class="empty">No entries yet in "Monthly split of my invstents." Add rows there and refresh to see the trend build up.</div>`;
+    $("progressionRange").textContent = "—";
+    $("momTiles").innerHTML = "";
+    $("momInsights").innerHTML = "";
+    $("ledgerCount").textContent = "0 entries";
+    $("ledgerPassbook").innerHTML = `<div class="empty">Ledger is empty.</div>`;
+    return;
+  }
+
+  $("progressionRange").textContent = points.length > 1 ? `${monthText(points[0].date)} – ${monthText(points[points.length - 1].date)}` : monthText(points[0].date);
+  drawProgressionChart(points, categories);
+  renderMoMTiles(points);
+  renderLedgerPassbook(rows);
+}
+
+function drawProgressionChart(points, categories) {
+  const palette = ["#9C7A3C", "#3A5F4F", "#26405C", "#6B4C7A", "#A6522C", "#1f8a8a"];
+  const colorOf = {};
+  categories.forEach((c, i) => colorOf[c] = palette[i % palette.length]);
+
+  const w = 640, h = 280, padL = 70, padR = 18, padT = 18, padB = 36;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const maxVal = Math.max(...points.map(p => p.total), 1);
+  const niceMax = niceCeiling_(maxVal);
+
+  const xFor = i => points.length > 1 ? padL + (i / (points.length - 1)) * plotW : padL + plotW / 2;
+  const yFor = v => padT + plotH - (v / niceMax) * plotH;
+
+  // Single-point case: render as a flat marker, not a line.
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${xFor(i)},${yFor(p.total)}`).join(" ");
+  const areaPath = points.length > 1
+    ? `${linePath} L${xFor(points.length - 1)},${padT + plotH} L${xFor(0)},${padT + plotH} Z`
+    : "";
+
+  const gridLines = [0, .25, .5, .75, 1].map(f => {
+    const y = padT + plotH - f * plotH;
+    const val = niceMax * f;
+    return `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#E4DFD3" stroke-width="1"/>
+             <text x="${padL - 10}" y="${y + 4}" text-anchor="end" font-size="10.5" fill="#5B6472" font-family="IBM Plex Mono, monospace">${short(val)}</text>`;
+  }).join("");
+
+  const xLabels = points.map((p, i) => `<text x="${xFor(i)}" y="${h - 10}" text-anchor="middle" font-size="10.5" fill="#5B6472">${monthText(p.date)}</text>`).join("");
+
+  const dots = points.map((p, i) => `<circle cx="${xFor(i)}" cy="${yFor(p.total)}" r="4" fill="#9C7A3C" stroke="#FAF8F4" stroke-width="2"/>`).join("");
+
+  const legend = categories.map(c => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);margin-right:14px"><span style="width:9px;height:9px;border-radius:2px;background:${colorOf[c]};display:inline-block"></span>${c}</span>`).join("");
+
+  $("progressionChart").innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;max-height:300px" preserveAspectRatio="xMidYMid meet">
+      ${gridLines}
+      ${areaPath ? `<path d="${areaPath}" fill="#9C7A3C" opacity="0.12"/>` : ""}
+      <path d="${linePath}" fill="none" stroke="#9C7A3C" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      ${xLabels}
+    </svg>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap">${legend}</div>
+  `;
+}
+
+function niceCeiling_(v) {
+  if (v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const norm = v / mag;
+  let step;
+  if (norm <= 1) step = 1; else if (norm <= 2) step = 2; else if (norm <= 5) step = 5; else step = 10;
+  return step * mag;
+}
+
+function renderMoMTiles(points) {
+  const last = points[points.length - 1];
+  const prev = points.length > 1 ? points[points.length - 2] : null;
+  const delta = prev ? last.total - prev.total : last.total;
+  const deltaPct = prev && prev.total ? (delta / prev.total * 100) : null;
+
+  const tiles = [
+    { label: "Latest Total", value: short(last.total) },
+    { label: "Change vs Prior", value: prev ? `${delta >= 0 ? "+" : ""}${short(delta)}` : "—" },
+    { label: "Growth Rate", value: deltaPct !== null ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "First entry" }
+  ];
+  $("momTiles").innerHTML = tiles.map(t => `<div class="mini"><div class="l-label">${t.label}</div><strong>${t.value}</strong></div>`).join("");
+
+  const insightItems = [];
+  if (!prev) {
+    insightItems.push({ s: "watch", t: "Only one ledger date so far — add another month's entries to start seeing a trend." });
+  } else {
+    insightItems.push({ s: delta >= 0 ? "ok" : "risk", t: `Net worth ${delta >= 0 ? "grew" : "declined"} by ${short(Math.abs(delta))} between ${monthText(prev.date)} and ${monthText(last.date)}.` });
+  }
+  // Largest-moving category between the last two snapshots
+  if (prev) {
+    let biggest = null;
+    Object.keys(last.byCategory).forEach(cat => {
+      const d = (last.byCategory[cat] || 0) - (prev.byCategory[cat] || 0);
+      if (!biggest || Math.abs(d) > Math.abs(biggest.d)) biggest = { cat, d };
+    });
+    if (biggest && biggest.d !== 0) {
+      insightItems.push({ s: biggest.d >= 0 ? "ok" : "watch", t: `${biggest.cat} moved the most: ${biggest.d >= 0 ? "+" : ""}${short(biggest.d)}.` });
+    }
+  }
+  $("momInsights").innerHTML = insightItems.map(i => `<div class="insight"><span class="dot ${i.s}"></span><div>${i.t}</div></div>`).join("");
+}
+
+function renderLedgerPassbook(rows) {
+  $("ledgerCount").textContent = `${rows.length} entries`;
+  const sorted = [...rows].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  // Running total computed chronologically, then displayed against the reverse-sorted list.
+  const chron = [...rows].sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+  let runningByRow = new Map();
+  let acc = 0;
+  chron.forEach(r => { acc += Number(r.amount) || 0; runningByRow.set(r, acc); });
+
+  const head = `<div class="passbook-row head"><span>Date</span><span>Type &amp; Purpose</span><span style="text-align:right">Amount</span><span style="text-align:right">Running Total</span></div>`;
+  const body = sorted.map(r => `
+    <div class="passbook-row">
+      <div class="passbook-date">${dateText(r.month)}</div>
+      <div><span class="chip-type">${r.type || "—"}</span><div class="passbook-purpose">${r.purpose || ""}</div></div>
+      <div class="passbook-amount">+${fmt(r.amount)}</div>
+      <div class="passbook-running">${fmt(runningByRow.get(r))}</div>
+    </div>`).join("");
+  $("ledgerPassbook").innerHTML = head + body;
+}
+
+// =====================================================================
+// Banking tab
+// =====================================================================
+function renderBanking() {
+  $("bankTable").innerHTML = table(["Bank", "Type", "Holder", "Balance"], state.bankAccounts.map(x => [x.bank, x.type, x.holder, fmt(x.balance)]), [0, 0, 0, 1]);
+  $("bankSearch").oninput = () => {
+    const q = $("bankSearch").value.toLowerCase();
+    document.querySelectorAll("#bankTable tbody tr").forEach(row => row.style.display = row.textContent.toLowerCase().includes(q) ? "" : "none");
+  };
+}
+
+// =====================================================================
+// Insurance tab
+// =====================================================================
+function renderInsurance() {
+  $("insuranceSummary").textContent = `${state.insurance.length} policies`;
+  $("insuranceTable").innerHTML = table(
+    ["Category", "Provider", "Type", "Tenure / Policy", "Renewal", "Coverage"],
+    state.insurance.map(x => [x.category, x.provider, x.type, x.policyNumber ? x.policyNumber : dateText(x.tenure), dateText(x.renewal), x.coverage]),
+    [0, 0, 0, 0, 0, 0]
+  );
+  $("renewalTimeline").innerHTML = timelineItems(state.insurance.filter(x => x.renewal).map(x => ({ date: x.renewal, title: `${x.provider} renewal`, sub: `${x.category} · ${x.coverage}`, tag: x.type })));
+}
+
+// =====================================================================
+// Timeline tab
+// =====================================================================
+function renderTimeline() {
+  $("timeline").innerHTML = timelineItems(nextEvents());
+  const sorted = [...state.monthlySplit].filter(x => x.month).sort((a, b) => String(b.month).localeCompare(String(a.month))).slice(0, 12);
+  $("timelineMonthlyTable").innerHTML = table(["Month", "Type", "Purpose", "Amount"], sorted.map(x => [dateText(x.month), x.type, x.purpose, fmt(x.amount)]), [0, 0, 0, 1]);
+}
+
+function nextEvents() {
+  return [
+    ...state.insurance.filter(x => x.renewal).map(x => ({ date: x.renewal, title: `${x.provider} renewal`, sub: `${x.category} insurance · ${x.coverage}`, tag: x.type })),
+    ...state.fixedDeposits.filter(x => x.maturity).map(x => ({ date: x.maturity, title: `${x.bank} FD maturity`, sub: `${x.investor} · ${fmt(x.amount)} principal`, tag: fmt(x.maturityAmount) }))
+  ].sort((a, b) => String(a.date).localeCompare(String(b.date))).filter(x => daysUntil(x.date) === null || daysUntil(x.date) >= -3650).slice(0, 10);
+}
+
+// =====================================================================
+// Data Health tab
+// =====================================================================
+function renderDataHealth() {
+  const checks = [
+    { s: state.assets.length ? "ok" : "risk", t: `${state.assets.length} asset rows loaded from Dashboard.` },
+    { s: state.bankAccounts.length ? "ok" : "risk", t: `${state.bankAccounts.length} bank-account rows loaded.` },
+    { s: state.mutualFunds.some(x => x.current) ? "ok" : "watch", t: state.mutualFunds.some(x => x.current) ? "At least one fund has a current value." : "Mutual fund current values are mostly blank — returns can't be tracked yet." },
+    { s: state.insurance.every(x => x.renewal) ? "ok" : "watch", t: "Insurance renewal dates checked across all visible policy rows." },
+    { s: state.monthlySplit.length ? "ok" : "watch", t: state.monthlySplit.length ? `${state.monthlySplit.length} ledger entries feeding the Monthly Progression view.` : "No ledger entries yet — Monthly Progression will stay empty until rows are added." }
+  ];
+  const score = Math.round(checks.filter(x => x.s === "ok").length / checks.length * 100);
+  $("sourceName").textContent = state.source || "Google Sheet";
+  $("loadedAt").textContent = state.loadedAt ? new Date(state.loadedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  $("dataHealth").textContent = `${score}/100`;
+  $("dataHealthNote").textContent = `${checks.filter(x => x.s !== "ok").length} item(s) need attention`;
+  $("qualityChecks").innerHTML = checks.map(i => `<div class="insight"><span class="dot ${i.s}"></span><div>${i.t}</div></div>`).join("");
+}
+
+// =====================================================================
+// Shared render helpers
+// =====================================================================
+function timelineItems(rows) {
+  if (!rows.length) return `<div class="empty">No dated items found.</div>`;
+  return rows.map(x => `
+    <div class="t-item">
+      <div class="t-date">${dateText(x.date)}</div>
+      <div><div class="t-title">${x.title}</div><div class="t-sub">${x.sub || ""}</div></div>
+      <span class="t-tag">${x.tag || ""}</span>
+    </div>`).join("");
+}
+
+// numCols: optional array marking which columns are numeric (1) for right-align
+function table(headers, rows, numCols) {
+  if (!rows.length) return `<div class="empty">No rows found.</div>`;
+  return `<div class="table-wrap"><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell, i) => `<td class="${numCols && numCols[i] ? "num-cell" : ""}">${cell ?? "—"}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+
+// =====================================================================
+// Boot
+// =====================================================================
+$("refreshBtn").addEventListener("click", loadData);
+loadData();
+
+</script>
+</body>
+</html>
