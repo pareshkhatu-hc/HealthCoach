@@ -18,8 +18,8 @@
   --line:#1E2532;
   --line-soft:#171D29;
   --text:#FFFFFF;
-  --text-dim:#8A93A3;
-  --text-faint:#5A6273;
+  --text-dim:#C3CAD6;
+  --text-faint:#9AA3B2;
   --green:#3DDC97;
   --green-dim:#1E5A41;
   --green-glow:rgba(61,220,151,.12);
@@ -638,7 +638,7 @@ function drawLineChart(containerId, opts) {
   [0, .25, .5, .75, 1].forEach(f => {
     const y = padT + plotH - f * plotH;
     svg.appendChild(svgEl("line", { x1: padL, y1: y, x2: w - padR, y2: y, stroke: "#171D29", "stroke-width": 1 }));
-    const t = svgEl("text", { x: padL - 8, y: y + 3, "text-anchor": "end", "font-size": 10, fill: "#5A6273", "font-family": "JetBrains Mono, monospace" });
+    const t = svgEl("text", { x: padL - 8, y: y + 3, "text-anchor": "end", "font-size": 10, fill: "#9AA3B2", "font-family": "JetBrains Mono, monospace" });
     t.textContent = opts.money !== false ? short(niceMax * f) : Math.round(niceMax * f);
     svg.appendChild(t);
   });
@@ -647,7 +647,7 @@ function drawLineChart(containerId, opts) {
   const xStep = Math.max(1, Math.ceil(n / 8));
   labels.forEach((lab, i) => {
     if (i % xStep !== 0 && i !== n - 1) return;
-    const t = svgEl("text", { x: xFor(i), y: h - (opts.legend === false ? 8 : 26), "text-anchor": "middle", "font-size": 10, fill: "#5A6273", "font-family": "JetBrains Mono, monospace" });
+    const t = svgEl("text", { x: xFor(i), y: h - (opts.legend === false ? 8 : 26), "text-anchor": "middle", "font-size": 10, fill: "#9AA3B2", "font-family": "JetBrains Mono, monospace" });
     t.textContent = lab;
     svg.appendChild(t);
   });
@@ -734,7 +734,7 @@ function drawDonut(containerId, rows, opts) {
     const t1 = svgEl("text", { x: cx, y: cy - 3, "text-anchor": "middle", "font-size": 16, "font-weight": 700, fill: "#E7EAEF", "font-family": "JetBrains Mono, monospace" });
     t1.textContent = opts.center.value;
     svg.appendChild(t1);
-    const t2 = svgEl("text", { x: cx, y: cy + 14, "text-anchor": "middle", "font-size": 9, fill: "#5A6273", "font-family": "Inter, sans-serif", "letter-spacing": "1px" });
+    const t2 = svgEl("text", { x: cx, y: cy + 14, "text-anchor": "middle", "font-size": 9, fill: "#9AA3B2", "font-family": "Inter, sans-serif", "letter-spacing": "1px" });
     t2.textContent = opts.center.label.toUpperCase();
     svg.appendChild(t2);
   }
@@ -766,7 +766,7 @@ function drawBarChart(containerId, rows, opts) {
       const y = padT + i * bandH;
       const barH = bandH * .56;
       const barW = (row.value / maxVal) * plotW;
-      const label = svgEl("text", { x: padL - 10, y: y + bandH / 2 + 4, "text-anchor": "end", "font-size": 11, fill: "#8A93A3", "font-family": "Inter, sans-serif" });
+      const label = svgEl("text", { x: padL - 10, y: y + bandH / 2 + 4, "text-anchor": "end", "font-size": 11, fill: "#C3CAD6", "font-family": "Inter, sans-serif" });
       label.textContent = row.name.length > 20 ? row.name.slice(0, 18) + "…" : row.name;
       svg.appendChild(label);
       const bar = svgEl("rect", { x: padL, y: y + (bandH - barH) / 2, width: Math.max(barW, 2), height: barH, rx: 4, fill: row.color || "#5B9DFF" });
@@ -781,7 +781,7 @@ function drawBarChart(containerId, rows, opts) {
     [0, .5, 1].forEach(f => {
       const y = padT + plotH - f * plotH;
       svg.appendChild(svgEl("line", { x1: padL, y1: y, x2: w - padR, y2: y, stroke: "#171D29", "stroke-width": 1 }));
-      const t = svgEl("text", { x: padL - 8, y: y + 3, "text-anchor": "end", "font-size": 10, fill: "#5A6273", "font-family": "JetBrains Mono, monospace" });
+      const t = svgEl("text", { x: padL - 8, y: y + 3, "text-anchor": "end", "font-size": 10, fill: "#9AA3B2", "font-family": "JetBrains Mono, monospace" });
       t.textContent = money ? short(maxVal * f) : Math.round(maxVal * f);
       svg.appendChild(t);
     });
@@ -793,7 +793,7 @@ function drawBarChart(containerId, rows, opts) {
       bar.addEventListener("mousemove", evt => showTooltip(evt, `<div class="tt-title">${row.name}</div><div class="tt-row">${money ? fmt(row.value) : row.value}</div>`));
       bar.addEventListener("mouseleave", hideTooltip);
       svg.appendChild(bar);
-      const label = svgEl("text", { x: x + bandW / 2, y: h - 8, "text-anchor": "middle", "font-size": 10, fill: "#5A6273", "font-family": "JetBrains Mono, monospace" });
+      const label = svgEl("text", { x: x + bandW / 2, y: h - 8, "text-anchor": "middle", "font-size": 10, fill: "#9AA3B2", "font-family": "JetBrains Mono, monospace" });
       label.textContent = row.name;
       svg.appendChild(label);
     });
