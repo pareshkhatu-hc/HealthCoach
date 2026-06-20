@@ -17,7 +17,7 @@
   --panel-hover:#1A2030;
   --line:#1E2532;
   --line-soft:#171D29;
-  --text:#E7EAEF;
+  --text:#FFFFFF;
   --text-dim:#8A93A3;
   --text-faint:#5A6273;
   --green:#3DDC97;
@@ -120,7 +120,7 @@ button,input{font:inherit;color:inherit}
 .tick{padding:14px 18px;border-right:1px solid var(--line-soft);position:relative}
 .tick:last-child{border-right:none}
 .tick-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint)}
-.tick-value{font-family:var(--mono);font-size:19px;font-weight:700;margin-top:7px;color:var(--text);white-space:nowrap}
+.tick-value{font-family:var(--mono);font-size:19px;font-weight:700;margin-top:7px;color:#FFFFFF;white-space:nowrap}
 .tick-delta{font-family:var(--mono);font-size:11px;margin-top:5px;display:flex;align-items:center;gap:4px}
 .tick-delta.up{color:var(--green)}
 .tick-delta.down{color:var(--red)}
@@ -190,6 +190,16 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
 .signal-icon.watch{background:var(--gold-glow);color:var(--gold)}
 .signal-icon.risk{background:var(--red-glow);color:var(--red)}
 .signal strong{color:var(--text);font-weight:600}
+
+/* ---------------- Investments sub-tabs ---------------- */
+.subtab-seg{display:inline-flex;margin-bottom:18px}
+.subtab-seg button{font-size:12.5px;padding:7px 16px}
+.subview{display:none}
+.subview.active{display:block;animation:fadein .2s ease}
+.sortable-th{cursor:pointer;user-select:none;position:relative}
+.sortable-th:hover{color:var(--text)}
+.sortable-th .sort-arrow{margin-left:4px;opacity:.5;font-size:9px}
+.sortable-th.sorted .sort-arrow{opacity:1;color:var(--green)}
 
 /* ---------------- Progression controls ---------------- */
 .prog-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px}
@@ -343,7 +353,7 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
       <div class="grid g-12">
         <div class="panel col-8">
           <div class="panel-head">
-            <div><h2>Net Worth Trajectory</h2><div class="ph-sub">Cumulative value from logged ledger entries</div></div>
+            <div><h2>Net Worth Trajectory</h2><div class="ph-sub">Each month's own contribution from logged ledger entries</div></div>
             <span class="pill green" id="trajRange">—</span>
           </div>
           <div class="chart-box h-280"><div id="trajChart" class="svg-chart"></div></div>
@@ -383,8 +393,8 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
           <div class="prog-control">
             <label>View</label>
             <div class="seg" id="progViewToggle">
-              <button data-mode="cumulative" class="active">Cumulative</button>
-              <button data-mode="monthly">Monthly</button>
+              <button data-mode="cumulative">Cumulative</button>
+              <button data-mode="monthly" class="active">Monthly</button>
             </div>
           </div>
           <div class="prog-control range-control">
@@ -402,7 +412,7 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
       <div class="grid g-12">
         <div class="panel col-8">
           <div class="panel-head">
-            <div><h2 id="progChartTitle">Cumulative Net Worth</h2><div class="ph-sub" id="progChartSub">Running total across all categories</div></div>
+            <div><h2 id="progChartTitle">Monthly Net Worth</h2><div class="ph-sub" id="progChartSub">Each month's own contribution, not running total</div></div>
             <span class="pill gold" id="progRange">—</span>
           </div>
           <div class="chart-box h-320"><div id="progChart" class="svg-chart"></div></div>
@@ -413,13 +423,6 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
           <div class="signals" id="momSignals" style="margin-top:14px"></div>
         </div>
       </div>
-
-      <div class="panel col-12" style="margin-top:16px">
-        <div class="panel-head">
-          <div><h2>Contribution Ledger</h2><div class="ph-sub">Every entry from "Monthly split of my invstents," newest first \u00b7 filtered to the selected range</div></div>
-        </div>
-        <div class="feed" id="ledgerFeed"></div>
-      </div>
     </section>
 
     <!-- ============ INVESTMENTS ============ -->
@@ -427,29 +430,68 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
       <div class="topbar">
         <div><h1>Investments</h1><div class="sub">Mutual funds, fixed deposits, provident fund, gold</div></div>
       </div>
-      <div class="grid g-12">
-        <div class="panel col-7">
-          <div class="panel-head"><div><h2>Mutual Funds &amp; ETF</h2><div class="ph-sub" id="mfSub">—</div></div></div>
-          <div class="table-scroll" id="mfTable"></div>
-        </div>
-        <div class="panel col-5">
-          <div class="panel-head"><div><h2>SIP Allocation</h2><div class="ph-sub">Monthly commitment by fund</div></div></div>
-          <div class="chart-box h-220"><div id="sipChart" class="svg-chart"></div></div>
+
+      <div class="seg subtab-seg" id="invSubTabs">
+        <button data-sub="mf" class="active">Mutual Funds</button>
+        <button data-sub="fd">Fixed Deposits</button>
+        <button data-sub="pf">Provident Fund</button>
+        <button data-sub="gold">Gold</button>
+      </div>
+
+      <!-- Mutual Funds sub-view -->
+      <div class="subview active" data-sub="mf">
+        <div class="ticker" id="mfStats" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
+        <div class="grid g-12">
+          <div class="panel col-7">
+            <div class="panel-head">
+              <div><h2>Fund Register</h2><div class="ph-sub" id="mfSub">—</div></div>
+              <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="mfSearch" type="search" placeholder="Search fund or investor…"></div>
+            </div>
+            <div class="ph-sub" style="margin-bottom:8px">Click a column header to sort</div>
+            <div class="table-scroll" id="mfTable"></div>
+          </div>
+          <div class="panel col-5">
+            <div class="panel-head"><div><h2>SIP Allocation</h2><div class="ph-sub">Monthly commitment by fund — click a slice to filter the table</div></div></div>
+            <div class="chart-box h-220"><div id="sipChart" class="svg-chart"></div></div>
+          </div>
         </div>
       </div>
-      <div class="grid g-12" style="margin-top:16px">
-        <div class="panel col-7">
-          <div class="panel-head"><div><h2>Fixed Deposit Ladder</h2><div class="ph-sub" id="fdSub">—</div></div></div>
-          <div class="table-scroll" id="fdTable"></div>
-        </div>
-        <div class="panel col-5">
-          <div class="panel-head"><div><h2>FD Maturity Timeline</h2><div class="ph-sub">Principal due to mature, by year</div></div></div>
-          <div class="chart-box h-220"><div id="fdTimelineChart" class="svg-chart"></div></div>
+
+      <!-- Fixed Deposits sub-view -->
+      <div class="subview" data-sub="fd">
+        <div class="ticker" id="fdStats" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px"></div>
+        <div class="grid g-12">
+          <div class="panel col-7">
+            <div class="panel-head">
+              <div><h2>Deposit Ladder</h2><div class="ph-sub" id="fdSub">—</div></div>
+              <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="fdSearch" type="search" placeholder="Search bank or investor…"></div>
+            </div>
+            <div class="ph-sub" style="margin-bottom:8px">Click a column header to sort</div>
+            <div class="table-scroll" id="fdTable"></div>
+          </div>
+          <div class="panel col-5">
+            <div class="panel-head"><div><h2>Maturity Timeline</h2><div class="ph-sub">Principal due to mature, by year</div></div></div>
+            <div class="chart-box h-220"><div id="fdTimelineChart" class="svg-chart"></div></div>
+          </div>
         </div>
       </div>
-      <div class="grid g-12" style="margin-top:16px">
-        <div class="panel col-6"><div class="panel-head"><div><h2>Provident Fund</h2></div></div><div class="table-scroll" id="pfTable"></div></div>
-        <div class="panel col-6"><div class="panel-head"><div><h2>Gold Holdings</h2></div></div><div class="table-scroll" id="goldTable"></div></div>
+
+      <!-- Provident Fund sub-view -->
+      <div class="subview" data-sub="pf">
+        <div class="ticker" id="pfStats" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+        <div class="grid g-12">
+          <div class="panel col-7"><div class="panel-head"><div><h2>Employer Breakdown</h2></div></div><div class="table-scroll" id="pfTable"></div></div>
+          <div class="panel col-5"><div class="panel-head"><div><h2>Share by Employer</h2></div></div><div class="chart-box h-220"><div id="pfChart" class="svg-chart"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Gold sub-view -->
+      <div class="subview" data-sub="gold">
+        <div class="ticker" id="goldStats" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px"></div>
+        <div class="grid g-12">
+          <div class="panel col-7"><div class="panel-head"><div><h2>Holdings by Investor</h2></div></div><div class="table-scroll" id="goldTable"></div></div>
+          <div class="panel col-5"><div class="panel-head"><div><h2>Share by Investor</h2></div></div><div class="chart-box h-220"><div id="goldChart" class="svg-chart"></div></div></div>
+        </div>
       </div>
     </section>
 
@@ -951,7 +993,7 @@ function renderTrajectoryChart() {
   const labels = points.map(p => monthShort(p.date));
   drawLineChart("trajChart", {
     labels,
-    series: [{ label: "Net worth", color: "#3DDC97", data: points.map(p => p.cumulativeTotal) }],
+    series: [{ label: "Net worth", color: "#3DDC97", data: points.map(p => p.monthlyTotal) }],
     legend: false
   });
   $("trajRange").textContent = points.length > 1 ? `${monthText(points[0].date)} → ${monthText(points[points.length - 1].date)}` : monthText(points[0]?.date);
@@ -994,7 +1036,7 @@ function renderSignals() {
 // Monthly Progression (signature view)
 // =====================================================================
 const CATEGORY_PALETTE = ["#D4A24C", "#3DDC97", "#5B9DFF", "#A78BFA", "#3FC7C7", "#FF6B6B"];
-const progState = { metric: "__total__", mode: "cumulative", rangeStart: null, rangeEnd: null };
+const progState = { metric: "__total__", mode: "monthly", rangeStart: null, rangeEnd: null };
 
 // Groups ledger rows by CALENDAR MONTH (yyyy-MM), not by exact date — so two
 // entries dated 2026-06-02 and 2026-06-18 land in the same "June 2026" point
@@ -1072,7 +1114,6 @@ function renderProgression() {
   $("progCount").textContent = `${rows.length} entries`;
 
   if (!rows.length) {
-    $("ledgerFeed").innerHTML = `<div class="empty-state">No entries yet in "Monthly split of my invstents." Add rows there and refresh to build the trend.</div>`;
     $("progRange").textContent = "—";
     $("momTiles").innerHTML = "";
     $("momSignals").innerHTML = "";
@@ -1089,7 +1130,6 @@ function renderProgression() {
 
   drawProgressionChart(visible, categories);
   renderMoM(visible);
-  renderLedgerFeed(rows, visible.map(p => p.monthKey));
 }
 
 function drawProgressionChart(points, categories) {
@@ -1146,25 +1186,6 @@ function renderMoM(points) {
   $("momSignals").innerHTML = items.map(i => `<div class="signal"><span class="signal-icon ${i.s}">${i.s === "ok" ? "✓" : "!"}</span><div>${i.t}</div></div>`).join("");
 }
 
-function renderLedgerFeed(rows, visibleMonthKeys) {
-  const visibleSet = new Set(visibleMonthKeys);
-  const inRange = rows.filter(r => visibleSet.has(r.monthKey.slice(0, 7)));
-  const sorted = [...inRange].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-  const chron = [...rows].sort((a, b) => a.monthKey.localeCompare(b.monthKey)); // running total uses ALL history, not just the filtered view
-  const runningByRow = new Map();
-  let acc = 0;
-  chron.forEach(r => { acc += Number(r.amount) || 0; runningByRow.set(r, acc); });
-
-  if (!sorted.length) { $("ledgerFeed").innerHTML = `<div class="empty-state">No entries in the selected month range.</div>`; return; }
-
-  $("ledgerFeed").innerHTML = sorted.map(r => `
-    <div class="feed-row">
-      <div class="feed-date">${dateText(r.month)}</div>
-      <div><div class="feed-type">${r.type || "—"}</div><div class="feed-purpose">${r.purpose || ""}</div></div>
-      <div><div class="feed-amt">+${fmt(r.amount)}</div><div class="feed-running">running ${short(runningByRow.get(r))}</div></div>
-    </div>`).join("");
-}
-
 function bindProgressionControls() {
   $("progMetric").addEventListener("change", e => { progState.metric = e.target.value; renderProgression(); });
   $("progViewToggle").addEventListener("click", e => {
@@ -1177,8 +1198,8 @@ function bindProgressionControls() {
   $("progStart").addEventListener("change", e => { progState.rangeStart = e.target.value; renderProgression(); });
   $("progEnd").addEventListener("change", e => { progState.rangeEnd = e.target.value; renderProgression(); });
   $("progReset").addEventListener("click", () => {
-    progState.rangeStart = null; progState.rangeEnd = null; progState.metric = "__total__"; progState.mode = "cumulative";
-    document.querySelectorAll("#progViewToggle button").forEach(b => b.classList.toggle("active", b.dataset.mode === "cumulative"));
+    progState.rangeStart = null; progState.rangeEnd = null; progState.metric = "__total__"; progState.mode = "monthly";
+    document.querySelectorAll("#progViewToggle button").forEach(b => b.classList.toggle("active", b.dataset.mode === "monthly"));
     renderProgression();
   });
 }
@@ -1187,28 +1208,116 @@ function bindProgressionControls() {
 // Investments tab
 // =====================================================================
 function renderInvestments() {
-  $("mfSub").textContent = `${state.mutualFunds.length} funds tracked`;
-  $("fdSub").textContent = `${state.fixedDeposits.length} deposits across ${new Set(state.fixedDeposits.map(x => x.bank)).size} banks`;
+  bindInvestmentSubTabs();
+  renderMutualFundsSubview();
+  renderFixedDepositsSubview();
+  renderProvidentFundSubview();
+  renderGoldSubview();
+}
 
-  $("mfTable").innerHTML = table(
-    ["Fund", "Investor", "Start", "SIP", "Invested", "Current"],
-    state.mutualFunds.map(x => [x.name, x.investor, dateText(x.start), fmt(x.sip), fmt(x.invested), x.current ? fmt(x.current) : '<span class="badge">pending</span>']),
-    [0, 0, 0, 1, 1, 1]
-  );
-  $("fdTable").innerHTML = table(
-    ["Bank", "Investor", "Principal", "Rate", "Maturity", "Maturity Amt"],
-    state.fixedDeposits.map(x => [x.bank, x.investor, fmt(x.amount), x.rate ? pct(x.rate * 100) : "—", dateText(x.maturity), fmt(x.maturityAmount)]),
-    [0, 0, 1, 1, 0, 1]
-  );
-  $("pfTable").innerHTML = table(["Employer", "PF Balance", "Pension"], state.providentFund.map(x => [x.employer, fmt(x.balance), fmt(x.pensionBalance)]), [0, 1, 1]);
-  $("goldTable").innerHTML = table(["Investor", "Quantity", "Rate", "Amount"], state.gold.map(x => [x.investor, `${x.quantity} gm`, fmt(x.rate), fmt(x.amount)]), [0, 1, 1, 1]);
+function bindInvestmentSubTabs() {
+  const seg = $("invSubTabs");
+  if (seg._bound) return; // only attach listeners once; renders happen every refresh
+  seg._bound = true;
+  seg.addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    document.querySelectorAll("#invSubTabs button").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".subview").forEach(v => v.classList.toggle("active", v.dataset.sub === btn.dataset.sub));
+  });
+}
+
+function renderMutualFundsSubview() {
+  const totalInvested = sum(state.mutualFunds, "invested");
+  const totalCurrent = sum(state.mutualFunds, "current") || totalInvested;
+  const totalSip = sum(state.mutualFunds, "sip");
+  const gainLoss = totalCurrent - totalInvested;
+
+  $("mfStats").innerHTML = [
+    { l: "Total Invested", v: short(totalInvested) },
+    { l: "Current Value", v: short(totalCurrent) },
+    { l: "Monthly SIP", v: fmt(totalSip) },
+    { l: "Unrealized P&L", v: `${gainLoss >= 0 ? "+" : ""}${short(gainLoss)}`, dir: gainLoss >= 0 ? "up" : "down" }
+  ].map(i => `<div class="tick"><div class="tick-label">${i.l}</div><div class="tick-value">${i.v}</div>${i.dir ? `<div class="tick-delta ${i.dir}"></div>` : ""}</div>`).join("");
+
+  $("mfSub").textContent = `${state.mutualFunds.length} funds tracked`;
+
+  const columns = [
+    { key: "name", label: "Fund", text: r => r.name, sortVal: r => r.name },
+    { key: "investor", label: "Investor", text: r => r.investor, sortVal: r => r.investor },
+    { key: "start", label: "Start", text: r => dateText(r.start), sortVal: r => r.start || "" },
+    { key: "sip", label: "SIP", text: r => fmt(r.sip), sortVal: r => r.sip, num: true },
+    { key: "invested", label: "Invested", text: r => fmt(r.invested), sortVal: r => r.invested, num: true },
+    { key: "current", label: "Current", text: r => r.current ? fmt(r.current) : '<span class="badge">pending</span>', sortVal: r => r.current || 0, num: true }
+  ];
+  interactiveTable("mfTable", state.mutualFunds, columns, { defaultSort: "invested" });
+  bindTableSearch("mfSearch", "mfTable", state.mutualFunds, columns, { defaultSort: "invested" });
 
   drawBarChart("sipChart", state.mutualFunds.map(x => ({ name: x.name.length > 18 ? x.name.slice(0, 16) + "…" : x.name, value: x.sip, color: "#A78BFA" })), { horizontal: true });
+}
+
+function renderFixedDepositsSubview() {
+  const totalPrincipal = sum(state.fixedDeposits, "amount");
+  const totalMaturity = sum(state.fixedDeposits, "maturityAmount");
+  const avgRate = state.fixedDeposits.length ? sum(state.fixedDeposits, "rate") / state.fixedDeposits.length * 100 : 0;
+  const projectedGain = totalMaturity - totalPrincipal;
+
+  $("fdStats").innerHTML = [
+    { l: "Total Principal", v: short(totalPrincipal) },
+    { l: "At Maturity", v: short(totalMaturity) },
+    { l: "Avg. Rate", v: `${avgRate.toFixed(2)}%` },
+    { l: "Projected Gain", v: `+${short(projectedGain)}`, dir: "up" }
+  ].map(i => `<div class="tick"><div class="tick-label">${i.l}</div><div class="tick-value">${i.v}</div>${i.dir ? `<div class="tick-delta ${i.dir}"></div>` : ""}</div>`).join("");
+
+  $("fdSub").textContent = `${state.fixedDeposits.length} deposits across ${new Set(state.fixedDeposits.map(x => x.bank)).size} banks`;
+
+  const columns = [
+    { key: "bank", label: "Bank", text: r => r.bank, sortVal: r => r.bank },
+    { key: "investor", label: "Investor", text: r => r.investor, sortVal: r => r.investor },
+    { key: "amount", label: "Principal", text: r => fmt(r.amount), sortVal: r => r.amount, num: true },
+    { key: "rate", label: "Rate", text: r => r.rate ? pct(r.rate * 100) : "—", sortVal: r => r.rate || 0, num: true },
+    { key: "maturity", label: "Maturity", text: r => dateText(r.maturity), sortVal: r => r.maturity || "" },
+    { key: "maturityAmount", label: "Maturity Amt", text: r => fmt(r.maturityAmount), sortVal: r => r.maturityAmount, num: true }
+  ];
+  interactiveTable("fdTable", state.fixedDeposits, columns, { defaultSort: "amount" });
+  bindTableSearch("fdSearch", "fdTable", state.fixedDeposits, columns, { defaultSort: "amount" });
 
   const byYear = {};
   state.fixedDeposits.filter(x => x.maturity).forEach(x => { const y = x.maturity.slice(0, 4); byYear[y] = (byYear[y] || 0) + x.amount; });
   const years = Object.keys(byYear).sort();
   drawBarChart("fdTimelineChart", years.map(y => ({ name: y, value: byYear[y], color: "#5B9DFF" })), { horizontal: false });
+}
+
+function renderProvidentFundSubview() {
+  const totalBalance = sum(state.providentFund, "balance");
+  const totalPension = sum(state.providentFund, "pensionBalance");
+
+  $("pfStats").innerHTML = [
+    { l: "Total PF Balance", v: short(totalBalance) },
+    { l: "Total Pension Balance", v: short(totalPension) },
+    { l: "Employers Tracked", v: String(state.providentFund.length) }
+  ].map(i => `<div class="tick"><div class="tick-label">${i.l}</div><div class="tick-value">${i.v}</div></div>`).join("");
+
+  $("pfTable").innerHTML = table(["Employer", "PF Balance", "Pension"], state.providentFund.map(x => [x.employer, fmt(x.balance), fmt(x.pensionBalance)]), [0, 1, 1]);
+
+  const rows = state.providentFund.map((x, i) => ({ name: x.employer, value: x.balance, color: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length] }));
+  drawDonut("pfChart", rows, { legend: true, center: { value: short(totalBalance), label: "PF Total" } });
+}
+
+function renderGoldSubview() {
+  const totalAmount = sum(state.gold, "amount");
+  const totalQty = sum(state.gold, "quantity");
+
+  $("goldStats").innerHTML = [
+    { l: "Total Value", v: short(totalAmount) },
+    { l: "Total Quantity", v: `${totalQty} gm` },
+    { l: "Holders", v: String(new Set(state.gold.map(x => x.investor)).size) }
+  ].map(i => `<div class="tick"><div class="tick-label">${i.l}</div><div class="tick-value">${i.v}</div></div>`).join("");
+
+  $("goldTable").innerHTML = table(["Investor", "Quantity", "Rate", "Amount"], state.gold.map(x => [x.investor, `${x.quantity} gm`, fmt(x.rate), fmt(x.amount)]), [0, 1, 1, 1]);
+
+  const rows = state.gold.map((x, i) => ({ name: x.investor, value: x.amount, color: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length] }));
+  drawDonut("goldChart", rows, { legend: true, center: { value: short(totalAmount), label: "Gold Total" } });
 }
 
 // =====================================================================
@@ -1285,6 +1394,54 @@ function renderDataHealth() {
 function table(headers, rows, numCols) {
   if (!rows.length) return `<div class="empty-state">No rows found.</div>`;
   return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(row => `<tr>${row.map((cell, i) => `<td class="${numCols && numCols[i] ? "num" : ""}">${cell ?? "—"}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
+// Sortable + searchable table. `rows` are raw data objects; `columns` describe
+// how to render and sort each one. State (sort column/direction, search text)
+// lives on the `state` object passed in so re-renders (e.g. after Refresh)
+// don't reset what the person was looking at.
+const tableUiState = {}; // keyed by tableId -> { sortKey, sortDir, search }
+
+function interactiveTable(tableId, rows, columns, opts) {
+  const st = tableUiState[tableId] || (tableUiState[tableId] = { sortKey: (opts && opts.defaultSort) || null, sortDir: -1, search: "" });
+
+  let filtered = rows;
+  if (st.search) {
+    const q = st.search.toLowerCase();
+    filtered = rows.filter(r => columns.some(c => String(c.text(r)).toLowerCase().includes(q)));
+  }
+  if (st.sortKey) {
+    const col = columns.find(c => c.key === st.sortKey);
+    if (col) filtered = [...filtered].sort((a, b) => (col.sortVal(a) > col.sortVal(b) ? 1 : col.sortVal(a) < col.sortVal(b) ? -1 : 0) * st.sortDir);
+  }
+
+  const theadHtml = `<tr>${columns.map(c => {
+    const isSorted = st.sortKey === c.key;
+    const arrow = isSorted ? (st.sortDir === 1 ? "▲" : "▼") : "▲";
+    return `<th class="sortable-th${isSorted ? " sorted" : ""}" data-key="${c.key}">${c.label}<span class="sort-arrow">${arrow}</span></th>`;
+  }).join("")}</tr>`;
+
+  const bodyHtml = filtered.length
+    ? filtered.map(r => `<tr>${columns.map(c => `<td class="${c.num ? "num" : ""}">${c.text(r)}</td>`).join("")}</tr>`).join("")
+    : `<tr><td colspan="${columns.length}"><div class="empty-state">No matching rows.</div></td></tr>`;
+
+  $(tableId).innerHTML = `<table><thead>${theadHtml}</thead><tbody>${bodyHtml}</tbody></table>`;
+
+  $(tableId).querySelectorAll(".sortable-th").forEach(th => {
+    th.addEventListener("click", () => {
+      const key = th.dataset.key;
+      if (st.sortKey === key) st.sortDir *= -1; else { st.sortKey = key; st.sortDir = 1; }
+      interactiveTable(tableId, rows, columns, opts);
+    });
+  });
+
+  return filtered.length;
+}
+
+function bindTableSearch(inputId, tableId, rows, columns, opts) {
+  const st = tableUiState[tableId] || (tableUiState[tableId] = { sortKey: (opts && opts.defaultSort) || null, sortDir: -1, search: "" });
+  $(inputId).value = st.search;
+  $(inputId).oninput = () => { st.search = $(inputId).value; interactiveTable(tableId, rows, columns, opts); };
 }
 
 // =====================================================================
