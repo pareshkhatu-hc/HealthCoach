@@ -191,6 +191,29 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
 .signal-icon.risk{background:var(--red-glow);color:var(--red)}
 .signal strong{color:var(--text);font-weight:600}
 
+/* ---------------- Progression controls ---------------- */
+.prog-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px}
+.prog-control{display:flex;flex-direction:column;gap:6px}
+.prog-control label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
+.ctrl-select{
+  background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:6px;
+  padding:8px 10px;font-size:12.5px;font-family:var(--sans);min-width:150px;cursor:pointer;outline:none;
+}
+.ctrl-select:focus{border-color:var(--green)}
+.range-control{position:relative}
+.range-control::before{
+  content:"";position:absolute;left:9px;top:31px;width:11px;height:11px;pointer-events:none;
+  background:var(--text-faint);
+  -webkit-mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>') center/contain no-repeat;
+  mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>') center/contain no-repeat;
+}
+.range-control .ctrl-select{padding-left:26px}
+.ctrl-reset{
+  border:1px solid var(--line);background:none;color:var(--text-dim);border-radius:6px;
+  padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;height:35px;
+}
+.ctrl-reset:hover{border-color:var(--green);color:var(--green)}
+
 /* ---------------- Search ---------------- */
 .search-box{
   position:relative;flex:1;min-width:200px;
@@ -238,6 +261,7 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
 
 /* ---------------- Mobile nav toggle ---------------- */
 .mobile-bar{display:none}
+.mobile-tabs{display:none}
 
 /* ---------------- Responsive ---------------- */
 @media(max-width:1200px){
@@ -346,14 +370,39 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
     <!-- ============ PROGRESSION (signature view) ============ -->
     <section class="view" data-view="progression">
       <div class="topbar">
-        <div><h1>Monthly Progression</h1><div class="sub">Transaction-style ledger — contributions accumulate into running totals</div></div>
+        <div><h1>Monthly Progression</h1><div class="sub">Transaction-style ledger — each month adds to the running total</div></div>
         <span class="pill" id="progCount">—</span>
+      </div>
+
+      <div class="panel col-12" style="margin-bottom:16px">
+        <div class="prog-controls">
+          <div class="prog-control">
+            <label>Metric</label>
+            <select id="progMetric" class="ctrl-select"></select>
+          </div>
+          <div class="prog-control">
+            <label>View</label>
+            <div class="seg" id="progViewToggle">
+              <button data-mode="cumulative" class="active">Cumulative</button>
+              <button data-mode="monthly">Monthly</button>
+            </div>
+          </div>
+          <div class="prog-control range-control">
+            <label>From</label>
+            <select id="progStart" class="ctrl-select"></select>
+          </div>
+          <div class="prog-control range-control">
+            <label>To</label>
+            <select id="progEnd" class="ctrl-select"></select>
+          </div>
+          <button class="ctrl-reset" id="progReset" type="button">Reset range</button>
+        </div>
       </div>
 
       <div class="grid g-12">
         <div class="panel col-8">
           <div class="panel-head">
-            <div><h2>Cumulative Growth by Category</h2><div class="ph-sub">Stacked running totals, latest snapshot on the right</div></div>
+            <div><h2 id="progChartTitle">Cumulative Net Worth</h2><div class="ph-sub" id="progChartSub">Running total across all categories</div></div>
             <span class="pill gold" id="progRange">—</span>
           </div>
           <div class="chart-box h-320"><div id="progChart" class="svg-chart"></div></div>
@@ -367,7 +416,7 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
 
       <div class="panel col-12" style="margin-top:16px">
         <div class="panel-head">
-          <div><h2>Contribution Ledger</h2><div class="ph-sub">Every entry from "Monthly split of my invstents," newest first</div></div>
+          <div><h2>Contribution Ledger</h2><div class="ph-sub">Every entry from "Monthly split of my invstents," newest first \u00b7 filtered to the selected range</div></div>
         </div>
         <div class="feed" id="ledgerFeed"></div>
       </div>
@@ -451,10 +500,10 @@ td .badge.vehicle{background:rgba(91,157,255,.12);color:var(--blue)}
 // Ledger Terminal — application logic
 // =====================================================================
 
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwUK2JmbaVtab_9NLhP5IsWeyDCaapEpNreQ2gLOh34WHDkWaAhfsbWWBdK4Lb8KSyy/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzaRuK07Gett0jDViXAS60ybzAasMKMabODQKuqfiLfV3gifghv3tMa8pUwwznFt1KP/exec';
 
 const sampleData = {
-  source: "Financial Dashboard.xlsx preview", loadedAt: new Date().toISOString(), updatedOn: "2026-06-01", emergencyTarget: 600000,
+  source: "Financial Dashboard.xlsx preview", loadedAt: new Date().toISOString(), updatedOn: "2026-06-01", emergencyTarget: 1200000,
   assets: [{ name: "Fixed Deposits", value: 750000, color: "#5B9DFF" }, { name: "Investments", value: 80000, color: "#A78BFA" }, { name: "Provident Fund", value: 958504, color: "#3DDC97" }, { name: "Bank Balance", value: 486000, color: "#3FC7C7" }, { name: "Gold", value: 3000000, color: "#D4A24C" }],
   goalBuckets: [{ name: "Emergency Fund", value: 1236000, color: "#3FC7C7" }, { name: "Retirement Fund", value: 958504, color: "#3DDC97" }, { name: "Fixed Asset", value: 3000000, color: "#D4A24C" }, { name: "10 Years Plan", value: 80000, color: "#A78BFA" }],
   bankAccounts: [{ bank: "HDFC Bank", type: "Savings", balance: 200000, holder: "Paresh" }, { bank: "ICICI Bank", type: "Savings", balance: 100000, holder: "Paresh" }, { bank: "Yes Bank", type: "Savings", balance: 0, holder: "Paresh" }, { bank: "Yes Bank", type: "Savings", balance: 60000, holder: "Sampada" }, { bank: "Yes Bank", type: "Savings", balance: 3000, holder: "Joint" }, { bank: "HDFC Bank", type: "Savings", balance: 0, holder: "Sampada" }, { bank: "Bank of India", type: "Savings", balance: 67000, holder: "Sampada" }, { bank: "Cash", type: "Cash in hand", balance: 56000, holder: "Sampada" }],
@@ -869,14 +918,14 @@ function render() {
 function renderTicker() {
   const netWorth = sum(state.assets, "value");
   const emergency = (state.goalBuckets.find(x => x.name.toLowerCase().includes("emergency")) || {}).value || 0;
-  const target = state.emergencyTarget || 600000;
+  const target = state.emergencyTarget || 1200000;
   const mfCurrent = sum(state.mutualFunds, "current") || sum(state.mutualFunds, "invested");
   const sip = sum(state.mutualFunds, "sip");
   const gold = (state.assets.find(x => x.name.toLowerCase().includes("gold")) || {}).value || 0;
   const upcoming = state.insurance.filter(x => x.renewal && daysUntil(x.renewal) >= 0 && daysUntil(x.renewal) <= 120);
   const { points } = buildProgressionSeries();
   const last = points[points.length - 1], prev = points[points.length - 2];
-  const momPct = (prev && prev.total) ? (last.total - prev.total) / prev.total * 100 : null;
+  const momPct = (prev && prev.cumulativeTotal) ? (last.cumulativeTotal - prev.cumulativeTotal) / prev.cumulativeTotal * 100 : null;
 
   const items = [
     { label: "Net Worth", value: short(netWorth), delta: momPct !== null ? `${momPct >= 0 ? "▲" : "▼"} ${Math.abs(momPct).toFixed(1)}% MoM` : "Single snapshot", dir: momPct === null ? "flat" : momPct >= 0 ? "up" : "down" },
@@ -902,7 +951,7 @@ function renderTrajectoryChart() {
   const labels = points.map(p => monthShort(p.date));
   drawLineChart("trajChart", {
     labels,
-    series: [{ label: "Net worth", color: "#3DDC97", data: points.map(p => p.total) }],
+    series: [{ label: "Net worth", color: "#3DDC97", data: points.map(p => p.cumulativeTotal) }],
     legend: false
   });
   $("trajRange").textContent = points.length > 1 ? `${monthText(points[0].date)} → ${monthText(points[points.length - 1].date)}` : monthText(points[0]?.date);
@@ -928,7 +977,7 @@ function renderGoalChart() {
 function renderSignals() {
   const netWorth = sum(state.assets, "value");
   const emergency = (state.goalBuckets.find(x => x.name.toLowerCase().includes("emergency")) || {}).value || 0;
-  const target = state.emergencyTarget || 600000;
+  const target = state.emergencyTarget || 1200000;
   const gold = (state.assets.find(x => x.name.toLowerCase().includes("gold")) || {}).value || 0;
   const missingCurrent = state.mutualFunds.filter(x => !x.current).length;
   const next = nextEvents()[0];
@@ -944,30 +993,78 @@ function renderSignals() {
 // =====================================================================
 // Monthly Progression (signature view)
 // =====================================================================
+const CATEGORY_PALETTE = ["#D4A24C", "#3DDC97", "#5B9DFF", "#A78BFA", "#3FC7C7", "#FF6B6B"];
+const progState = { metric: "__total__", mode: "cumulative", rangeStart: null, rangeEnd: null };
+
+// Groups ledger rows by CALENDAR MONTH (yyyy-MM), not by exact date — so two
+// entries dated 2026-06-02 and 2026-06-18 land in the same "June 2026" point
+// instead of creating two separate points. Each point carries:
+//   - monthlyByCategory: just that month's own contributions (no carry-forward)
+//   - cumulativeByCategory: running total through that month (carries forward)
 function buildProgressionSeries() {
   const rows = state.monthlySplit
     .filter(x => x.month)
-    .map(x => ({ ...x, monthKey: String(x.month).slice(0, 10) }))
+    .map(x => ({ ...x, monthKey: String(x.month).slice(0, 7) })) // yyyy-MM
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
 
   const categories = [...new Set(rows.map(x => x.type || "Other"))];
   const running = {};
   categories.forEach(c => running[c] = 0);
 
-  const byDate = [];
+  const byMonth = [];
   const seen = new Map();
   rows.forEach(r => {
-    if (!seen.has(r.monthKey)) { seen.set(r.monthKey, { date: r.monthKey, entries: [] }); byDate.push(seen.get(r.monthKey)); }
+    if (!seen.has(r.monthKey)) { seen.set(r.monthKey, { monthKey: r.monthKey, entries: [] }); byMonth.push(seen.get(r.monthKey)); }
     seen.get(r.monthKey).entries.push(r);
   });
 
-  const points = byDate.map(batch => {
-    batch.entries.forEach(e => { running[e.type || "Other"] += Number(e.amount) || 0; });
-    const total = Object.values(running).reduce((s, v) => s + v, 0);
-    return { date: batch.date, total, byCategory: { ...running } };
+  const points = byMonth.map(batch => {
+    const monthlyByCategory = {};
+    categories.forEach(c => monthlyByCategory[c] = 0);
+    batch.entries.forEach(e => {
+      const cat = e.type || "Other";
+      monthlyByCategory[cat] += Number(e.amount) || 0;
+      running[cat] += Number(e.amount) || 0;
+    });
+    const monthlyTotal = Object.values(monthlyByCategory).reduce((s, v) => s + v, 0);
+    const cumulativeTotal = Object.values(running).reduce((s, v) => s + v, 0);
+    return {
+      monthKey: batch.monthKey,
+      date: batch.entries[0].monthKey + "-01", // for date-text helpers expecting yyyy-MM-dd
+      monthlyTotal, cumulativeTotal,
+      monthlyByCategory: { ...monthlyByCategory },
+      cumulativeByCategory: { ...running }
+    };
   });
 
   return { points, categories, rows };
+}
+
+function populateProgressionControls(points, categories) {
+  const metricSelect = $("progMetric");
+  const prevMetric = progState.metric;
+  metricSelect.innerHTML = `<option value="__total__">Net Worth (all categories)</option>` +
+    categories.map(c => `<option value="${c}">${c}</option>`).join("");
+  metricSelect.value = categories.includes(prevMetric) || prevMetric === "__total__" ? prevMetric : "__total__";
+  progState.metric = metricSelect.value;
+
+  const monthOptions = points.map(p => `<option value="${p.monthKey}">${monthText(p.date)}</option>`).join("");
+  const startSelect = $("progStart"), endSelect = $("progEnd");
+  startSelect.innerHTML = monthOptions;
+  endSelect.innerHTML = monthOptions;
+
+  const keys = points.map(p => p.monthKey);
+  if (!progState.rangeStart || !keys.includes(progState.rangeStart)) progState.rangeStart = keys[0];
+  if (!progState.rangeEnd || !keys.includes(progState.rangeEnd)) progState.rangeEnd = keys[keys.length - 1];
+  startSelect.value = progState.rangeStart;
+  endSelect.value = progState.rangeEnd;
+}
+
+function filteredPoints(points) {
+  if (!progState.rangeStart || !progState.rangeEnd) return points;
+  let [a, b] = [progState.rangeStart, progState.rangeEnd];
+  if (a > b) [a, b] = [b, a]; // tolerate "From" being set after "To"
+  return points.filter(p => p.monthKey >= a && p.monthKey <= b);
 }
 
 function renderProgression() {
@@ -979,59 +1076,86 @@ function renderProgression() {
     $("progRange").textContent = "—";
     $("momTiles").innerHTML = "";
     $("momSignals").innerHTML = "";
-    destroyChart("prog");
+    destroyChart("progChart");
+    $("progMetric").innerHTML = "";
+    $("progStart").innerHTML = "";
+    $("progEnd").innerHTML = "";
     return;
   }
 
-  $("progRange").textContent = points.length > 1 ? `${monthText(points[0].date)} → ${monthText(points[points.length - 1].date)}` : monthText(points[0].date);
-  drawProgressionChart(points, categories);
-  renderMoM(points);
-  renderLedgerFeed(rows);
+  populateProgressionControls(points, categories);
+  const visible = filteredPoints(points);
+  $("progRange").textContent = visible.length > 1 ? `${monthText(visible[0].date)} → ${monthText(visible[visible.length - 1].date)}` : monthText(visible[0]?.date);
+
+  drawProgressionChart(visible, categories);
+  renderMoM(visible);
+  renderLedgerFeed(rows, visible.map(p => p.monthKey));
 }
 
-const CATEGORY_PALETTE = ["#D4A24C", "#3DDC97", "#5B9DFF", "#A78BFA", "#3FC7C7", "#FF6B6B"];
-
 function drawProgressionChart(points, categories) {
-  const colorOf = {};
-  categories.forEach((c, i) => colorOf[c] = CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]);
+  const isTotal = progState.metric === "__total__";
+  const isCumulative = progState.mode === "cumulative";
+  const valueKey = isCumulative ? "cumulativeByCategory" : "monthlyByCategory";
+  const totalKey = isCumulative ? "cumulativeTotal" : "monthlyTotal";
   const labels = points.map(p => monthText(p.date));
-  const series = categories.map(cat => ({ label: cat, color: colorOf[cat], data: points.map(p => p.byCategory[cat] || 0) }));
-  drawLineChart("progChart", { labels, series, stacked: true, legend: true });
+
+  let series;
+  if (isTotal) {
+    series = [{ label: "Net Worth", color: "#3DDC97", data: points.map(p => p[totalKey]) }];
+  } else {
+    const color = CATEGORY_PALETTE[categories.indexOf(progState.metric) % CATEGORY_PALETTE.length];
+    series = [{ label: progState.metric, color, data: points.map(p => p[valueKey][progState.metric] || 0) }];
+  }
+
+  drawLineChart("progChart", { labels, series, stacked: false, legend: series.length > 1 });
+
+  $("progChartTitle").textContent = `${isCumulative ? "Cumulative" : "Monthly"} ${isTotal ? "Net Worth" : progState.metric}`;
+  $("progChartSub").textContent = isCumulative
+    ? (isTotal ? "Running total across all categories" : `Running total for ${progState.metric}`)
+    : (isTotal ? "Each month's own contribution, not running total" : `Each month's own contribution to ${progState.metric}`);
 }
 
 function renderMoM(points) {
+  if (!points.length) { $("momTiles").innerHTML = ""; $("momSignals").innerHTML = ""; return; }
   const last = points[points.length - 1];
   const prev = points.length > 1 ? points[points.length - 2] : null;
-  const delta = prev ? last.total - prev.total : last.total;
-  const deltaPct = prev && prev.total ? (delta / prev.total * 100) : null;
+  const lastTotal = last.cumulativeTotal;
+  const prevTotal = prev ? prev.cumulativeTotal : null;
+  const delta = prev ? lastTotal - prevTotal : last.monthlyTotal;
+  const deltaPct = prev && prevTotal ? (delta / prevTotal * 100) : null;
 
   $("momTiles").innerHTML = [
-    { l: "Latest Total", v: short(last.total) },
-    { l: "Change vs Prior", v: prev ? `${delta >= 0 ? "+" : ""}${short(delta)}` : "—" },
+    { l: "Latest Cumulative Total", v: short(lastTotal) },
+    { l: "This Month's Contribution", v: short(last.monthlyTotal) },
+    { l: "Change vs Prior Month", v: prev ? `${delta >= 0 ? "+" : ""}${short(delta)}` : "—" },
     { l: "Growth Rate", v: deltaPct !== null ? `${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}%` : "First entry" }
   ].map(t => `<div class="legend-row" style="grid-template-columns:1fr auto"><span class="legend-name">${t.l}</span><span class="legend-val" style="width:auto">${t.v}</span></div>`).join("");
 
   const items = [];
   if (!prev) {
-    items.push({ s: "watch", t: "Only one ledger date so far — add another month's entries to start seeing a trend." });
+    items.push({ s: "watch", t: `Only one month (<strong>${monthText(last.date)}</strong>) in the selected range — widen the range to see a trend.` });
   } else {
     items.push({ s: delta >= 0 ? "ok" : "risk", t: `Net worth ${delta >= 0 ? "grew" : "declined"} by <strong>${short(Math.abs(delta))}</strong> between ${monthText(prev.date)} and ${monthText(last.date)}.` });
     let biggest = null;
-    Object.keys(last.byCategory).forEach(cat => {
-      const d = (last.byCategory[cat] || 0) - (prev.byCategory[cat] || 0);
-      if (!biggest || Math.abs(d) > Math.abs(biggest.d)) biggest = { cat, d };
+    Object.keys(last.monthlyByCategory).forEach(cat => {
+      const v = last.monthlyByCategory[cat] || 0;
+      if (!biggest || Math.abs(v) > Math.abs(biggest.v)) biggest = { cat, v };
     });
-    if (biggest && biggest.d !== 0) items.push({ s: biggest.d >= 0 ? "ok" : "watch", t: `<strong>${biggest.cat}</strong> moved the most: ${biggest.d >= 0 ? "+" : ""}${short(biggest.d)}.` });
+    if (biggest && biggest.v !== 0) items.push({ s: "ok", t: `<strong>${biggest.cat}</strong> was the largest contribution in ${monthText(last.date)}: +${short(biggest.v)}.` });
   }
   $("momSignals").innerHTML = items.map(i => `<div class="signal"><span class="signal-icon ${i.s}">${i.s === "ok" ? "✓" : "!"}</span><div>${i.t}</div></div>`).join("");
 }
 
-function renderLedgerFeed(rows) {
-  const sorted = [...rows].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-  const chron = [...rows].sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+function renderLedgerFeed(rows, visibleMonthKeys) {
+  const visibleSet = new Set(visibleMonthKeys);
+  const inRange = rows.filter(r => visibleSet.has(r.monthKey.slice(0, 7)));
+  const sorted = [...inRange].sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  const chron = [...rows].sort((a, b) => a.monthKey.localeCompare(b.monthKey)); // running total uses ALL history, not just the filtered view
   const runningByRow = new Map();
   let acc = 0;
   chron.forEach(r => { acc += Number(r.amount) || 0; runningByRow.set(r, acc); });
+
+  if (!sorted.length) { $("ledgerFeed").innerHTML = `<div class="empty-state">No entries in the selected month range.</div>`; return; }
 
   $("ledgerFeed").innerHTML = sorted.map(r => `
     <div class="feed-row">
@@ -1039,6 +1163,24 @@ function renderLedgerFeed(rows) {
       <div><div class="feed-type">${r.type || "—"}</div><div class="feed-purpose">${r.purpose || ""}</div></div>
       <div><div class="feed-amt">+${fmt(r.amount)}</div><div class="feed-running">running ${short(runningByRow.get(r))}</div></div>
     </div>`).join("");
+}
+
+function bindProgressionControls() {
+  $("progMetric").addEventListener("change", e => { progState.metric = e.target.value; renderProgression(); });
+  $("progViewToggle").addEventListener("click", e => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    progState.mode = btn.dataset.mode;
+    document.querySelectorAll("#progViewToggle button").forEach(b => b.classList.toggle("active", b === btn));
+    renderProgression();
+  });
+  $("progStart").addEventListener("change", e => { progState.rangeStart = e.target.value; renderProgression(); });
+  $("progEnd").addEventListener("change", e => { progState.rangeEnd = e.target.value; renderProgression(); });
+  $("progReset").addEventListener("click", () => {
+    progState.rangeStart = null; progState.rangeEnd = null; progState.metric = "__total__"; progState.mode = "cumulative";
+    document.querySelectorAll("#progViewToggle button").forEach(b => b.classList.toggle("active", b.dataset.mode === "cumulative"));
+    renderProgression();
+  });
 }
 
 // =====================================================================
@@ -1149,6 +1291,7 @@ function table(headers, rows, numCols) {
 // Boot
 // =====================================================================
 buildNav();
+bindProgressionControls();
 $("refreshBtn").addEventListener("click", loadData);
 $("refreshBtnMobile").addEventListener("click", loadData);
 loadData();
